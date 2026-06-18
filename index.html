@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Canopia Smoke & Grow Shop: parafernalia, cultivo indoor, accesorios y combos."
+    />
+    <title>Canopia Smoke & Grow Shop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#inicio" aria-label="Canopia inicio">
+        <img class="brand-logo" src="assets/logo-canopia.png" alt="" />
+        <span>
+          <strong>Canopia</strong>
+          <small>Smoke & Grow Shop</small>
+        </span>
+      </a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
+        Menu
+      </button>
+      <nav id="main-nav" class="main-nav" aria-label="Navegacion principal">
+        <a href="#catalogo">Catalogo</a>
+        <a href="#grow">Grow</a>
+        <a href="#smoke">Smoke</a>
+        <a href="#combos">Combos</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="inicio" class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Parafernalia, cultivo y accesorios</p>
+          <h1>Todo para armar tu ritual smoke y tu espacio grow.</h1>
+          <p>
+            Catalogo claro, precios a mano y consulta directa por WhatsApp. Verde vivo,
+            neon justo y productos ordenados para encontrar rapido lo que buscas.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#catalogo">Ver catalogo</a>
+            <a class="button ghost" data-whatsapp-link href="#contacto">Consultar</a>
+          </div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <img class="hero-logo" src="assets/logo-canopia.png" alt="" />
+          <div class="hero-card">
+            <small>Destacado</small>
+            <strong id="hero-feature">Kit inicio grow</strong>
+            <span id="hero-price">$0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section quick-cats" aria-label="Categorias principales">
+        <div class="section-heading">
+          <p class="eyebrow">Entradas rapidas</p>
+          <h2>Categorias</h2>
+        </div>
+        <div id="category-grid" class="category-grid"></div>
+      </section>
+
+      <section id="catalogo" class="section">
+        <div class="section-heading row">
+          <div>
+            <p class="eyebrow">Stock editable</p>
+            <h2>Catalogo</h2>
+          </div>
+          <div class="filters" id="filters" aria-label="Filtrar productos"></div>
+        </div>
+        <div id="product-grid" class="product-grid"></div>
+      </section>
+
+      <section id="grow" class="section split-section">
+        <div>
+          <p class="eyebrow">Grow shop</p>
+          <h2>Cultivo ordenado por etapa</h2>
+          <p>
+            Sustratos, macetas, fertilizantes, iluminacion, carpas y control de clima.
+            La seccion grow prioriza informacion practica y comparacion rapida.
+          </p>
+        </div>
+        <div class="stage-list">
+          <span>Germinacion</span>
+          <span>Vegetativo</span>
+          <span>Floracion</span>
+          <span>Secado</span>
+          <span>Control</span>
+        </div>
+      </section>
+
+      <section id="smoke" class="section split-section smoke-panel">
+        <div>
+          <p class="eyebrow">Smoke shop</p>
+          <h2>Accesorios con presencia</h2>
+          <p>
+            Pipas, bongs, sedas, filtros, picadores, bandejas, encendedores y piezas para
+            armar una vidriera visual, directa y facil de recorrer.
+          </p>
+        </div>
+        <div class="smoke-tags">
+          <span>Bongs</span>
+          <span>Pipas</span>
+          <span>Sedas</span>
+          <span>Grinders</span>
+          <span>Vapos</span>
+        </div>
+      </section>
+
+      <section id="combos" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Promos</p>
+          <h2>Combos</h2>
+        </div>
+        <div id="combo-grid" class="combo-grid"></div>
+      </section>
+
+      <section id="contacto" class="section contact-section">
+        <div>
+          <p class="eyebrow">Atencion directa</p>
+          <h2>Consultanos por disponibilidad</h2>
+          <p id="contact-text">
+            Escribinos por WhatsApp o Instagram para confirmar stock, precios y retiros.
+          </p>
+        </div>
+        <div class="contact-actions">
+          <a class="button primary" data-whatsapp-link href="#">WhatsApp</a>
+          <a class="button ghost" id="instagram-link" href="#" target="_blank" rel="noreferrer">
+            Instagram
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Canopia Smoke & Grow Shop</span>
+      <a href="EDITAR_WEB.html">Editar catalogo y tema</a>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

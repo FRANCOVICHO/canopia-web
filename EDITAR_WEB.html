@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Editar Canopia</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body {
+        background: var(--bg);
+      }
+
+      .editor {
+        width: min(1100px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2rem 0 4rem;
+      }
+
+      .editor-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+
+      .editor-card {
+        border: 1px solid var(--line);
+        border-radius: 0.7rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      label {
+        display: grid;
+        gap: 0.35rem;
+        margin: 0.8rem 0;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 0.45rem;
+        padding: 0.75rem;
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.28);
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 220px;
+        resize: vertical;
+      }
+
+      .editor-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem;
+        margin: 1rem 0;
+      }
+
+      .editor-actions button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .help {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      @media (max-width: 800px) {
+        .editor-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/logo-canopia.png" alt="" />
+        <span>
+          <strong>Canopia</strong>
+          <small>Editor local</small>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <a href="index.html">Volver a la web</a>
+      </nav>
+    </header>
+
+    <main class="editor">
+      <p class="eyebrow">Acceso directo</p>
+      <h1>Editar catalogo y tema</h1>
+      <p class="help">
+        Este panel trabaja con el archivo <strong>data/site.json</strong>. Cambia datos,
+        descarga el JSON y reemplaza ese archivo antes de publicar. Es gratis porque no usa
+        base de datos ni servidor pago.
+      </p>
+
+      <div class="editor-actions">
+        <button class="button primary" type="button" id="download-json">Descargar JSON</button>
+        <button class="button ghost" type="button" id="copy-json">Copiar JSON</button>
+        <button class="button ghost" type="button" id="reset-json">Recargar original</button>
+      </div>
+
+      <section class="editor-grid">
+        <div class="editor-card">
+          <h2>Datos rapidos</h2>
+          <label>
+            WhatsApp
+            <input id="whatsapp" placeholder="5491100000000" />
+          </label>
+          <label>
+            Instagram
+            <input id="instagram" placeholder="https://instagram.com/canopia" />
+          </label>
+          <label>
+            Mensaje contacto
+            <input id="message" />
+          </label>
+          <h3>Planillas online</h3>
+          <label>
+            URL CSV productos
+            <input id="products-csv-url" placeholder="https://docs.google.com/spreadsheets/..." />
+          </label>
+          <label>
+            URL CSV categorias
+            <input id="categories-csv-url" placeholder="Opcional" />
+          </label>
+          <label>
+            URL CSV combos
+            <input id="combos-csv-url" placeholder="Opcional" />
+          </label>
+          <h3>Colores</h3>
+          <label>Fondo <input type="color" id="color-bg" /></label>
+          <label>Verde neon <input type="color" id="color-green" /></label>
+          <label>Lima <input type="color" id="color-lime" /></label>
+          <label>Violeta <input type="color" id="color-violet" /></label>
+          <label>Fucsia <input type="color" id="color-pink" /></label>
+        </div>
+
+        <div class="editor-card">
+          <h2>JSON completo</h2>
+          <p class="help">
+            Para productos, precios, categorias y combos, edita aca. Mantene comillas y comas
+            como vienen.
+          </p>
+          <textarea id="json-editor" spellcheck="false"></textarea>
+        </div>
+      </section>
+    </main>
+
+    <script src="editor.js"></script>
+  </body>
+</html>

@@ -1,0 +1,115 @@
+{
+  "theme": {
+    "bg": "#0d0f10",
+    "panel": "#10251f",
+    "panel-2": "#15191c",
+    "text": "#f4f7f2",
+    "muted": "#a9b4ad",
+    "green": "#29ff7a",
+    "lime": "#d7ff37",
+    "violet": "#9b4dff",
+    "pink": "#ff3dd8"
+  },
+  "onlineData": {
+    "productsCsvUrl": "",
+    "categoriesCsvUrl": "",
+    "combosCsvUrl": ""
+  },
+  "contact": {
+    "whatsapp": "5491100000000",
+    "instagram": "https://instagram.com/canopia",
+    "message": "Hola Canopia, quiero consultar por productos.",
+    "text": "Escribinos por WhatsApp o Instagram para confirmar stock, precios, retiros y envios."
+  },
+  "categories": [
+    {
+      "id": "parafernalia",
+      "name": "Parafernalia",
+      "description": "Pipas, bongs, bandejas, sedas, filtros y accesorios smoke."
+    },
+    {
+      "id": "grow",
+      "name": "Grow indoor",
+      "description": "Sustratos, fertilizantes, macetas, carpas, luces y control."
+    },
+    {
+      "id": "picadores",
+      "name": "Picadores",
+      "description": "Grinders metalicos, acrilicos y accesorios de preparado."
+    },
+    {
+      "id": "combos",
+      "name": "Combos",
+      "description": "Kits smoke y grow listos para arrancar con precio cerrado."
+    }
+  ],
+  "products": [
+    {
+      "id": "kit-inicio-grow",
+      "name": "Kit inicio grow",
+      "category": "grow",
+      "description": "Base simple para arrancar: maceta, sustrato y medidor.",
+      "price": 28000,
+      "tag": "Grow",
+      "featured": true
+    },
+    {
+      "id": "bong-neon",
+      "name": "Bong vidrio neon",
+      "category": "parafernalia",
+      "description": "Pieza de vidrio con detalle de color y buena presencia en vidriera.",
+      "price": 42000,
+      "tag": "Smoke"
+    },
+    {
+      "id": "seda-premium",
+      "name": "Sedas premium",
+      "category": "parafernalia",
+      "description": "Pack de sedas finas para rotacion diaria.",
+      "price": 2500,
+      "tag": "Accesorio"
+    },
+    {
+      "id": "grinder-metal",
+      "name": "Picador metalico",
+      "category": "picadores",
+      "description": "Grinder resistente de cuatro partes con cierre magnetico.",
+      "price": 15500,
+      "tag": "Destacado"
+    },
+    {
+      "id": "fertilizante-flora",
+      "name": "Fertilizante flora",
+      "category": "grow",
+      "description": "Nutriente para etapa de floracion. Consultar marcas disponibles.",
+      "price": 18500,
+      "tag": "Grow"
+    },
+    {
+      "id": "bandeja-rolling",
+      "name": "Bandeja rolling",
+      "category": "parafernalia",
+      "description": "Bandeja practica para preparar y mantener todo ordenado.",
+      "price": 9800,
+      "tag": "Smoke"
+    }
+  ],
+  "combos": [
+    {
+      "id": "combo-smoke",
+      "name": "Combo smoke diario",
+      "description": "Para resolver lo basico sin dar vueltas.",
+      "items": ["Sedas premium", "Filtros", "Bandeja rolling", "Encendedor"],
+      "price": 14500,
+      "tag": "Smoke"
+    },
+    {
+      "id": "combo-grow",
+      "name": "Combo grow inicio",
+      "description": "Una base simple para empezar cultivo indoor.",
+      "items": ["Sustrato", "Maceta", "Medidor", "Fertilizante inicial"],
+      "price": 36500,
+      "tag": "Grow"
+    }
+  ]
+}
