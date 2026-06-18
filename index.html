@@ -34,6 +34,7 @@
         <a href="#smoke">Smoke</a>
         <a href="#combos">Combos</a>
         <a href="#contacto">Contacto</a>
+        <button class="cart-button" type="button" id="open-cart">Carrito <span id="cart-count">0</span></button>
       </nav>
     </header>
 
@@ -143,8 +144,38 @@
 
     <footer class="site-footer">
       <span>Canopia Smoke & Grow Shop</span>
-      <a href="EDITAR_WEB.html">Editar catalogo y tema</a>
+      <span>Catalogo online con stock actualizado</span>
     </footer>
+
+    <aside class="cart-panel" id="cart-panel" aria-hidden="true">
+      <div class="cart-dialog" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <div class="cart-head">
+          <h2 id="cart-title">Carrito</h2>
+          <button class="icon-button" type="button" id="close-cart" aria-label="Cerrar carrito">x</button>
+        </div>
+        <div id="cart-items" class="cart-items"></div>
+        <div class="cart-total">
+          <span>Total</span>
+          <strong id="cart-total">$0</strong>
+        </div>
+        <form id="checkout-form" class="checkout-form">
+          <label>
+            Nombre
+            <input name="name" autocomplete="name" required />
+          </label>
+          <label>
+            WhatsApp
+            <input name="phone" autocomplete="tel" required />
+          </label>
+          <label>
+            Nota
+            <textarea name="note" placeholder="Retiro, envio, horario, referencias..."></textarea>
+          </label>
+          <button class="button primary" type="submit">Confirmar compra</button>
+          <p id="checkout-message" class="checkout-message"></p>
+        </form>
+      </div>
+    </aside>
 
     <script src="app.js"></script>
   </body>

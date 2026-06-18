@@ -24,14 +24,27 @@ const defaultData = {
 
 let store = defaultData;
 let activeCategory = "todos";
+let cart = JSON.parse(localStorage.getItem("canopia_cart") || "[]");
 
 async function loadStore() {
   try {
     const response = await fetch("data/site.json", { cache: "no-store" });
     store = { ...defaultData, ...(await response.json()) };
     await loadOnlineData();
+    await loadDatabaseProducts();
   } catch (error) {
     console.warn("No se pudo cargar data/site.json", error);
+  }
+}
+
+async function loadDatabaseProducts() {
+  try {
+    const response = await fetch("/api/products", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.products?.length) store.products = data.products;
+  } catch (error) {
+    console.warn("No se pudo cargar el catalogo online", error);
   }
 }
 
@@ -227,15 +240,30 @@ function renderProducts() {
             <span class="badge">${product.tag}</span>
             <h3>${product.name}</h3>
             <p>${product.description}</p>
+            <span class="stock-line">${stockLabel(product.stock)}</span>
             <div class="product-meta">
               <span class="price">${formatPrice(product.price)}</span>
-              <a class="button ghost" href="${whatsappUrl(product.name)}" target="_blank" rel="noreferrer">Consultar</a>
+              <div class="product-actions">
+                <button class="button primary" type="button" data-add-to-cart="${product.id}" ${Number(product.stock) <= 0 ? "disabled" : ""}>Comprar</button>
+                <a class="button ghost" href="${whatsappUrl(product.name)}" target="_blank" rel="noreferrer">Consultar</a>
+              </div>
             </div>
           </div>
         </article>
       `,
     )
     .join("");
+
+  grid.querySelectorAll("[data-add-to-cart]").forEach((button) => {
+    button.addEventListener("click", () => addToCart(button.dataset.addToCart));
+  });
+}
+
+function stockLabel(stock) {
+  const value = Number(stock || 0);
+  if (value <= 0) return "Sin stock";
+  if (value <= 3) return `Ultimos ${value}`;
+  return `Stock: ${value}`;
 }
 
 function renderCombos() {
@@ -293,6 +321,153 @@ function setupNav() {
   });
 }
 
+function addToCart(productId) {
+  const product = store.products.find((item) => item.id === productId);
+  if (!product || Number(product.stock) <= 0) return;
+
+  const existing = cart.find((item) => item.id === productId);
+  if (existing) {
+    if (existing.quantity < Number(product.stock)) existing.quantity += 1;
+  } else {
+    cart.push({ id: productId, quantity: 1 });
+  }
+
+  saveCart();
+  openCart();
+}
+
+function saveCart() {
+  localStorage.setItem("canopia_cart", JSON.stringify(cart));
+  renderCart();
+}
+
+function renderCart() {
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const total = cart.reduce((sum, item) => {
+    const product = store.products.find((entry) => entry.id === item.id);
+    return sum + (product ? product.price * item.quantity : 0);
+  }, 0);
+
+  document.querySelector("#cart-count").textContent = String(count);
+  document.querySelector("#cart-total").textContent = formatPrice(total);
+
+  const items = document.querySelector("#cart-items");
+  if (!cart.length) {
+    items.innerHTML = "<p>Tu carrito esta vacio.</p>";
+    return;
+  }
+
+  items.innerHTML = cart
+    .map((item) => {
+      const product = store.products.find((entry) => entry.id === item.id);
+      if (!product) return "";
+      return `
+        <div class="cart-line">
+          <div>
+            <strong>${product.name}</strong>
+            <span>${formatPrice(product.price)} x ${item.quantity}</span>
+          </div>
+          <div class="quantity-controls">
+            <button type="button" data-cart-dec="${item.id}">-</button>
+            <strong>${item.quantity}</strong>
+            <button type="button" data-cart-inc="${item.id}">+</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  items.querySelectorAll("[data-cart-dec]").forEach((button) => {
+    button.addEventListener("click", () => changeQuantity(button.dataset.cartDec, -1));
+  });
+  items.querySelectorAll("[data-cart-inc]").forEach((button) => {
+    button.addEventListener("click", () => changeQuantity(button.dataset.cartInc, 1));
+  });
+}
+
+function changeQuantity(productId, delta) {
+  const product = store.products.find((entry) => entry.id === productId);
+  const item = cart.find((entry) => entry.id === productId);
+  if (!item || !product) return;
+
+  item.quantity += delta;
+  if (item.quantity <= 0) cart = cart.filter((entry) => entry.id !== productId);
+  if (item.quantity > Number(product.stock)) item.quantity = Number(product.stock);
+  saveCart();
+}
+
+function openCart() {
+  document.querySelector("#cart-panel").classList.add("is-open");
+  document.querySelector("#cart-panel").setAttribute("aria-hidden", "false");
+}
+
+function closeCart() {
+  document.querySelector("#cart-panel").classList.remove("is-open");
+  document.querySelector("#cart-panel").setAttribute("aria-hidden", "true");
+}
+
+function setupCart() {
+  document.querySelector("#open-cart").addEventListener("click", openCart);
+  document.querySelector("#close-cart").addEventListener("click", closeCart);
+  document.querySelector("#cart-panel").addEventListener("click", (event) => {
+    if (event.target.id === "cart-panel") closeCart();
+  });
+  document.querySelector("#checkout-form").addEventListener("submit", checkout);
+  renderCart();
+}
+
+async function checkout(event) {
+  event.preventDefault();
+  const message = document.querySelector("#checkout-message");
+  if (!cart.length) {
+    message.textContent = "Agrega productos antes de confirmar.";
+    return;
+  }
+
+  const form = new FormData(event.currentTarget);
+  message.textContent = "Confirmando compra...";
+
+  try {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer: {
+          name: form.get("name"),
+          phone: form.get("phone"),
+          note: form.get("note"),
+        },
+        items: cart,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "No se pudo confirmar la compra.");
+
+    cart = [];
+    saveCart();
+    await loadDatabaseProducts();
+    renderProducts();
+    setupHeroFeature();
+    message.textContent = "Compra confirmada. Te abrimos WhatsApp con el resumen.";
+    window.open(whatsappOrderUrl(result), "_blank", "noreferrer");
+  } catch (error) {
+    message.textContent = error.message;
+  }
+}
+
+function whatsappOrderUrl(order) {
+  const lines = [
+    "Hola Canopia, confirme esta compra desde la web:",
+    ...order.items.map((item) => `- ${item.name} x${item.quantity}: ${formatPrice(item.subtotal)}`),
+    `Total: ${formatPrice(order.total)}`,
+    `Nombre: ${order.customer.name}`,
+    `Telefono: ${order.customer.phone}`,
+    order.customer.note ? `Nota: ${order.customer.note}` : "",
+  ].filter(Boolean);
+
+  return `https://wa.me/${store.contact.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
 async function init() {
   await loadStore();
   applyTheme();
@@ -303,6 +478,7 @@ async function init() {
   setupContact();
   setupHeroFeature();
   setupNav();
+  setupCart();
 }
 
 init();
