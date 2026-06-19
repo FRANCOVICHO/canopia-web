@@ -25,6 +25,8 @@ const defaultData = {
 let store = defaultData;
 let activeCategory = "todos";
 let cart = JSON.parse(localStorage.getItem("canopia_cart") || "[]");
+let catalogUpdatedAt = null;
+let catalogPollTimer = null;
 
 async function loadStore() {
   try {
@@ -40,12 +42,53 @@ async function loadStore() {
 async function loadDatabaseProducts() {
   try {
     const response = await fetch("/api/products", { cache: "no-store" });
-    if (!response.ok) return;
+    if (!response.ok) return false;
     const data = await response.json();
     if (data.products?.length) store.products = data.products;
+    catalogUpdatedAt = data.updatedAt || catalogUpdatedAt;
+    setLiveStatus(true);
+    return true;
   } catch (error) {
     console.warn("No se pudo cargar el catalogo online", error);
+    setLiveStatus(false);
+    return false;
   }
+}
+
+function setLiveStatus(isLive) {
+  const badge = document.querySelector("#live-sync");
+  if (!badge) return;
+  badge.hidden = !isLive;
+  badge.title = isLive ? "Catalogo conectado en tiempo real" : "";
+}
+
+function refreshCatalogViews() {
+  renderFilters();
+  renderProducts();
+  renderHeroSlider();
+  renderCombos();
+  setupHeroFeature();
+  renderCart();
+}
+
+async function pollCatalog() {
+  try {
+    const response = await fetch("/api/products", { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (!data.updatedAt || data.updatedAt === catalogUpdatedAt) return;
+    catalogUpdatedAt = data.updatedAt;
+    if (data.products) store.products = data.products;
+    refreshCatalogViews();
+    setLiveStatus(true);
+  } catch {
+    setLiveStatus(false);
+  }
+}
+
+function startCatalogPolling() {
+  if (catalogPollTimer) clearInterval(catalogPollTimer);
+  catalogPollTimer = setInterval(pollCatalog, 5000);
 }
 
 async function loadOnlineData() {
@@ -169,11 +212,79 @@ function slugify(value) {
     .replace(/^-|-$/g, "");
 }
 
-function applyTheme() {
+function applyThemeVariables() {
+  // Aplica variables customizadas desde data/site.json si existen
   Object.entries(store.theme || {}).forEach(([key, value]) => {
     document.documentElement.style.setProperty(`--${key}`, value);
   });
 }
+
+function getSavedTheme() {
+  try {
+    return localStorage.getItem("canopia_theme");
+  } catch {
+    return null;
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem("canopia_theme", theme);
+  } catch {
+    // ignore
+  }
+}
+
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
+function setupThemePrompt() {
+  const dialog = document.querySelector("#theme-dialog");
+  const buttons = dialog?.querySelectorAll("[data-theme-value]");
+  const themeToggle = document.querySelector("#theme-toggle");
+
+  const applyFromStorageOrPrompt = () => {
+    const saved = getSavedTheme();
+    if (saved === "dark" || saved === "light") {
+      setTheme(saved);
+      return;
+    }
+    if (dialog && typeof dialog.showModal === "function") {
+      dialog.showModal();
+    } else if (dialog) {
+      dialog.setAttribute("open", "true");
+    }
+  };
+
+  if (buttons?.length) {
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const value = btn.dataset.themeValue;
+        if (value !== "dark" && value !== "light") return;
+        setTheme(value);
+        saveTheme(value);
+        try {
+          dialog?.close();
+        } catch {
+          // ignore
+        }
+      });
+    });
+  }
+
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      setTheme(next);
+      saveTheme(next);
+    });
+  }
+
+  applyFromStorageOrPrompt();
+}
+
 
 function initials(text) {
   return text
@@ -257,6 +368,24 @@ function renderProducts() {
   grid.querySelectorAll("[data-add-to-cart]").forEach((button) => {
     button.addEventListener("click", () => addToCart(button.dataset.addToCart));
   });
+}
+
+function renderHeroSlider() {
+  const track = document.querySelector("#hero-slider-track");
+  const products = store.products.filter((product) => product.visible !== false).slice(0, 8);
+  if (!products.length) return;
+
+  track.innerHTML = [...products, ...products]
+    .map(
+      (product) => `
+        <a class="hero-slide" href="#catalogo">
+          <span>${product.tag}</span>
+          <strong>${product.name}</strong>
+          <small>${formatPrice(product.price)} · ${stockLabel(product.stock)}</small>
+        </a>
+      `,
+    )
+    .join("");
 }
 
 function stockLabel(stock) {
@@ -470,15 +599,24 @@ function whatsappOrderUrl(order) {
 
 async function init() {
   await loadStore();
-  applyTheme();
+  // Tema: pregunta si no hay elección guardada
+  setupThemePrompt();
+  applyThemeVariables();
+
   renderCategories();
   renderFilters();
   renderProducts();
+  renderHeroSlider();
   renderCombos();
   setupContact();
   setupHeroFeature();
   setupNav();
   setupCart();
+
+  if (catalogUpdatedAt) {
+    refreshCatalogViews();
+    startCatalogPolling();
+  }
 }
 
 init();

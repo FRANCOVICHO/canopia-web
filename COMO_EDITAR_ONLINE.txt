@@ -1,71 +1,45 @@
 CANOPIA - COMO EDITAR PRODUCTOS ONLINE GRATIS
 
-La web esta preparada para vivir online en Cloudflare Pages.
-Tu computadora NO tiene que quedar prendida. La PC solo se usa para preparar o subir cambios.
+La web vive en Cloudflare Pages con base de datos D1 gratuita.
+Tu computadora NO tiene que quedar prendida.
 
-FORMA RECOMENDADA PARA EDITAR PRODUCTOS
+FORMA RECOMENDADA (NUEVA)
 
-1. Entra a Google Drive.
-2. Crea una planilla nueva de Google Sheets.
-3. Copia las columnas de este archivo:
-   plantilla-productos.csv
+1. Entra a tu tienda online y abre:
+   /admin.html
 
-Columnas de productos:
+   Ejemplo:
+   https://canopiagrow.pages.dev/admin.html
 
-id          = nombre interno sin espacios. Ejemplo: bong-neon
-nombre      = nombre que ve el cliente.
-categoria   = parafernalia, grow, picadores, combos, etc.
-descripcion = texto corto del producto.
-precio      = numero sin simbolo $. Ejemplo: 42000
-etiqueta    = Smoke, Grow, Nuevo, Oferta, Destacado.
-destacado   = si o no. Solo uno deberia estar en "si".
-visible     = si o no. Si pones "no", no aparece en la web.
-imagen      = link directo a una imagen. Puede quedar vacio.
+2. Ingresa la clave de admin (ADMIN_TOKEN configurada en Cloudflare).
 
-4. En Google Sheets anda a:
-   Archivo > Compartir > Publicar en la web.
+3. Desde ahi podes:
+   - Crear productos
+   - Cambiar precios
+   - Subir o bajar stock
+   - Ocultar productos
+   - Marcar destacados
 
-5. Elegi:
-   Hoja: la hoja de productos.
-   Formato: Valores separados por comas (.csv).
+4. La tienda principal se actualiza sola en unos segundos.
+   No hace falta subir archivos ni tocar JSON.
 
-6. Copia el link publicado.
+CONFIGURAR LA CLAVE DE ADMIN (UNA VEZ)
 
-7. Abri EDITAR_CANOPIA.bat.
+1. Cloudflare > Workers & Pages > canopiagrow > Settings
+2. Environment variables > Add
+3. Name: ADMIN_TOKEN
+4. Value: una clave secreta que solo vos conozcas
+5. Save y redeploy
 
-8. Pega ese link en:
-   URL CSV productos
+FORMA ALTERNATIVA (GOOGLE SHEETS)
 
-9. Toca "Descargar JSON".
+Todavia podes usar planillas CSV publicadas si queres.
+Ver columnas en plantilla-productos.csv y pegar el link en data/site.json.
 
-10. Reemplaza el archivo:
-    data/site.json
-
-11. Sube la carpeta a Cloudflare Pages o hace deploy desde GitHub.
-
-Desde ese momento, cuando edites precios/productos en Google Sheets, la web online los va a leer desde la planilla publicada.
-
-CATEGORIAS Y COMBOS
-
-Tambien podes usar:
-
-plantilla-categorias.csv
-plantilla-combos.csv
-
-Es opcional. Si no pegas links de categorias o combos, la web usa los datos guardados en data/site.json.
+Pero el panel /admin.html es mas directo y sincroniza stock y pedidos.
 
 HOSTING GRATIS 24/7
 
-Usar Cloudflare Pages:
-
-1. Crear cuenta gratis en Cloudflare.
-2. Ir a Workers & Pages.
-3. Crear proyecto de Pages.
-4. Subir la carpeta del sitio o conectarla con GitHub.
-5. Framework preset: None.
-6. Build command: vacio.
-7. Output directory: vacio o "/".
-
-Importante:
-Cloudflare aloja la web online. Google Sheets aloja la lista editable de productos.
-Tu computadora puede estar apagada y la web sigue funcionando.
+- Cloudflare Pages: sitio online
+- Cloudflare D1: catalogo y pedidos
+- Sin costo mensual para este tamano de tienda

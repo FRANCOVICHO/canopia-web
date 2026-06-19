@@ -18,7 +18,8 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="#inicio" aria-label="Canopia inicio">
+        <a class="brand" href="#inicio" aria-label="Canopia inicio">
+
         <img class="brand-logo" src="assets/logo-canopia.png" alt="" />
         <span>
           <strong>Canopia</strong>
@@ -34,12 +35,29 @@
         <a href="#smoke">Smoke</a>
         <a href="#combos">Combos</a>
         <a href="#contacto">Contacto</a>
+        <button class="theme-toggle button ghost" type="button" id="theme-toggle" aria-label="Cambiar modo">Modo</button>
+
+        <span class="live-badge" id="live-sync" hidden title="Catalogo conectado en tiempo real">
+          <span class="live-dot"></span> En vivo
+        </span>
         <button class="cart-button" type="button" id="open-cart">Carrito <span id="cart-count">0</span></button>
       </nav>
     </header>
 
-    <main>
+<main>
+      <dialog id="theme-dialog" class="theme-dialog" aria-label="Selector de tema">
+        <div class="theme-dialog-card">
+          <h2>Elegí tu modo</h2>
+          <p>Podés cambiarlo cuando quieras desde el botón.</p>
+          <div class="theme-dialog-actions">
+            <button type="button" class="button primary" data-theme-value="dark">Modo oscuro</button>
+            <button type="button" class="button ghost" data-theme-value="light">Modo claro</button>
+          </div>
+        </div>
+      </dialog>
+
       <section id="inicio" class="hero">
+
         <div class="hero-copy">
           <p class="eyebrow">Parafernalia, cultivo y accesorios</p>
           <h1>Todo para armar tu ritual smoke y tu espacio grow.</h1>
@@ -51,9 +69,14 @@
             <a class="button primary" href="#catalogo">Ver catalogo</a>
             <a class="button ghost" data-whatsapp-link href="#contacto">Consultar</a>
           </div>
+          <div class="hero-slider" aria-label="Productos destacados">
+            <div class="hero-slider-track" id="hero-slider-track"></div>
+          </div>
         </div>
         <div class="hero-visual" aria-hidden="true">
-          <img class="hero-logo" src="assets/logo-canopia.png" alt="" />
+          <div class="logo-blend">
+            <img class="hero-logo" src="assets/logo-canopia-soft.png" alt="" />
+          </div>
           <div class="hero-card">
             <small>Destacado</small>
             <strong id="hero-feature">Kit inicio grow</strong>
@@ -177,6 +200,10 @@
       </div>
     </aside>
 
+    <script type="module">
+      import "./theme-utils.js";
+    </script>
     <script src="app.js"></script>
+
   </body>
 </html>

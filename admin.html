@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Canopia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="assets/logo-canopia.png" alt="" />
+        <span>
+          <strong>Canopia</strong>
+          <small>Panel admin</small>
+        </span>
+      </a>
+      <nav class="main-nav">
+        <span class="live-badge" id="live-badge" hidden>
+          <span class="live-dot"></span> En vivo
+        </span>
+        <a href="index.html" target="_blank" rel="noreferrer">Ver tienda</a>
+        <button class="button ghost" type="button" id="logout-btn" hidden>Salir</button>
+      </nav>
+    </header>
+
+    <main class="admin-shell">
+      <section class="admin-login" id="login-section">
+        <div class="admin-card login-card">
+          <p class="eyebrow">Acceso privado</p>
+          <h1>Gestionar catalogo</h1>
+          <p class="help">
+            Los cambios se guardan en la base de datos gratuita de Cloudflare y la tienda se
+            actualiza sola en segundos.
+          </p>
+          <form id="login-form" class="admin-form">
+            <label>
+              Clave de admin
+              <input type="password" name="token" autocomplete="current-password" required />
+            </label>
+            <button class="button primary" type="submit">Entrar</button>
+            <p class="form-message" id="login-message"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="admin-panel" id="admin-panel" hidden>
+        <div class="admin-top">
+          <div>
+            <p class="eyebrow">Catalogo online</p>
+            <h1>Productos y stock</h1>
+            <p class="help" id="sync-status">Sincronizado con la tienda.</p>
+          </div>
+          <button class="button primary" type="button" id="new-product-btn">Nuevo producto</button>
+        </div>
+
+        <div class="admin-stats" id="admin-stats"></div>
+
+        <div class="admin-card">
+          <div class="admin-toolbar">
+            <input type="search" id="search-products" placeholder="Buscar producto..." />
+            <select id="filter-category">
+              <option value="todos">Todas las categorias</option>
+            </select>
+          </div>
+          <div class="product-table-wrap">
+            <table class="product-table" id="product-table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Categoria</th>
+                  <th>Precio</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="product-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="admin-dialog" id="product-dialog">
+      <form id="product-form" class="admin-form" method="dialog">
+        <div class="dialog-head">
+          <h2 id="dialog-title">Nuevo producto</h2>
+          <button class="icon-button" type="button" id="close-dialog" aria-label="Cerrar">x</button>
+        </div>
+        <input type="hidden" name="mode" value="create" />
+        <div class="admin-form-grid">
+          <label>
+            ID
+            <input name="id" placeholder="bong-neon" />
+          </label>
+          <label>
+            Nombre
+            <input name="name" required />
+          </label>
+          <label>
+            Categoria
+            <select name="category" id="form-category"></select>
+          </label>
+          <label>
+            Precio
+            <input name="price" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Stock
+            <input name="stock" type="number" min="0" step="1" required />
+          </label>
+          <label>
+            Etiqueta
+            <input name="tag" placeholder="Smoke, Grow, Nuevo..." />
+          </label>
+          <label class="full">
+            Imagen (URL)
+            <input name="image" placeholder="https://..." />
+          </label>
+          <label class="full">
+            Descripcion
+            <textarea name="description" rows="3"></textarea>
+          </label>
+          <label class="checkbox">
+            <input name="featured" type="checkbox" />
+            Destacado
+          </label>
+          <label class="checkbox">
+            <input name="visible" type="checkbox" checked />
+            Visible en tienda
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button class="button ghost" type="button" id="cancel-dialog">Cancelar</button>
+          <button class="button primary" type="submit">Guardar</button>
+        </div>
+        <p class="form-message" id="form-message"></p>
+      </form>
+    </dialog>
+
+    <script src="admin.js"></script>
+  </body>
+</html>
