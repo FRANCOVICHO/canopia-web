@@ -24,14 +24,18 @@ const defaultData = {
 
 let store = defaultData;
 let activeCategory = "todos";
+let searchQuery = "";
+let activeSort = "default";
 let cart = JSON.parse(localStorage.getItem("canopia_cart") || "[]");
 let catalogUpdatedAt = null;
 let catalogPollTimer = null;
+let apiBase = "";
 
 async function loadStore() {
   try {
     const response = await fetch("data/site.json", { cache: "no-store" });
     store = { ...defaultData, ...(await response.json()) };
+    apiBase = store.editorUrl || "";
     await loadOnlineData();
     await loadDatabaseProducts();
   } catch (error) {
@@ -41,7 +45,7 @@ async function loadStore() {
 
 async function loadDatabaseProducts() {
   try {
-    const response = await fetch("/api/products", { cache: "no-store" });
+    const response = await fetch(`${apiBase}/api/products`, { cache: "no-store" });
     if (!response.ok) return false;
     const data = await response.json();
     if (data.products?.length) store.products = data.products;
@@ -73,7 +77,7 @@ function refreshCatalogViews() {
 
 async function pollCatalog() {
   try {
-    const response = await fetch("/api/products", { cache: "no-store" });
+    const response = await fetch(`${apiBase}/api/products`, { cache: "no-store" });
     if (!response.ok) return;
     const data = await response.json();
     if (!data.updatedAt || data.updatedAt === catalogUpdatedAt) return;
@@ -331,12 +335,40 @@ function renderFilters() {
   });
 }
 
+function cleanString(str) {
+  return (str || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function renderProducts() {
   const grid = document.querySelector("#product-grid");
-  const products =
+  
+  // 1. Filtrar por categoría
+  let products =
     activeCategory === "todos"
       ? store.products.filter((product) => product.visible !== false)
       : store.products.filter((product) => product.visible !== false && product.category === activeCategory);
+
+  // 2. Filtrar por texto de búsqueda
+  if (searchQuery.trim()) {
+    const query = cleanString(searchQuery);
+    products = products.filter(
+      (product) =>
+        cleanString(product.name).includes(query) ||
+        cleanString(product.description || "").includes(query),
+    );
+  }
+
+  // 3. Ordenar
+  if (activeSort === "price-asc") {
+    products.sort((a, b) => a.price - b.price);
+  } else if (activeSort === "price-desc") {
+    products.sort((a, b) => b.price - a.price);
+  } else if (activeSort === "name-asc") {
+    products.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   grid.innerHTML = products
     .map(
@@ -557,7 +589,7 @@ async function checkout(event) {
   message.textContent = "Confirmando compra...";
 
   try {
-    const response = await fetch("/api/orders", {
+    const response = await fetch(`${apiBase}/api/orders`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -597,6 +629,25 @@ function whatsappOrderUrl(order) {
   return `https://wa.me/${store.contact.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
 
+function setupCatalogControls() {
+  const searchInput = document.querySelector("#catalog-search");
+  const sortSelect = document.querySelector("#catalog-sort");
+
+  if (searchInput) {
+    searchInput.addEventListener("input", (event) => {
+      searchQuery = event.target.value;
+      renderProducts();
+    });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", (event) => {
+      activeSort = event.target.value;
+      renderProducts();
+    });
+  }
+}
+
 async function init() {
   await loadStore();
   // Tema: pregunta si no hay elección guardada
@@ -612,6 +663,7 @@ async function init() {
   setupHeroFeature();
   setupNav();
   setupCart();
+  setupCatalogControls();
 
   if (catalogUpdatedAt) {
     refreshCatalogViews();

@@ -510,6 +510,41 @@ h2 {
   background: var(--green);
 }
 
+.catalog-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-box input,
+.sort-box select {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.search-box input:focus,
+.sort-box select:focus {
+  border-color: rgba(41, 255, 122, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sort-box select {
+  cursor: pointer;
+  appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a9b4ad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
 .split-section,
 .contact-section {
   display: grid;
