@@ -10,6 +10,7 @@
   --pink: #ff42d3;
   --line: rgba(244, 247, 242, 0.12);
   --shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+  --header-bg: rgba(13, 15, 16, 0.86);
 }
 
 :root[data-theme="dark"] {
@@ -24,6 +25,7 @@
   --violet: #8558ff;
   --pink: #ff4bd8;
   --shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+  --header-bg: rgba(13, 15, 16, 0.86);
 }
 
 :root[data-theme="light"] {
@@ -38,6 +40,7 @@
   --lime: #7bd100;
   --violet: #6b42ff;
   --pink: #ff2bbf;
+  --header-bg: rgba(246, 247, 246, 0.86);
 }
 
 * {
@@ -73,7 +76,7 @@ a {
   gap: 1rem;
   padding: 1rem clamp(1rem, 4vw, 3rem);
   border-bottom: 1px solid var(--line);
-  background: rgba(13, 15, 16, 0.86);
+  background: var(--header-bg);
   backdrop-filter: blur(18px);
 }
 
@@ -87,13 +90,12 @@ a {
 .brand-logo {
   width: 2.6rem;
   height: 2.6rem;
-  border-radius: 0.35rem;
-  object-fit: cover;
-  background:
-    radial-gradient(circle at 35% 20%, rgba(215, 255, 55, 0.26), transparent 55%),
-    linear-gradient(135deg, rgba(41, 255, 122, 0.18), rgba(155, 77, 255, 0.16)),
-    rgba(13, 15, 16, 0.35);
-  box-shadow: 0 0 18px rgba(41, 255, 122, 0.2);
+  object-fit: contain;
+  transition: filter 0.3s ease;
+}
+
+.brand:hover .brand-logo {
+  filter: drop-shadow(0 0 8px var(--green));
 }
 
 .brand strong,
@@ -300,22 +302,26 @@ a {
   width: min(78%, 420px);
   aspect-ratio: 1;
   place-items: center;
-  border-radius: 1rem;
-  background:
-    radial-gradient(circle at 38% 28%, rgba(215, 255, 55, 0.2), transparent 36%),
-    radial-gradient(circle at 72% 64%, rgba(255, 61, 216, 0.14), transparent 38%),
-    linear-gradient(145deg, rgba(41, 255, 122, 0.12), rgba(13, 15, 16, 0.18));
-  box-shadow: 0 0 70px rgba(41, 255, 122, 0.2);
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  box-shadow: 
+    inset 0 0 20px rgba(255, 255, 255, 0.03),
+    0 12px 40px rgba(0, 0, 0, 0.3),
+    0 0 50px rgba(41, 255, 122, 0.15);
+  padding: 1.5rem;
 }
 
 .hero-logo {
   width: 100%;
-  aspect-ratio: 1;
-  border-radius: 1rem;
-  object-fit: cover;
-  filter: saturate(1.08) contrast(1.04);
-  mix-blend-mode: screen;
-  opacity: 0.94;
+  height: 100%;
+  object-fit: contain;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.logo-blend:hover .hero-logo {
+  transform: scale(1.05) rotate(2deg);
 }
 
 .hero-card {
