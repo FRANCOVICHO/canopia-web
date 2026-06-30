@@ -76,7 +76,7 @@ a {
   gap: 1rem;
   padding: 1rem clamp(1rem, 4vw, 3rem);
   border-bottom: 1px solid var(--line);
-  background: var(--header-bg);
+  background: var(--panel);
   backdrop-filter: blur(18px);
 }
 

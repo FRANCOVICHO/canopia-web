@@ -1,11 +1,32 @@
-import { getSavedTheme, saveTheme, applyTheme } from "./theme-utils.js";
-
 const formatPrice = (value) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
     currency: "ARS",
     maximumFractionDigits: 0,
   }).format(value);
+
+const THEME_STORAGE_KEY = "canopia_theme";
+
+function getSavedTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // ignore
+  }
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+}
 
 const defaultData = {
   theme: {},
