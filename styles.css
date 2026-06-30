@@ -1184,4 +1184,4 @@ button { font: inherit; cursor: pointer; }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--panel-2); color: var(--text); cursor: pointer; font-family: inherit; }
 
 /* Admin brand logo */
-.brand-logo { width: 2rem; height: 2rem; object-fit: contain; }
+.brand-logo { height: 2.4rem; width: auto; object-fit: contain; display: block; }
