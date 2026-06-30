@@ -1183,5 +1183,9 @@ button { font: inherit; cursor: pointer; }
 .button.danger { color: #ffd0d0; border-color: rgba(255,80,80,0.35); background: transparent; }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 2.4rem; border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--panel-2); color: var(--text); cursor: pointer; font-family: inherit; }
 
-/* Admin brand logo */
-.brand-logo { height: 2.4rem; width: auto; object-fit: contain; display: block; }
+/* Brand logo icon + text */
+.brand-logo { height: 2.2rem; width: auto; object-fit: contain; display: block; flex-shrink: 0; }
+.brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+.brand-text { display: flex; flex-direction: column; line-height: 1; }
+.brand-text strong { font-size: 0.95rem; font-weight: 900; letter-spacing: 0.06em; color: var(--text); }
+.brand-text small  { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
