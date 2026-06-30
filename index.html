@@ -3,112 +3,183 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Canopia Smoke & Grow Shop: parafernalia, cultivo indoor, accesorios y combos."
-    />
+    <meta name="description" content="Canopia Smoke & Grow Shop: parafernalia, cultivo indoor, accesorios y combos." />
     <title>Canopia Smoke & Grow Shop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+
+    <!-- ── HEADER ─────────────────────────────────── -->
     <header class="site-header">
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
-        Menu
-      </button>
+      <a class="brand" href="#inicio">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 2C16 2 6 10 6 18a10 10 0 0020 0C26 10 16 2 16 2z" fill="#22c55e"/>
+          <path d="M16 8c0 0-4 5-4 9a4 4 0 008 0C20 13 16 8 16 8z" fill="#16a34a"/>
+          <line x1="16" y1="28" x2="16" y2="20" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-text">
+          <strong>CANOPIA</strong>
+          <small>GROW &amp; SMOKE SHOP</small>
+        </span>
+      </a>
+
       <nav id="main-nav" class="main-nav" aria-label="Navegacion principal">
-        <a href="#catalogo">Catalogo</a>
+        <a href="#catalogo">Catálogo</a>
         <a href="#grow">Grow</a>
         <a href="#smoke">Smoke</a>
         <a href="#combos">Combos</a>
         <a href="#contacto">Contacto</a>
-
-        <span class="live-badge" id="live-sync" hidden title="Catalogo conectado en tiempo real">
+        <span class="live-badge" id="live-sync" hidden>
           <span class="live-dot"></span> En vivo
         </span>
-        <button class="fav-nav-button" type="button" id="open-favs" aria-label="Favoritos">
-          ❤️ <span class="fav-count" id="fav-count">0</span>
-        </button>
-        <button class="cart-button" type="button" id="open-cart">Carrito <span id="cart-count">0</span></button>
       </nav>
+
+      <div class="header-actions">
+        <button class="icon-btn" type="button" aria-label="Buscar" id="search-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </button>
+        <button class="icon-btn fav-nav-button" type="button" id="open-favs" aria-label="Favoritos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span class="fav-count" id="fav-count">0</span>
+        </button>
+        <button class="cart-button" type="button" id="open-cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Carrito
+          <span id="cart-count">0</span>
+        </button>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </header>
 
-<main>
-      <section id="inicio" class="hero">
-        <div class="hero-content">
-          <p class="eyebrow">Grow Shop & Smoke Shop</p>
-          <h1>Cultivo Indoor y Parafernalia</h1>
-          <p>Todo lo que necesitas para tu espacio grow y tu ritual smoke. Productos de calidad, precios claros y atención directa.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#catalogo">Ver Catálogo</a>
-            <a class="button ghost" data-whatsapp-link href="#contacto">Consultar</a>
+    <!-- ── SEARCH BAR (colapsable) ────────────────── -->
+    <div class="search-bar-overlay" id="search-bar-overlay" hidden>
+      <div class="search-bar-inner">
+        <input type="search" id="header-search-input" placeholder="Buscar producto..." aria-label="Buscar" />
+        <button class="icon-btn" type="button" id="search-close" aria-label="Cerrar búsqueda">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <main>
+      <!-- ── HERO ───────────────────────────────────── -->
+      <section id="inicio" class="hero-section">
+        <div class="hero-inner">
+          <div class="hero-text">
+            <p class="eyebrow">Grow Shop &amp; Smoke Shop</p>
+            <h1>Cultivo Indoor y<br><span class="accent">Parafernalia</span></h1>
+            <p class="hero-desc">Todo lo que necesitas para tu espacio grow y tu ritual smoke. Productos de calidad, precios claros y atención directa.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#catalogo">Ver Catálogo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+              <a class="btn btn-outline" href="#combos">Explorar Combos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="hero-img-wrap">
+              <img src="https://images.unsplash.com/photo-1603909122634-db30f47fc7e8?w=700&q=80" alt="Cultivo indoor bajo luz LED" loading="eager" />
+            </div>
+            <div class="hero-trust">
+              <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span>Productos<br>de calidad</span>
+              </div>
+              <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <span>Compra<br>segura</span>
+              </div>
+              <div class="trust-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <span>Atención<br>directa</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section quick-cats" aria-label="Categorias principales">
-        <div class="section-heading">
-          <p class="eyebrow">Entradas rapidas</p>
-          <h2>Categorias</h2>
+      <!-- ── BENEFITS BAR ───────────────────────────── -->
+      <div class="benefits-bar">
+        <div class="benefits-inner">
+          <div class="benefit-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            <div><strong>Envíos a todo el país</strong><small>Rápidos y discretos</small></div>
+          </div>
+          <div class="benefit-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <div><strong>Pago seguro</strong><small>Múltiples métodos</small></div>
+          </div>
+          <div class="benefit-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            <div><strong>Mejores precios</strong><small>Calidad garantizada</small></div>
+          </div>
+          <div class="benefit-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <div><strong>Atención personalizada</strong><small>Estamos para asesorarte</small></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CATEGORÍAS ─────────────────────────────── -->
+      <section class="section cats-section">
+        <div class="section-head-row">
+          <h2 class="section-title">Explorá nuestras categorías</h2>
+          <a class="link-arrow" href="#catalogo">Ver catálogo completo <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
         </div>
         <div id="category-grid" class="category-grid"></div>
       </section>
 
-      <section id="catalogo" class="section">
-        <div class="section-heading row">
+      <!-- ── CATÁLOGO ───────────────────────────────── -->
+      <section id="catalogo" class="section catalog-section">
+        <div class="section-head-row">
           <div>
-            <p class="eyebrow">Stock editable</p>
-            <h2>Catalogo</h2>
+            <p class="eyebrow">Stock actualizado</p>
+            <h2 class="section-title">Catálogo</h2>
           </div>
           <div class="catalog-controls">
             <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               <input type="search" id="catalog-search" placeholder="Buscar producto..." aria-label="Buscar producto" />
             </div>
             <div class="sort-box">
               <select id="catalog-sort" aria-label="Ordenar por">
                 <option value="default">Relevancia</option>
-                <option value="price-asc">Precio: Menor a Mayor</option>
-                <option value="price-desc">Precio: Mayor a Menor</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
                 <option value="name-asc">Nombre: A-Z</option>
               </select>
             </div>
           </div>
-          <div class="filters" id="filters" aria-label="Filtrar productos"></div>
         </div>
+        <div class="filters-row" id="filters" aria-label="Filtrar productos"></div>
         <div id="product-grid" class="product-grid"></div>
       </section>
 
+      <!-- ── GROW ───────────────────────────────────── -->
       <section id="grow" class="section split-section">
-        <div>
+        <div class="split-text">
           <p class="eyebrow">Grow shop</p>
-          <h2>Cultivo ordenado por etapa</h2>
-          <p>
-            Sustratos, macetas, fertilizantes, iluminacion, carpas y control de clima.
-            La seccion grow prioriza informacion practica y comparacion rapida.
-          </p>
+          <h2 class="section-title">Cultivo ordenado<br>por etapa</h2>
+          <p>Sustratos, macetas, fertilizantes, iluminación, carpas y control de clima. Todo lo que necesitás para cada fase.</p>
         </div>
         <div class="stage-list">
-          <span>Germinacion</span>
-          <span>Vegetativo</span>
-          <span>Floracion</span>
-          <span>Secado</span>
-          <span>Control</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10"/><circle cx="12" cy="12" r="3"/></svg>Germinación</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M12 12C12 12 7 8 7 4a5 5 0 0 1 10 0c0 4-5 8-5 8z"/></svg>Vegetativo</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/></svg>Floración</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Secado</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Control</span>
         </div>
       </section>
 
-      <section id="smoke" class="section split-section smoke-panel">
-        <div>
+      <!-- ── SMOKE ──────────────────────────────────── -->
+      <section id="smoke" class="section split-section smoke-split">
+        <div class="split-text">
           <p class="eyebrow">Smoke shop</p>
-          <h2>Accesorios con presencia</h2>
-          <p>
-            Pipas, bongs, sedas, filtros, picadores, bandejas, encendedores y piezas para
-            armar una vidriera visual, directa y facil de recorrer.
-          </p>
+          <h2 class="section-title">Accesorios<br>con presencia</h2>
+          <p>Pipas, bongs, sedas, filtros, picadores, bandejas y encendedores. Una vidriera visual, directa y fácil de recorrer.</p>
         </div>
         <div class="smoke-tags">
           <span>Bongs</span>
@@ -119,41 +190,75 @@
         </div>
       </section>
 
+      <!-- ── COMBOS ─────────────────────────────────── -->
       <section id="combos" class="section">
-        <div class="section-heading">
-          <p class="eyebrow">Promos</p>
-          <h2>Combos</h2>
+        <div class="section-head-row">
+          <div>
+            <p class="eyebrow">Promos</p>
+            <h2 class="section-title">Combos</h2>
+          </div>
         </div>
         <div id="combo-grid" class="combo-grid"></div>
       </section>
 
+      <!-- ── CONTACTO ───────────────────────────────── -->
       <section id="contacto" class="section contact-section">
         <div>
-          <p class="eyebrow">Atencion directa</p>
-          <h2>Consultanos por disponibilidad</h2>
-          <p id="contact-text">
-            Escribinos por WhatsApp o Instagram para confirmar stock, precios y retiros.
-          </p>
+          <p class="eyebrow">Atención directa</p>
+          <h2 class="section-title">Consultanos por disponibilidad</h2>
+          <p id="contact-text">Escribinos por WhatsApp o Instagram para confirmar stock, precios, retiros y envíos.</p>
         </div>
         <div class="contact-actions">
-          <a class="button primary" data-whatsapp-link href="#">WhatsApp</a>
-          <a class="button ghost" id="instagram-link" href="#" target="_blank" rel="noreferrer">
+          <a class="btn btn-primary" data-whatsapp-link href="#">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
+            WhatsApp
+          </a>
+          <a class="btn btn-outline" id="instagram-link" href="#" target="_blank" rel="noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
             Instagram
           </a>
         </div>
       </section>
     </main>
 
+    <!-- ── FOOTER ─────────────────────────────────── -->
     <footer class="site-footer">
-      <span>Canopia Smoke & Grow Shop</span>
-      <span>Catalogo online con stock actualizado</span>
+      <a class="brand" href="#inicio">
+        <svg class="brand-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 2C16 2 6 10 6 18a10 10 0 0020 0C26 10 16 2 16 2z" fill="#22c55e"/>
+          <path d="M16 8c0 0-4 5-4 9a4 4 0 008 0C20 13 16 8 16 8z" fill="#16a34a"/>
+          <line x1="16" y1="28" x2="16" y2="20" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-text"><strong>CANOPIA</strong><small>GROW &amp; SMOKE SHOP</small></span>
+      </a>
+      <span class="footer-copy">Catálogo online con stock actualizado</span>
     </footer>
 
+    <!-- ── WHATSAPP STICKY ────────────────────────── -->
+    <div class="wa-sticky" id="wa-sticky">
+      <div class="wa-sticky-inner">
+        <div class="wa-sticky-text">
+          <svg viewBox="0 0 24 24" fill="#22c55e" class="wa-sticky-icon"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
+          <div>
+            <strong>¿Tenés dudas? Escribinos por WhatsApp</strong>
+            <small>Te asesoramos en todo lo que necesites.</small>
+          </div>
+        </div>
+        <a class="btn btn-primary wa-btn" data-whatsapp-link href="#" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
+          Chatear ahora
+        </a>
+      </div>
+    </div>
+
+    <!-- ── CARRITO ────────────────────────────────── -->
     <aside class="cart-panel" id="cart-panel" aria-hidden="true">
       <div class="cart-dialog" role="dialog" aria-modal="true" aria-labelledby="cart-title">
         <div class="cart-head">
           <h2 id="cart-title">Carrito</h2>
-          <button class="icon-button" type="button" id="close-cart" aria-label="Cerrar carrito">x</button>
+          <button class="icon-btn" type="button" id="close-cart" aria-label="Cerrar carrito">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
         <div id="cart-items" class="cart-items"></div>
         <div class="cart-total">
@@ -161,55 +266,48 @@
           <strong id="cart-total">$0</strong>
         </div>
         <form id="checkout-form" class="checkout-form">
-          <label>
-            Nombre
-            <input name="name" autocomplete="name" required />
-          </label>
-          <label>
-            WhatsApp
-            <input name="phone" autocomplete="tel" required />
-          </label>
-          <label>
-            Nota
-            <textarea name="note" placeholder="Retiro, envio, horario, referencias..."></textarea>
-          </label>
-          <button class="button primary" type="submit">Confirmar compra</button>
+          <label>Nombre<input name="name" autocomplete="name" required /></label>
+          <label>WhatsApp<input name="phone" autocomplete="tel" required /></label>
+          <label>Nota<textarea name="note" placeholder="Retiro, envio, horario, referencias..."></textarea></label>
+          <button class="btn btn-primary" type="submit" style="width:100%">Confirmar compra</button>
           <p id="checkout-message" class="checkout-message"></p>
         </form>
       </div>
     </aside>
 
-    <!-- Panel de Favoritos -->
+    <!-- ── FAVORITOS ──────────────────────────────── -->
     <aside class="favs-panel" id="favs-panel" aria-hidden="true">
       <div class="favs-dialog" role="dialog" aria-modal="true" aria-labelledby="favs-title">
         <div class="favs-head">
-          <h2 id="favs-title">Favoritos ❤️</h2>
-          <button class="icon-button" type="button" id="close-favs" aria-label="Cerrar favoritos">x</button>
+          <h2 id="favs-title">Favoritos</h2>
+          <button class="icon-btn" type="button" id="close-favs" aria-label="Cerrar favoritos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
         <div id="favs-list" class="favs-list"></div>
       </div>
     </aside>
 
-    <!-- Barra flotante de comparación -->
+    <!-- ── COMPARAR (barra + modal) ──────────────── -->
     <div class="compare-bar" id="compare-bar" role="status" aria-live="polite">
       <div class="compare-bar-slots" id="compare-slots"></div>
       <span id="compare-bar-label">Comparar</span>
-      <button class="button primary" type="button" id="compare-now-btn">Ver comparación</button>
-      <button class="button ghost" type="button" id="compare-clear-btn">Limpiar</button>
+      <button class="btn btn-primary" type="button" id="compare-now-btn" style="min-height:auto;padding:.4rem .9rem;font-size:.8rem">Ver comparación</button>
+      <button class="btn btn-outline" type="button" id="compare-clear-btn" style="min-height:auto;padding:.4rem .9rem;font-size:.8rem">Limpiar</button>
     </div>
 
-    <!-- Modal de comparación -->
     <div class="compare-modal-overlay" id="compare-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
       <div class="compare-modal">
         <div class="compare-modal-head">
           <h2 id="compare-modal-title">Comparar productos</h2>
-          <button class="icon-button" type="button" id="close-compare-modal" aria-label="Cerrar comparación">x</button>
+          <button class="icon-btn" type="button" id="close-compare-modal" aria-label="Cerrar comparación">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
         </div>
         <div id="compare-modal-body"></div>
       </div>
     </div>
 
     <script src="app.js"></script>
-
   </body>
 </html>

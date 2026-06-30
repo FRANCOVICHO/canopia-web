@@ -218,16 +218,90 @@ function productImageHtml(product, extraClass = "") {
     : `<div class="product-art">${initials(product.name)}</div>`;
 }
 
+// ─── Category icon & image map ────────────────────────────────────────────────
+const CAT_DATA = {
+  grow: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M12 12C12 12 7 8 7 4a5 5 0 0 1 10 0c0 4-5 8-5 8z"/></svg>`,
+    img: "https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=400&q=70",
+    sub: "Todo para tu cultivo",
+  },
+  parafernalia: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+    img: "https://images.unsplash.com/photo-1574626035716-01df7c6c9a1f?w=400&q=70",
+    sub: "Para tu ritual",
+  },
+  smoke: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+    img: "https://images.unsplash.com/photo-1574626035716-01df7c6c9a1f?w=400&q=70",
+    sub: "Para tu ritual",
+  },
+  picadores: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
+    img: "https://images.unsplash.com/photo-1603910522284-4c652f8d3e2d?w=400&q=70",
+    sub: "Grinders y más",
+  },
+  iluminacion: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=70",
+    sub: "Led y más",
+  },
+  nutrientes: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg>`,
+    img: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=400&q=70",
+    sub: "Feeding & boosters",
+  },
+  accesorios: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+    img: "https://images.unsplash.com/photo-1416339684178-3a239570f315?w=400&q=70",
+    sub: "Herramientas y más",
+  },
+  combos: {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
+    img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&q=70",
+    sub: "Kits listos",
+  },
+};
+
+function getCatData(catId) {
+  return CAT_DATA[catId] || {
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+    img: "",
+    sub: "",
+  };
+}
+
 // ─── Categories ───────────────────────────────────────────────────────────────
 function renderCategories() {
   const grid = document.querySelector("#category-grid");
   grid.innerHTML = store.categories
-    .map((c) => `
-      <article class="category-card">
-        <strong>${c.name}</strong>
-        <span>${c.description}</span>
-      </article>`)
+    .map((c) => {
+      const d = getCatData(c.id);
+      return `
+        <article class="category-card" role="button" tabindex="0" data-cat-filter="${c.id}">
+          ${d.img ? `<img class="cat-img" src="${d.img}" alt="" loading="lazy" />` : ""}
+          <div class="cat-overlay">
+            <div class="cat-icon">${d.icon}</div>
+            <strong>${c.name}</strong>
+            <small>${d.sub || c.description}</small>
+            <span class="cat-arrow">
+              Ver todo
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </article>`;
+    })
     .join("");
+
+  grid.querySelectorAll("[data-cat-filter]").forEach((card) => {
+    const handler = () => {
+      activeCategory = card.dataset.catFilter;
+      renderFilters();
+      renderProducts();
+      document.querySelector("#catalogo")?.scrollIntoView({ behavior: "smooth" });
+    };
+    card.addEventListener("click", handler);
+    card.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") handler(); });
+  });
 }
 
 // ─── Filters ─────────────────────────────────────────────────────────────────
@@ -260,18 +334,20 @@ function productCardHtml(product) {
         data-fav-toggle="${product.id}" aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
         ${isFav ? "❤️" : "🤍"}
       </button>
-      ${productImageHtml(product)}
+      ${product.image
+        ? `<img class="product-image" src="${product.image}" alt="${product.name}" loading="lazy" />`
+        : `<div class="product-art">${initials(product.name)}</div>`}
       <div class="product-body">
         <span class="badge">${product.tag}</span>
         <h3>${product.name}</h3>
         <p>${product.description}</p>
         <span class="stock-line">${stockLabel(product.stock)}</span>
-        <div class="product-meta">
+        <div class="product-footer">
           <span class="price">${formatPrice(product.price)}</span>
           <div class="product-actions">
-            <button class="button primary" type="button"
+            <button class="btn btn-primary" type="button"
               data-add-to-cart="${product.id}" ${outOfStock ? "disabled" : ""}>Comprar</button>
-            <a class="button ghost" href="${whatsappUrl(product.name)}"
+            <a class="btn btn-outline" href="${whatsappUrl(product.name)}"
               target="_blank" rel="noreferrer">Consultar</a>
             <button class="compare-button ${isComparing ? "is-comparing" : ""}" type="button"
               data-compare-toggle="${product.id}">
@@ -337,18 +413,48 @@ function setupContact() {
     link.rel = "noreferrer";
   });
   const instagram = document.querySelector("#instagram-link");
-  instagram.href = store.contact.instagram;
+  if (instagram) instagram.href = store.contact.instagram;
   const text = document.querySelector("#contact-text");
-  if (store.contact.text) text.textContent = store.contact.text;
+  if (text && store.contact.text) text.textContent = store.contact.text;
 }
 
 function setupNav() {
   const toggle = document.querySelector(".nav-toggle");
   const nav = document.querySelector("#main-nav");
-  toggle.addEventListener("click", () => {
-    const isOpen = nav.classList.toggle("is-open");
-    toggle.setAttribute("aria-expanded", String(isOpen));
-  });
+  if (toggle && nav) {
+    toggle.addEventListener("click", () => {
+      const isOpen = nav.classList.toggle("is-open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+    });
+  }
+
+  // Header search toggle
+  const searchToggle = document.querySelector("#search-toggle");
+  const searchOverlay = document.querySelector("#search-bar-overlay");
+  const searchClose = document.querySelector("#search-close");
+  const searchInput = document.querySelector("#header-search-input");
+
+  if (searchToggle && searchOverlay) {
+    searchToggle.addEventListener("click", () => {
+      searchOverlay.hidden = !searchOverlay.hidden;
+      if (!searchOverlay.hidden) searchInput?.focus();
+    });
+  }
+  if (searchClose) {
+    searchClose.addEventListener("click", () => { searchOverlay.hidden = true; });
+  }
+  // Sync header search with catalog search
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      const catalogInput = document.querySelector("#catalog-search");
+      if (catalogInput) catalogInput.value = searchQuery;
+      renderProducts();
+      if (searchQuery.trim()) {
+        document.querySelector("#catalogo")?.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  }
 }
 
 // ─── FAVORITOS ────────────────────────────────────────────────────────────────
