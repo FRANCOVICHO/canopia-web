@@ -15,16 +15,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script>
-      (function () {
-        const saved = localStorage.getItem("canopia_theme");
-        if (saved === "dark" || saved === "light") {
-          document.documentElement.setAttribute("data-theme", saved);
-        } else {
-          document.documentElement.setAttribute("data-theme", "dark");
-        }
-      })();
-    </script>
   </head>
   <body>
     <header class="site-header">
@@ -223,10 +213,7 @@
       </div>
     </aside>
 
-    <script type="module">
-      import "./theme-utils.js";
-    </script>
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 
   </body>
 </html>

@@ -1,3 +1,5 @@
+import { getSavedTheme, saveTheme, applyTheme } from "./theme-utils.js";
+
 const formatPrice = (value) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -223,26 +225,6 @@ function applyThemeVariables() {
   });
 }
 
-function getSavedTheme() {
-  try {
-    return localStorage.getItem("canopia_theme");
-  } catch {
-    return null;
-  }
-}
-
-function saveTheme(theme) {
-  try {
-    localStorage.setItem("canopia_theme", theme);
-  } catch {
-    // ignore
-  }
-}
-
-function setTheme(theme) {
-  document.documentElement.setAttribute("data-theme", theme);
-}
-
 function setupThemePrompt() {
   const dialog = document.querySelector("#theme-dialog");
   const buttons = dialog?.querySelectorAll("[data-theme-value]");
@@ -251,7 +233,7 @@ function setupThemePrompt() {
   const applyFromStorageOrPrompt = () => {
     const saved = getSavedTheme();
     if (saved === "dark" || saved === "light") {
-      setTheme(saved);
+      applyTheme(saved);
       return;
     }
     if (dialog && typeof dialog.showModal === "function") {
@@ -266,7 +248,7 @@ function setupThemePrompt() {
       btn.addEventListener("click", () => {
         const value = btn.dataset.themeValue;
         if (value !== "dark" && value !== "light") return;
-        setTheme(value);
+        applyTheme(value);
         saveTheme(value);
         try {
           dialog?.close();
@@ -281,7 +263,7 @@ function setupThemePrompt() {
     themeToggle.addEventListener("click", () => {
       const current = document.documentElement.getAttribute("data-theme") || "dark";
       const next = current === "dark" ? "light" : "dark";
-      setTheme(next);
+      applyTheme(next);
       saveTheme(next);
     });
   }
