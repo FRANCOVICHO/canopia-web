@@ -5,29 +5,6 @@ const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const THEME_STORAGE_KEY = "canopia_theme";
-
-function getSavedTheme() {
-  try {
-    return localStorage.getItem(THEME_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function saveTheme(theme) {
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {
-    // ignore
-  }
-}
-
-function applyTheme(theme) {
-  const root = document.documentElement;
-  root.setAttribute("data-theme", theme);
-}
-
 const defaultData = {
   theme: {},
   onlineData: {
@@ -239,60 +216,6 @@ function slugify(value) {
     .replace(/^-|-$/g, "");
 }
 
-function applyThemeVariables() {
-  // Aplica variables customizadas desde data/site.json si existen
-  Object.entries(store.theme || {}).forEach(([key, value]) => {
-    document.documentElement.style.setProperty(`--${key}`, value);
-  });
-}
-
-function setupThemePrompt() {
-  const dialog = document.querySelector("#theme-dialog");
-  const buttons = dialog?.querySelectorAll("[data-theme-value]");
-  const themeToggle = document.querySelector("#theme-toggle");
-
-  const applyFromStorageOrPrompt = () => {
-    const saved = getSavedTheme();
-    if (saved === "dark" || saved === "light") {
-      applyTheme(saved);
-      return;
-    }
-    if (dialog && typeof dialog.showModal === "function") {
-      dialog.showModal();
-    } else if (dialog) {
-      dialog.setAttribute("open", "true");
-    }
-  };
-
-  if (buttons?.length) {
-    buttons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const value = btn.dataset.themeValue;
-        if (value !== "dark" && value !== "light") return;
-        applyTheme(value);
-        saveTheme(value);
-        try {
-          dialog?.close();
-        } catch {
-          // ignore
-        }
-      });
-    });
-  }
-
-  if (themeToggle) {
-    themeToggle.addEventListener("click", () => {
-      const current = document.documentElement.getAttribute("data-theme") || "dark";
-      const next = current === "dark" ? "light" : "dark";
-      applyTheme(next);
-      saveTheme(next);
-    });
-  }
-
-  applyFromStorageOrPrompt();
-}
-
-
 function initials(text) {
   return text
     .split(" ")
@@ -405,24 +328,6 @@ function renderProducts() {
   });
 }
 
-function renderHeroSlider() {
-  const track = document.querySelector("#hero-slider-track");
-  const products = store.products.filter((product) => product.visible !== false).slice(0, 8);
-  if (!products.length) return;
-
-  track.innerHTML = [...products, ...products]
-    .map(
-      (product) => `
-        <a class="hero-slide" href="#catalogo">
-          <span>${product.tag}</span>
-          <strong>${product.name}</strong>
-          <small>${formatPrice(product.price)} · ${stockLabel(product.stock)}</small>
-        </a>
-      `,
-    )
-    .join("");
-}
-
 function stockLabel(stock) {
   const value = Number(stock || 0);
   if (value <= 0) return "Sin stock";
@@ -467,13 +372,6 @@ function setupContact() {
 
   const text = document.querySelector("#contact-text");
   if (store.contact.text) text.textContent = store.contact.text;
-}
-
-function setupHeroFeature() {
-  const featured = store.products.find((product) => product.featured) || store.products[0];
-  if (!featured) return;
-  document.querySelector("#hero-feature").textContent = featured.name;
-  document.querySelector("#hero-price").textContent = formatPrice(featured.price);
 }
 
 function setupNav() {
@@ -653,17 +551,12 @@ function setupCatalogControls() {
 
 async function init() {
   await loadStore();
-  // Tema: pregunta si no hay elección guardada
-  setupThemePrompt();
-  applyThemeVariables();
 
   renderCategories();
   renderFilters();
   renderProducts();
-  renderHeroSlider();
   renderCombos();
   setupContact();
-  setupHeroFeature();
   setupNav();
   setupCart();
   setupCatalogControls();

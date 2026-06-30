@@ -15,27 +15,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
-    <script>
-      (function () {
-        const saved = localStorage.getItem("canopia_theme");
-        if (saved === "dark" || saved === "light") {
-          document.documentElement.setAttribute("data-theme", saved);
-        } else {
-          document.documentElement.setAttribute("data-theme", "dark");
-        }
-      })();
-    </script>
   </head>
   <body>
     <header class="site-header">
-        <a class="brand" href="#inicio" aria-label="Canopia inicio">
-
-        <img class="brand-logo" src="assets/logo-canopia.png" alt="" />
-        <span>
-          <strong>Canopia</strong>
-          <small>Smoke & Grow Shop</small>
-        </span>
-      </a>
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
         Menu
       </button>
@@ -45,7 +27,6 @@
         <a href="#smoke">Smoke</a>
         <a href="#combos">Combos</a>
         <a href="#contacto">Contacto</a>
-        <button class="theme-toggle button ghost" type="button" id="theme-toggle" aria-label="Cambiar modo">Modo</button>
 
         <span class="live-badge" id="live-sync" hidden title="Catalogo conectado en tiempo real">
           <span class="live-dot"></span> En vivo
@@ -55,42 +36,14 @@
     </header>
 
 <main>
-      <dialog id="theme-dialog" class="theme-dialog" aria-label="Selector de tema">
-        <div class="theme-dialog-card">
-          <h2>Elegí tu modo</h2>
-          <p>Podés cambiarlo cuando quieras desde el botón.</p>
-          <div class="theme-dialog-actions">
-            <button type="button" class="button primary" data-theme-value="dark">Modo oscuro</button>
-            <button type="button" class="button ghost" data-theme-value="light">Modo claro</button>
-          </div>
-        </div>
-      </dialog>
-
       <section id="inicio" class="hero">
-
-        <div class="hero-copy">
-          <p class="eyebrow">Parafernalia, cultivo y accesorios</p>
-          <h1>Todo para armar tu ritual smoke y tu espacio grow.</h1>
-          <p>
-            Catalogo claro, precios a mano y consulta directa por WhatsApp. Verde vivo,
-            neon justo y productos ordenados para encontrar rapido lo que buscas.
-          </p>
+        <div class="hero-content">
+          <p class="eyebrow">Grow Shop & Smoke Shop</p>
+          <h1>Cultivo Indoor y Parafernalia</h1>
+          <p>Todo lo que necesitas para tu espacio grow y tu ritual smoke. Productos de calidad, precios claros y atención directa.</p>
           <div class="hero-actions">
-            <a class="button primary" href="#catalogo">Ver catalogo</a>
+            <a class="button primary" href="#catalogo">Ver Catálogo</a>
             <a class="button ghost" data-whatsapp-link href="#contacto">Consultar</a>
-          </div>
-          <div class="hero-slider" aria-label="Productos destacados">
-            <div class="hero-slider-track" id="hero-slider-track"></div>
-          </div>
-        </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="logo-blend">
-            <img class="hero-logo" src="assets/logo-canopia-soft.png" alt="" />
-          </div>
-          <div class="hero-card">
-            <small>Destacado</small>
-            <strong id="hero-feature">Kit inicio grow</strong>
-            <span id="hero-price">$0</span>
           </div>
         </div>
       </section>
