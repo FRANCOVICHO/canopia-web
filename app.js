@@ -1,3 +1,4 @@
+// ─── Helpers ────────────────────────────────────────────────────────────────
 const formatPrice = (value) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -5,13 +6,32 @@ const formatPrice = (value) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function initials(text) {
+  return text.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function cleanString(str) {
+  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function normalizeKey(value) {
+  return value.trim().toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+}
+
+// ─── State ──────────────────────────────────────────────────────────────────
 const defaultData = {
   theme: {},
-  onlineData: {
-    productsCsvUrl: "",
-    categoriesCsvUrl: "",
-    combosCsvUrl: "",
-  },
+  onlineData: { productsCsvUrl: "", categoriesCsvUrl: "", combosCsvUrl: "" },
   contact: {
     whatsapp: "5491100000000",
     instagram: "https://instagram.com/canopia",
@@ -27,10 +47,13 @@ let activeCategory = "todos";
 let searchQuery = "";
 let activeSort = "default";
 let cart = JSON.parse(localStorage.getItem("canopia_cart") || "[]");
+let favs = new Set(JSON.parse(localStorage.getItem("canopia_favs") || "[]"));
+let compareList = []; // max 3 IDs
 let catalogUpdatedAt = null;
 let catalogPollTimer = null;
 let apiBase = "";
 
+// ─── Load / Poll ─────────────────────────────────────────────────────────────
 async function loadStore() {
   try {
     const response = await fetch("data/site.json", { cache: "no-store" });
@@ -63,16 +86,14 @@ function setLiveStatus(isLive) {
   const badge = document.querySelector("#live-sync");
   if (!badge) return;
   badge.hidden = !isLive;
-  badge.title = isLive ? "Catalogo conectado en tiempo real" : "";
 }
 
 function refreshCatalogViews() {
   renderFilters();
   renderProducts();
-  renderHeroSlider();
   renderCombos();
-  setupHeroFeature();
   renderCart();
+  renderFavs();
 }
 
 async function pollCatalog() {
@@ -95,6 +116,7 @@ function startCatalogPolling() {
   catalogPollTimer = setInterval(pollCatalog, 5000);
 }
 
+// ─── CSV ─────────────────────────────────────────────────────────────────────
 async function loadOnlineData() {
   const onlineData = store.onlineData || {};
   const [products, categories, combos] = await Promise.all([
@@ -102,7 +124,6 @@ async function loadOnlineData() {
     fetchCsvData(onlineData.categoriesCsvUrl, parseCategory),
     fetchCsvData(onlineData.combosCsvUrl, parseCombo),
   ]);
-
   if (products.length) store.products = products;
   if (categories.length) store.categories = categories;
   if (combos.length) store.combos = combos;
@@ -110,7 +131,6 @@ async function loadOnlineData() {
 
 async function fetchCsvData(url, parser) {
   if (!url) return [];
-
   try {
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -123,52 +143,25 @@ async function fetchCsvData(url, parser) {
 
 function parseCsv(text) {
   const rows = [];
-  let row = [];
-  let cell = "";
-  let quoted = false;
-
-  for (let index = 0; index < text.length; index += 1) {
-    const char = text[index];
-    const next = text[index + 1];
-
-    if (char === '"' && quoted && next === '"') {
-      cell += '"';
-      index += 1;
-    } else if (char === '"') {
-      quoted = !quoted;
-    } else if (char === "," && !quoted) {
+  let row = [], cell = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i], next = text[i + 1];
+    if (char === '"' && quoted && next === '"') { cell += '"'; i++; }
+    else if (char === '"') { quoted = !quoted; }
+    else if (char === "," && !quoted) { row.push(cell); cell = ""; }
+    else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") i++;
       row.push(cell);
-      cell = "";
-    } else if ((char === "\n" || char === "\r") && !quoted) {
-      if (char === "\r" && next === "\n") index += 1;
-      row.push(cell);
-      if (row.some((value) => value.trim())) rows.push(row);
-      row = [];
-      cell = "";
-    } else {
-      cell += char;
-    }
+      if (row.some((v) => v.trim())) rows.push(row);
+      row = []; cell = "";
+    } else { cell += char; }
   }
-
   row.push(cell);
-  if (row.some((value) => value.trim())) rows.push(row);
-
-  const headers = rows.shift()?.map((header) => normalizeKey(header)) || [];
+  if (row.some((v) => v.trim())) rows.push(row);
+  const headers = rows.shift()?.map((h) => normalizeKey(h)) || [];
   return rows.map((values) =>
-    headers.reduce((record, header, index) => {
-      record[header] = values[index]?.trim() || "";
-      return record;
-    }, {}),
+    headers.reduce((rec, h, i) => { rec[h] = values[i]?.trim() || ""; return rec; }, {}),
   );
-}
-
-function normalizeKey(value) {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "_");
 }
 
 function parseProduct(row) {
@@ -188,11 +181,7 @@ function parseProduct(row) {
 
 function parseCategory(row) {
   if (!row.nombre) return null;
-  return {
-    id: row.id || slugify(row.nombre),
-    name: row.nombre,
-    description: row.descripcion || "",
-  };
+  return { id: row.id || slugify(row.nombre), name: row.nombre, description: row.descripcion || "" };
 }
 
 function parseCombo(row) {
@@ -201,155 +190,18 @@ function parseCombo(row) {
     id: row.id || slugify(row.nombre),
     name: row.nombre,
     description: row.descripcion || "",
-    items: (row.items || "").split("|").map((item) => item.trim()).filter(Boolean),
+    items: (row.items || "").split("|").map((i) => i.trim()).filter(Boolean),
     price: Number(row.precio || 0),
     tag: row.etiqueta || "Combo",
   };
 }
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-function initials(text) {
-  return text
-    .split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
-
-function renderCategories() {
-  const grid = document.querySelector("#category-grid");
-  grid.innerHTML = store.categories
-    .map(
-      (category) => `
-        <article class="category-card">
-          <strong>${category.name}</strong>
-          <span>${category.description}</span>
-        </article>
-      `,
-    )
-    .join("");
-}
-
-function renderFilters() {
-  const filters = document.querySelector("#filters");
-  const items = [{ id: "todos", name: "Todo" }, ...store.categories];
-  filters.innerHTML = items
-    .map(
-      (item) => `
-        <button class="filter-button ${item.id === activeCategory ? "is-active" : ""}" type="button" data-filter="${item.id}">
-          ${item.name}
-        </button>
-      `,
-    )
-    .join("");
-
-  filters.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeCategory = button.dataset.filter;
-      renderFilters();
-      renderProducts();
-    });
-  });
-}
-
-function cleanString(str) {
-  return (str || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
-function renderProducts() {
-  const grid = document.querySelector("#product-grid");
-  
-  // 1. Filtrar por categoría
-  let products =
-    activeCategory === "todos"
-      ? store.products.filter((product) => product.visible !== false)
-      : store.products.filter((product) => product.visible !== false && product.category === activeCategory);
-
-  // 2. Filtrar por texto de búsqueda
-  if (searchQuery.trim()) {
-    const query = cleanString(searchQuery);
-    products = products.filter(
-      (product) =>
-        cleanString(product.name).includes(query) ||
-        cleanString(product.description || "").includes(query),
-    );
-  }
-
-  // 3. Ordenar
-  if (activeSort === "price-asc") {
-    products.sort((a, b) => a.price - b.price);
-  } else if (activeSort === "price-desc") {
-    products.sort((a, b) => b.price - a.price);
-  } else if (activeSort === "name-asc") {
-    products.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  grid.innerHTML = products
-    .map(
-      (product) => `
-        <article class="product-card">
-          ${
-            product.image
-              ? `<img class="product-image" src="${product.image}" alt="${product.name}" loading="lazy" />`
-              : `<div class="product-art">${initials(product.name)}</div>`
-          }
-          <div class="product-body">
-            <span class="badge">${product.tag}</span>
-            <h3>${product.name}</h3>
-            <p>${product.description}</p>
-            <span class="stock-line">${stockLabel(product.stock)}</span>
-            <div class="product-meta">
-              <span class="price">${formatPrice(product.price)}</span>
-              <div class="product-actions">
-                <button class="button primary" type="button" data-add-to-cart="${product.id}" ${Number(product.stock) <= 0 ? "disabled" : ""}>Comprar</button>
-                <a class="button ghost" href="${whatsappUrl(product.name)}" target="_blank" rel="noreferrer">Consultar</a>
-              </div>
-            </div>
-          </div>
-        </article>
-      `,
-    )
-    .join("");
-
-  grid.querySelectorAll("[data-add-to-cart]").forEach((button) => {
-    button.addEventListener("click", () => addToCart(button.dataset.addToCart));
-  });
-}
-
+// ─── Render helpers ───────────────────────────────────────────────────────────
 function stockLabel(stock) {
-  const value = Number(stock || 0);
-  if (value <= 0) return "Sin stock";
-  if (value <= 3) return `Ultimos ${value}`;
-  return `Stock: ${value}`;
-}
-
-function renderCombos() {
-  const grid = document.querySelector("#combo-grid");
-  grid.innerHTML = store.combos
-    .map(
-      (combo) => `
-        <article class="combo-card">
-          <span class="badge">${combo.tag}</span>
-          <h3>${combo.name}</h3>
-          <p>${combo.description}</p>
-          <ul>${combo.items.map((item) => `<li>${item}</li>`).join("")}</ul>
-          <strong class="price">${formatPrice(combo.price)}</strong>
-        </article>
-      `,
-    )
-    .join("");
+  const v = Number(stock || 0);
+  if (v <= 0) return "Sin stock";
+  if (v <= 3) return `Ultimos ${v}`;
+  return `Stock: ${v}`;
 }
 
 function whatsappUrl(productName = "") {
@@ -360,16 +212,132 @@ function whatsappUrl(productName = "") {
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 }
 
+function productImageHtml(product, extraClass = "") {
+  return product.image
+    ? `<img class="product-image${extraClass ? " " + extraClass : ""}" src="${product.image}" alt="${product.name}" loading="lazy" />`
+    : `<div class="product-art">${initials(product.name)}</div>`;
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+function renderCategories() {
+  const grid = document.querySelector("#category-grid");
+  grid.innerHTML = store.categories
+    .map((c) => `
+      <article class="category-card">
+        <strong>${c.name}</strong>
+        <span>${c.description}</span>
+      </article>`)
+    .join("");
+}
+
+// ─── Filters ─────────────────────────────────────────────────────────────────
+function renderFilters() {
+  const filters = document.querySelector("#filters");
+  const items = [{ id: "todos", name: "Todo" }, ...store.categories];
+  filters.innerHTML = items
+    .map((item) => `
+      <button class="filter-button ${item.id === activeCategory ? "is-active" : ""}" type="button" data-filter="${item.id}">
+        ${item.name}
+      </button>`)
+    .join("");
+  filters.querySelectorAll("button").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeCategory = btn.dataset.filter;
+      renderFilters();
+      renderProducts();
+    });
+  });
+}
+
+// ─── Product card ─────────────────────────────────────────────────────────────
+function productCardHtml(product) {
+  const isFav = favs.has(product.id);
+  const isComparing = compareList.includes(product.id);
+  const outOfStock = Number(product.stock) <= 0;
+  return `
+    <article class="product-card" data-product-id="${product.id}">
+      <button class="fav-button ${isFav ? "is-fav" : ""}" type="button"
+        data-fav-toggle="${product.id}" aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
+        ${isFav ? "❤️" : "🤍"}
+      </button>
+      ${productImageHtml(product)}
+      <div class="product-body">
+        <span class="badge">${product.tag}</span>
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <span class="stock-line">${stockLabel(product.stock)}</span>
+        <div class="product-meta">
+          <span class="price">${formatPrice(product.price)}</span>
+          <div class="product-actions">
+            <button class="button primary" type="button"
+              data-add-to-cart="${product.id}" ${outOfStock ? "disabled" : ""}>Comprar</button>
+            <a class="button ghost" href="${whatsappUrl(product.name)}"
+              target="_blank" rel="noreferrer">Consultar</a>
+            <button class="compare-button ${isComparing ? "is-comparing" : ""}" type="button"
+              data-compare-toggle="${product.id}">
+              ${isComparing ? "✓ Comparando" : "Comparar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>`;
+}
+
+// ─── Product grid ─────────────────────────────────────────────────────────────
+function renderProducts() {
+  const grid = document.querySelector("#product-grid");
+  let products = store.products.filter((p) => p.visible !== false);
+  if (activeCategory !== "todos") products = products.filter((p) => p.category === activeCategory);
+  if (searchQuery.trim()) {
+    const q = cleanString(searchQuery);
+    products = products.filter(
+      (p) => cleanString(p.name).includes(q) || cleanString(p.description || "").includes(q),
+    );
+  }
+  if (activeSort === "price-asc") products.sort((a, b) => a.price - b.price);
+  else if (activeSort === "price-desc") products.sort((a, b) => b.price - a.price);
+  else if (activeSort === "name-asc") products.sort((a, b) => a.name.localeCompare(b.name));
+
+  grid.innerHTML = products.map(productCardHtml).join("");
+  bindProductCardEvents(grid);
+}
+
+function bindProductCardEvents(container) {
+  container.querySelectorAll("[data-fav-toggle]").forEach((btn) => {
+    btn.addEventListener("click", (e) => { e.stopPropagation(); toggleFav(btn.dataset.favToggle); });
+  });
+  container.querySelectorAll("[data-add-to-cart]").forEach((btn) => {
+    btn.addEventListener("click", (e) => { e.stopPropagation(); addToCart(btn.dataset.addToCart); });
+  });
+  container.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
+    btn.addEventListener("click", (e) => { e.stopPropagation(); toggleCompare(btn.dataset.compareToggle); });
+  });
+}
+
+// ─── Combos ──────────────────────────────────────────────────────────────────
+function renderCombos() {
+  const grid = document.querySelector("#combo-grid");
+  grid.innerHTML = store.combos
+    .map((combo) => `
+      <article class="combo-card">
+        <span class="badge">${combo.tag}</span>
+        <h3>${combo.name}</h3>
+        <p>${combo.description}</p>
+        <ul>${combo.items.map((i) => `<li>${i}</li>`).join("")}</ul>
+        <strong class="price">${formatPrice(combo.price)}</strong>
+      </article>`)
+    .join("");
+}
+
+// ─── Contact / Nav ────────────────────────────────────────────────────────────
 function setupContact() {
   document.querySelectorAll("[data-whatsapp-link]").forEach((link) => {
     link.href = whatsappUrl();
     link.target = "_blank";
     link.rel = "noreferrer";
   });
-
   const instagram = document.querySelector("#instagram-link");
   instagram.href = store.contact.instagram;
-
   const text = document.querySelector("#contact-text");
   if (store.contact.text) text.textContent = store.contact.text;
 }
@@ -383,31 +351,328 @@ function setupNav() {
   });
 }
 
-function addToCart(productId) {
-  const product = store.products.find((item) => item.id === productId);
-  if (!product || Number(product.stock) <= 0) return;
-
-  const existing = cart.find((item) => item.id === productId);
-  if (existing) {
-    if (existing.quantity < Number(product.stock)) existing.quantity += 1;
-  } else {
-    cart.push({ id: productId, quantity: 1 });
-  }
-
-  saveCart();
-  openCart();
+// ─── FAVORITOS ────────────────────────────────────────────────────────────────
+function saveFavs() {
+  localStorage.setItem("canopia_favs", JSON.stringify([...favs]));
 }
 
+function toggleFav(id) {
+  if (favs.has(id)) favs.delete(id);
+  else favs.add(id);
+  saveFavs();
+  // re-render sólo el botón del card sin re-renderizar todo
+  document.querySelectorAll(`[data-fav-toggle="${id}"]`).forEach((btn) => {
+    const isFav = favs.has(id);
+    btn.classList.toggle("is-fav", isFav);
+    btn.textContent = isFav ? "❤️" : "🤍";
+    btn.setAttribute("aria-label", isFav ? "Quitar de favoritos" : "Agregar a favoritos");
+  });
+  updateFavCount();
+  // si el panel está abierto, re-render
+  if (!document.querySelector("#favs-panel").classList.contains("is-open")) return;
+  renderFavs();
+}
+
+function updateFavCount() {
+  document.querySelector("#fav-count").textContent = String(favs.size);
+}
+
+function renderFavs() {
+  const list = document.querySelector("#favs-list");
+  const favProducts = [...favs]
+    .map((id) => store.products.find((p) => p.id === id))
+    .filter(Boolean);
+
+  if (!favProducts.length) {
+    list.innerHTML = "<p style='color:var(--muted)'>Aún no guardaste favoritos.<br>Tocá ❤️ en cualquier producto.</p>";
+    return;
+  }
+
+  list.innerHTML = favProducts
+    .map((p) => `
+      <div class="fav-item">
+        ${p.image
+          ? `<img class="fav-item-art" src="${p.image}" alt="${p.name}" loading="lazy" />`
+          : `<div class="fav-item-art">${initials(p.name)}</div>`}
+        <div class="fav-item-info">
+          <strong>${p.name}</strong>
+          <span>${formatPrice(p.price)}</span>
+        </div>
+        <div class="fav-item-actions">
+          <button class="button primary" type="button" data-fav-buy="${p.id}"
+            ${Number(p.stock) <= 0 ? "disabled" : ""}>Comprar</button>
+          <button class="button ghost" type="button" data-fav-remove="${p.id}">✕</button>
+        </div>
+      </div>`)
+    .join("");
+
+  list.querySelectorAll("[data-fav-buy]").forEach((btn) => {
+    btn.addEventListener("click", () => { addToCart(btn.dataset.favBuy); closeFavs(); openCart(); });
+  });
+  list.querySelectorAll("[data-fav-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => { toggleFav(btn.dataset.favRemove); });
+  });
+}
+
+function openFavs() {
+  renderFavs();
+  document.querySelector("#favs-panel").classList.add("is-open");
+  document.querySelector("#favs-panel").setAttribute("aria-hidden", "false");
+}
+
+function closeFavs() {
+  document.querySelector("#favs-panel").classList.remove("is-open");
+  document.querySelector("#favs-panel").setAttribute("aria-hidden", "true");
+}
+
+function setupFavs() {
+  document.querySelector("#open-favs").addEventListener("click", openFavs);
+  document.querySelector("#close-favs").addEventListener("click", closeFavs);
+  document.querySelector("#favs-panel").addEventListener("click", (e) => {
+    if (e.target.id === "favs-panel") closeFavs();
+  });
+  updateFavCount();
+}
+
+// ─── COMPARAR ────────────────────────────────────────────────────────────────
+const MAX_COMPARE = 3;
+
+function toggleCompare(id) {
+  const idx = compareList.indexOf(id);
+  if (idx !== -1) {
+    compareList.splice(idx, 1);
+  } else {
+    if (compareList.length >= MAX_COMPARE) {
+      // quitar el primero para hacer lugar
+      compareList.shift();
+    }
+    compareList.push(id);
+  }
+  updateCompareBar();
+  // actualizar botones en el grid
+  document.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
+    const isC = compareList.includes(btn.dataset.compareToggle);
+    btn.classList.toggle("is-comparing", isC);
+    btn.textContent = isC ? "✓ Comparando" : "Comparar";
+  });
+}
+
+function updateCompareBar() {
+  const bar = document.querySelector("#compare-bar");
+  const slots = document.querySelector("#compare-slots");
+  const label = document.querySelector("#compare-bar-label");
+  bar.classList.toggle("is-visible", compareList.length > 0);
+  label.textContent = compareList.length === 0
+    ? "Comparar"
+    : `${compareList.length} / ${MAX_COMPARE}`;
+
+  slots.innerHTML = Array.from({ length: MAX_COMPARE }, (_, i) => {
+    const id = compareList[i];
+    const p = id ? store.products.find((pr) => pr.id === id) : null;
+    if (p && p.image) {
+      return `<div class="compare-slot filled"><img src="${p.image}" alt="${p.name}" /></div>`;
+    } else if (p) {
+      return `<div class="compare-slot filled" title="${p.name}">${initials(p.name)}</div>`;
+    }
+    return `<div class="compare-slot"></div>`;
+  }).join("");
+}
+
+function openCompareModal() {
+  if (compareList.length < 2) return;
+  const products = compareList
+    .map((id) => store.products.find((p) => p.id === id))
+    .filter(Boolean);
+
+  const colWidth = `${Math.floor(100 / (products.length + 1))}%`;
+  const fields = [
+    { label: "Precio", key: "price", render: (v) => `<span class="compare-highlight">${formatPrice(v)}</span>` },
+    { label: "Categoría", key: "category", render: (v) => v },
+    { label: "Stock", key: "stock", render: (v) => stockLabel(v) },
+    { label: "Descripción", key: "description", render: (v) => v || "—" },
+    { label: "Etiqueta", key: "tag", render: (v) => `<span class="badge">${v}</span>` },
+    { label: "Destacado", key: "featured", render: (v) => (v ? "✓" : "—") },
+  ];
+
+  const headerRow = `
+    <tr>
+      <th style="width:${colWidth}"></th>
+      ${products.map((p) => `
+        <td class="compare-product-header" style="width:${colWidth}">
+          ${p.image ? `<img src="${p.image}" alt="${p.name}" />` : `<div class="compare-art">${initials(p.name)}</div>`}
+          <strong>${p.name}</strong>
+          <br>
+          <button class="button primary" type="button" style="margin-top:0.5rem;min-height:auto;padding:0.4rem 0.8rem;font-size:0.8rem"
+            data-compare-buy="${p.id}" ${Number(p.stock) <= 0 ? "disabled" : ""}>Comprar</button>
+        </td>`).join("")}
+    </tr>`;
+
+  const dataRows = fields
+    .map((f) => `
+      <tr>
+        <th>${f.label}</th>
+        ${products.map((p) => `<td>${f.render(p[f.key])}</td>`).join("")}
+      </tr>`)
+    .join("");
+
+  document.querySelector("#compare-modal-body").innerHTML = `
+    <table class="compare-table">
+      <thead>${headerRow}</thead>
+      <tbody>${dataRows}</tbody>
+    </table>`;
+
+  document.querySelector("#compare-modal-body").querySelectorAll("[data-compare-buy]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      addToCart(btn.dataset.compareBuy);
+      closeCompareModal();
+      openCart();
+    });
+  });
+
+  document.querySelector("#compare-modal-overlay").classList.add("is-open");
+}
+
+function closeCompareModal() {
+  document.querySelector("#compare-modal-overlay").classList.remove("is-open");
+}
+
+function setupCompare() {
+  document.querySelector("#compare-now-btn").addEventListener("click", openCompareModal);
+  document.querySelector("#compare-clear-btn").addEventListener("click", () => {
+    compareList = [];
+    updateCompareBar();
+    document.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
+      btn.classList.remove("is-comparing");
+      btn.textContent = "Comparar";
+    });
+  });
+  document.querySelector("#close-compare-modal").addEventListener("click", closeCompareModal);
+  document.querySelector("#compare-modal-overlay").addEventListener("click", (e) => {
+    if (e.target.id === "compare-modal-overlay") closeCompareModal();
+  });
+}
+
+// ─── SUGERENCIAS: Comprados juntos / Relacionados ────────────────────────────
+// Mapa en memoria: productId → Set de IDs con los que aparece en el mismo carrito
+const togetherMap = new Map();
+
+/**
+ * Registra que los IDs de un pedido fueron comprados juntos.
+ * Se llama tras cada checkout exitoso con los IDs del carrito.
+ */
+function recordPurchasedTogether(ids) {
+  for (const id of ids) {
+    if (!togetherMap.has(id)) togetherMap.set(id, new Map());
+    for (const other of ids) {
+      if (other === id) continue;
+      const count = togetherMap.get(id).get(other) || 0;
+      togetherMap.get(id).set(other, count + 1);
+    }
+  }
+}
+
+/**
+ * Devuelve hasta `limit` IDs que se compraron más juntos con `productId`.
+ * Si no hay datos suficientes, completa con productos de la misma categoría.
+ */
+function getSuggestedIds(productId, limit = 4) {
+  const product = store.products.find((p) => p.id === productId);
+  const results = new Set();
+
+  // 1. Comprados juntos (frecuencia)
+  const together = togetherMap.get(productId);
+  if (together && together.size) {
+    const sorted = [...together.entries()].sort((a, b) => b[1] - a[1]);
+    for (const [id] of sorted) {
+      if (results.size >= limit) break;
+      const p = store.products.find((pr) => pr.id === id && pr.visible !== false);
+      if (p) results.add(id);
+    }
+  }
+
+  // 2. Misma categoría como fallback
+  if (product && results.size < limit) {
+    store.products
+      .filter((p) => p.id !== productId && p.category === product.category && p.visible !== false)
+      .slice(0, limit)
+      .forEach((p) => { if (results.size < limit) results.add(p.id); });
+  }
+
+  return [...results].slice(0, limit);
+}
+
+/**
+ * Renderiza una fila de sugerencias dentro de un contenedor dado.
+ * `title` es el texto del encabezado.
+ */
+function renderSuggestionsRow(container, ids, title) {
+  if (!ids.length) return;
+  const products = ids
+    .map((id) => store.products.find((p) => p.id === id))
+    .filter(Boolean);
+  if (!products.length) return;
+
+  const section = document.createElement("div");
+  section.className = "suggestions-section";
+  section.innerHTML = `
+    <p class="suggestions-title">${title}</p>
+    <div class="suggestions-row">
+      ${products.map((p) => `
+        <div class="suggestion-card" data-suggestion-id="${p.id}">
+          ${p.image
+            ? `<img src="${p.image}" alt="${p.name}" loading="lazy" />`
+            : `<div class="suggestion-art">${initials(p.name)}</div>`}
+          <div class="suggestion-body">
+            <strong>${p.name}</strong>
+            <span>${formatPrice(p.price)}</span>
+            <button class="button primary" type="button"
+              data-suggestion-buy="${p.id}"
+              ${Number(p.stock) <= 0 ? "disabled" : ""}>+ Agregar</button>
+          </div>
+        </div>`).join("")}
+    </div>`;
+
+  section.querySelectorAll("[data-suggestion-buy]").forEach((btn) => {
+    btn.addEventListener("click", () => addToCart(btn.dataset.suggestionBuy));
+  });
+
+  container.appendChild(section);
+}
+
+// ─── CARRITO ──────────────────────────────────────────────────────────────────
 function saveCart() {
   localStorage.setItem("canopia_cart", JSON.stringify(cart));
   renderCart();
 }
 
+function addToCart(productId) {
+  const product = store.products.find((p) => p.id === productId);
+  if (!product || Number(product.stock) <= 0) return;
+  const existing = cart.find((i) => i.id === productId);
+  if (existing) {
+    if (existing.quantity < Number(product.stock)) existing.quantity += 1;
+  } else {
+    cart.push({ id: productId, quantity: 1 });
+  }
+  saveCart();
+  openCart();
+}
+
+function changeQuantity(productId, delta) {
+  const product = store.products.find((p) => p.id === productId);
+  const item = cart.find((i) => i.id === productId);
+  if (!item || !product) return;
+  item.quantity += delta;
+  if (item.quantity <= 0) cart = cart.filter((i) => i.id !== productId);
+  if (item.quantity > Number(product.stock)) item.quantity = Number(product.stock);
+  saveCart();
+}
+
 function renderCart() {
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const total = cart.reduce((sum, item) => {
-    const product = store.products.find((entry) => entry.id === item.id);
-    return sum + (product ? product.price * item.quantity : 0);
+  const count = cart.reduce((s, i) => s + i.quantity, 0);
+  const total = cart.reduce((s, i) => {
+    const p = store.products.find((e) => e.id === i.id);
+    return s + (p ? p.price * i.quantity : 0);
   }, 0);
 
   document.querySelector("#cart-count").textContent = String(count);
@@ -421,41 +686,50 @@ function renderCart() {
 
   items.innerHTML = cart
     .map((item) => {
-      const product = store.products.find((entry) => entry.id === item.id);
-      if (!product) return "";
+      const p = store.products.find((e) => e.id === item.id);
+      if (!p) return "";
       return `
         <div class="cart-line">
           <div>
-            <strong>${product.name}</strong>
-            <span>${formatPrice(product.price)} x ${item.quantity}</span>
+            <strong>${p.name}</strong>
+            <span>${formatPrice(p.price)} x ${item.quantity}</span>
           </div>
           <div class="quantity-controls">
             <button type="button" data-cart-dec="${item.id}">-</button>
             <strong>${item.quantity}</strong>
             <button type="button" data-cart-inc="${item.id}">+</button>
           </div>
-        </div>
-      `;
+        </div>`;
     })
     .join("");
 
-  items.querySelectorAll("[data-cart-dec]").forEach((button) => {
-    button.addEventListener("click", () => changeQuantity(button.dataset.cartDec, -1));
+  items.querySelectorAll("[data-cart-dec]").forEach((btn) => {
+    btn.addEventListener("click", () => changeQuantity(btn.dataset.cartDec, -1));
   });
-  items.querySelectorAll("[data-cart-inc]").forEach((button) => {
-    button.addEventListener("click", () => changeQuantity(button.dataset.cartInc, 1));
+  items.querySelectorAll("[data-cart-inc]").forEach((btn) => {
+    btn.addEventListener("click", () => changeQuantity(btn.dataset.cartInc, 1));
   });
-}
 
-function changeQuantity(productId, delta) {
-  const product = store.products.find((entry) => entry.id === productId);
-  const item = cart.find((entry) => entry.id === productId);
-  if (!item || !product) return;
+  // Sugerencias "comprados juntos" basadas en todos los items del carrito
+  const cartIds = cart.map((i) => i.id);
+  const suggestedIds = new Set();
+  for (const id of cartIds) {
+    getSuggestedIds(id, 4).forEach((sid) => {
+      if (!cartIds.includes(sid)) suggestedIds.add(sid);
+    });
+  }
 
-  item.quantity += delta;
-  if (item.quantity <= 0) cart = cart.filter((entry) => entry.id !== productId);
-  if (item.quantity > Number(product.stock)) item.quantity = Number(product.stock);
-  saveCart();
+  // Limpiar sugerencias previas y renderizar
+  const existing = items.parentElement.querySelector(".suggestions-section");
+  if (existing) existing.remove();
+
+  if (suggestedIds.size) {
+    renderSuggestionsRow(
+      document.querySelector(".cart-dialog"),
+      [...suggestedIds].slice(0, 4),
+      "Comprados juntos frecuentemente",
+    );
+  }
 }
 
 function openCart() {
@@ -471,20 +745,30 @@ function closeCart() {
 function setupCart() {
   document.querySelector("#open-cart").addEventListener("click", openCart);
   document.querySelector("#close-cart").addEventListener("click", closeCart);
-  document.querySelector("#cart-panel").addEventListener("click", (event) => {
-    if (event.target.id === "cart-panel") closeCart();
+  document.querySelector("#cart-panel").addEventListener("click", (e) => {
+    if (e.target.id === "cart-panel") closeCart();
   });
   document.querySelector("#checkout-form").addEventListener("submit", checkout);
   renderCart();
 }
 
+// ─── CHECKOUT ────────────────────────────────────────────────────────────────
+function whatsappOrderUrl(order) {
+  const lines = [
+    "Hola Canopia, confirme esta compra desde la web:",
+    ...order.items.map((i) => `- ${i.name} x${i.quantity}: ${formatPrice(i.subtotal)}`),
+    `Total: ${formatPrice(order.total)}`,
+    `Nombre: ${order.customer.name}`,
+    `Telefono: ${order.customer.phone}`,
+    order.customer.note ? `Nota: ${order.customer.note}` : "",
+  ].filter(Boolean);
+  return `https://wa.me/${store.contact.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`;
+}
+
 async function checkout(event) {
   event.preventDefault();
   const message = document.querySelector("#checkout-message");
-  if (!cart.length) {
-    message.textContent = "Agrega productos antes de confirmar.";
-    return;
-  }
+  if (!cart.length) { message.textContent = "Agrega productos antes de confirmar."; return; }
 
   const form = new FormData(event.currentTarget);
   message.textContent = "Confirmando compra...";
@@ -505,11 +789,13 @@ async function checkout(event) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "No se pudo confirmar la compra.");
 
+    // Registrar comprados juntos
+    recordPurchasedTogether(result.items.map((i) => i.id));
+
     cart = [];
     saveCart();
     await loadDatabaseProducts();
     renderProducts();
-    setupHeroFeature();
     message.textContent = "Compra confirmada. Te abrimos WhatsApp con el resumen.";
     window.open(whatsappOrderUrl(result), "_blank", "noreferrer");
   } catch (error) {
@@ -517,38 +803,86 @@ async function checkout(event) {
   }
 }
 
-function whatsappOrderUrl(order) {
-  const lines = [
-    "Hola Canopia, confirme esta compra desde la web:",
-    ...order.items.map((item) => `- ${item.name} x${item.quantity}: ${formatPrice(item.subtotal)}`),
-    `Total: ${formatPrice(order.total)}`,
-    `Nombre: ${order.customer.name}`,
-    `Telefono: ${order.customer.phone}`,
-    order.customer.note ? `Nota: ${order.customer.note}` : "",
-  ].filter(Boolean);
+// ─── Productos relacionados (se inyecta debajo de cada card al hacer hover largo) ──
+// Estrategia: panel debajo del catálogo cuando el usuario agrega al carrito
+let relatedTimeout = null;
 
-  return `https://wa.me/${store.contact.whatsapp}?text=${encodeURIComponent(lines.join("\n"))}`;
+function showRelated(productId) {
+  const product = store.products.find((p) => p.id === productId);
+  if (!product) return;
+
+  // Productos de la misma categoría, excluyendo el actual y los del carrito
+  const cartIds = cart.map((i) => i.id);
+  const related = store.products
+    .filter(
+      (p) =>
+        p.id !== productId &&
+        p.visible !== false &&
+        p.category === product.category &&
+        !cartIds.includes(p.id),
+    )
+    .slice(0, 4);
+
+  if (!related.length) return;
+
+  // Remover sección previa
+  document.querySelector("#related-section")?.remove();
+
+  const section = document.createElement("section");
+  section.id = "related-section";
+  section.className = "section";
+  section.style.paddingTop = "1rem";
+  section.innerHTML = `
+    <div class="section-heading">
+      <p class="eyebrow">Puede interesarte</p>
+      <h2>Productos relacionados</h2>
+    </div>`;
+
+  const row = document.createElement("div");
+  row.className = "suggestions-row";
+
+  related.forEach((p) => {
+    const card = document.createElement("div");
+    card.className = "suggestion-card";
+    card.innerHTML = `
+      ${p.image ? `<img src="${p.image}" alt="${p.name}" loading="lazy" />`
+                : `<div class="suggestion-art">${initials(p.name)}</div>`}
+      <div class="suggestion-body">
+        <strong>${p.name}</strong>
+        <span>${formatPrice(p.price)}</span>
+        <button class="button primary" type="button"
+          ${Number(p.stock) <= 0 ? "disabled" : ""}>+ Agregar</button>
+      </div>`;
+    card.querySelector("button").addEventListener("click", () => addToCart(p.id));
+    row.appendChild(card);
+  });
+
+  section.appendChild(row);
+
+  // Insertar después del catálogo
+  const catalogSection = document.querySelector("#catalogo");
+  catalogSection?.after(section);
+
+  // Auto-remover después de 12s si no se interactuó
+  clearTimeout(relatedTimeout);
+  relatedTimeout = setTimeout(() => {
+    document.querySelector("#related-section")?.remove();
+  }, 12000);
 }
 
+// ─── Setup catalog controls ───────────────────────────────────────────────────
 function setupCatalogControls() {
   const searchInput = document.querySelector("#catalog-search");
   const sortSelect = document.querySelector("#catalog-sort");
-
   if (searchInput) {
-    searchInput.addEventListener("input", (event) => {
-      searchQuery = event.target.value;
-      renderProducts();
-    });
+    searchInput.addEventListener("input", (e) => { searchQuery = e.target.value; renderProducts(); });
   }
-
   if (sortSelect) {
-    sortSelect.addEventListener("change", (event) => {
-      activeSort = event.target.value;
-      renderProducts();
-    });
+    sortSelect.addEventListener("change", (e) => { activeSort = e.target.value; renderProducts(); });
   }
 }
 
+// ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
   await loadStore();
 
@@ -559,7 +893,15 @@ async function init() {
   setupContact();
   setupNav();
   setupCart();
+  setupFavs();
+  setupCompare();
   setupCatalogControls();
+
+  // Mostrar relacionados cuando se agrega al carrito
+  document.querySelector("#product-grid").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-add-to-cart]");
+    if (btn) showRelated(btn.dataset.addToCart);
+  });
 
   if (catalogUpdatedAt) {
     refreshCatalogViews();

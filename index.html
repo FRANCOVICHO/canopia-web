@@ -31,6 +31,9 @@
         <span class="live-badge" id="live-sync" hidden title="Catalogo conectado en tiempo real">
           <span class="live-dot"></span> En vivo
         </span>
+        <button class="fav-nav-button" type="button" id="open-favs" aria-label="Favoritos">
+          ❤️ <span class="fav-count" id="fav-count">0</span>
+        </button>
         <button class="cart-button" type="button" id="open-cart">Carrito <span id="cart-count">0</span></button>
       </nav>
     </header>
@@ -175,6 +178,36 @@
         </form>
       </div>
     </aside>
+
+    <!-- Panel de Favoritos -->
+    <aside class="favs-panel" id="favs-panel" aria-hidden="true">
+      <div class="favs-dialog" role="dialog" aria-modal="true" aria-labelledby="favs-title">
+        <div class="favs-head">
+          <h2 id="favs-title">Favoritos ❤️</h2>
+          <button class="icon-button" type="button" id="close-favs" aria-label="Cerrar favoritos">x</button>
+        </div>
+        <div id="favs-list" class="favs-list"></div>
+      </div>
+    </aside>
+
+    <!-- Barra flotante de comparación -->
+    <div class="compare-bar" id="compare-bar" role="status" aria-live="polite">
+      <div class="compare-bar-slots" id="compare-slots"></div>
+      <span id="compare-bar-label">Comparar</span>
+      <button class="button primary" type="button" id="compare-now-btn">Ver comparación</button>
+      <button class="button ghost" type="button" id="compare-clear-btn">Limpiar</button>
+    </div>
+
+    <!-- Modal de comparación -->
+    <div class="compare-modal-overlay" id="compare-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+      <div class="compare-modal">
+        <div class="compare-modal-head">
+          <h2 id="compare-modal-title">Comparar productos</h2>
+          <button class="icon-button" type="button" id="close-compare-modal" aria-label="Cerrar comparación">x</button>
+        </div>
+        <div id="compare-modal-body"></div>
+      </div>
+    </div>
 
     <script src="app.js"></script>
 
