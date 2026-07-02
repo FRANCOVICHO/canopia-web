@@ -61,6 +61,7 @@ async function loadStore() {
     apiBase = store.editorUrl || "";
     await loadOnlineData();
     await loadDatabaseProducts();
+    await loadDatabaseCategories();
   } catch (error) {
     console.warn("No se pudo cargar data/site.json", error);
   }
@@ -79,6 +80,24 @@ async function loadDatabaseProducts() {
     console.warn("No se pudo cargar el catalogo online", error);
     setLiveStatus(false);
     return false;
+  }
+}
+
+async function loadDatabaseCategories() {
+  try {
+    const response = await fetch(`${apiBase}/api/categories`, { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data.categories?.length) {
+      // Convertir formato DB (name, description) al formato interno (id, name, description)
+      store.categories = data.categories.map((c) => ({
+        id: slugify(c.name),
+        name: c.name,
+        description: c.description || "",
+      }));
+    }
+  } catch {
+    // Si falla, usa las categorías de site.json (fallback silencioso)
   }
 }
 

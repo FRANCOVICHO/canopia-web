@@ -96,17 +96,28 @@ async function api(path, options = {}) {
 }
 
 async function loadCategories() {
+  // Intentar cargar desde la API (DB)
   try {
-    const response = await fetch("data/site.json", { cache: "no-store" });
-    const data = await response.json();
-    categories = data.categories || [];
+    const data = await api("/api/categories");
+    categories = (data.categories || []).map((c) => ({
+      id: c.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "-"),
+      name: c.name,
+      description: c.description || "",
+    }));
   } catch {
-    categories = [
-      { id: "parafernalia", name: "Parafernalia" },
-      { id: "grow", name: "Grow" },
-      { id: "picadores", name: "Picadores" },
-      { id: "combos", name: "Combos" },
-    ];
+    // Fallback a site.json si la API no responde
+    try {
+      const response = await fetch("data/site.json", { cache: "no-store" });
+      const data = await response.json();
+      categories = data.categories || [];
+    } catch {
+      categories = [
+        { id: "parafernalia", name: "Parafernalia" },
+        { id: "grow", name: "Grow" },
+        { id: "picadores", name: "Picadores" },
+        { id: "combos", name: "Combos" },
+      ];
+    }
   }
 
   const filter = document.querySelector("#filter-category");

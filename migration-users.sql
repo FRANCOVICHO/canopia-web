@@ -28,3 +28,10 @@ CREATE TABLE IF NOT EXISTS user_addresses (
 
 -- 3. Agregar columna user_id a orders (ignorar error si ya existe)
 ALTER TABLE orders ADD COLUMN user_id INTEGER;
+
+-- 4. Tabla de categorías
+CREATE TABLE IF NOT EXISTS categories (
+  name        TEXT    PRIMARY KEY,
+  description TEXT    NOT NULL DEFAULT '',
+  sort_order  INTEGER NOT NULL DEFAULT 0
+);
