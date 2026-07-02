@@ -37,6 +37,9 @@
         <button class="icon-btn" type="button" aria-label="Buscar" id="search-toggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
+        <button class="icon-btn" type="button" id="open-auth" aria-label="Mi cuenta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
         <button class="icon-btn fav-nav-button" type="button" id="open-favs" aria-label="Favoritos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
           <span class="fav-count" id="fav-count">0</span>
@@ -302,6 +305,205 @@
         <div id="compare-modal-body"></div>
       </div>
     </div>
+
+    <!-- ── MODAL DETALLE PRODUCTO ────────────────── -->
+    <div class="product-modal-overlay" id="product-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="product-modal-name">
+      <div class="product-modal" id="product-modal">
+        <div class="product-modal-handle" aria-hidden="true"></div>
+        <div class="product-modal-head">
+          <button class="icon-btn" type="button" id="close-product-modal" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="product-modal-body" id="product-modal-body">
+          <!-- llenado por JS -->
+        </div>
+        <div class="product-modal-reviews" id="product-modal-reviews">
+          <!-- llenado por JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODAL NUEVA RESEÑA ─────────────────── -->
+    <div class="review-modal-overlay" id="review-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+      <div class="review-modal">
+        <div class="review-modal-head">
+          <h3 id="review-modal-title">Dejar reseña</h3>
+          <button class="icon-btn" type="button" id="close-review-modal" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="review-modal-product">
+          <strong id="review-modal-product-name"></strong>
+          <span id="review-modal-product-cat"></span>
+        </div>
+        <div class="review-modal-body">
+          <div class="star-picker" id="star-picker" role="group" aria-label="Puntuación">
+            <button class="star-pick" type="button" data-star="1" aria-label="1 estrella">★</button>
+            <button class="star-pick" type="button" data-star="2" aria-label="2 estrellas">★</button>
+            <button class="star-pick" type="button" data-star="3" aria-label="3 estrellas">★</button>
+            <button class="star-pick" type="button" data-star="4" aria-label="4 estrellas">★</button>
+            <button class="star-pick" type="button" data-star="5" aria-label="5 estrellas">★</button>
+          </div>
+          <form class="review-form" id="review-form">
+            <label>
+              Tu nombre
+              <input name="author" placeholder="¿Cómo te llamás?" maxlength="40" required />
+            </label>
+            <label>
+              Comentario
+              <textarea name="text" placeholder="Contanos tu experiencia con el producto..." maxlength="400"></textarea>
+            </label>
+            <div class="review-form-footer">
+              <span class="review-star-required" id="review-star-required"></span>
+              <div style="display:flex;gap:.5rem">
+                <button class="btn btn-outline" type="button" id="cancel-review-modal">Cancelar</button>
+                <button class="btn btn-primary" type="submit">Publicar reseña</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PANEL RESEÑAS ──────────────────────── -->
+    <aside class="reviews-panel" id="reviews-panel" aria-hidden="true">
+      <div class="reviews-dialog" role="dialog" aria-modal="true" aria-labelledby="reviews-panel-title">
+        <div class="reviews-dialog-head">
+          <h2 id="reviews-panel-title">Reseñas</h2>
+          <button class="icon-btn" type="button" id="close-reviews-panel" aria-label="Cerrar reseñas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="reviews-product-info">
+          <strong id="reviews-panel-product-name"></strong>
+          <div class="stars-display" id="reviews-panel-stars"></div>
+        </div>
+        <div class="reviews-summary" id="reviews-summary"></div>
+        <div class="reviews-list" id="reviews-list"></div>
+        <div class="reviews-cta">
+          <button class="btn btn-primary" type="button" id="open-review-from-panel" style="width:100%">
+            ✏️ Escribir reseña
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── AUTH PANEL ─────────────────────────── -->
+    <aside class="auth-panel" id="auth-panel" aria-hidden="true">
+      <div class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-panel-title">
+
+        <!-- VISTA: Login / Registro -->
+        <div id="auth-view-login">
+          <div class="auth-dialog-head">
+            <h2 id="auth-panel-title">Mi cuenta</h2>
+            <button class="icon-btn" type="button" id="close-auth-panel" aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="auth-tabs">
+            <button class="auth-tab is-active" type="button" data-tab="login">Ingresar</button>
+            <button class="auth-tab" type="button" data-tab="register">Crear cuenta</button>
+          </div>
+
+          <!-- Form login -->
+          <form class="auth-form" id="login-form-user">
+            <div id="login-tab-content">
+              <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
+              <label>Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="••••••" /></label>
+              <button class="btn btn-primary" type="submit" style="width:100%">Ingresar</button>
+            </div>
+          </form>
+
+          <!-- Form registro -->
+          <form class="auth-form" id="register-form-user" hidden>
+            <label>Nombre<input name="name" autocomplete="name" required placeholder="Tu nombre" /></label>
+            <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
+            <label>WhatsApp<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional" /></label>
+            <label>Contraseña<input name="password" type="password" autocomplete="new-password" required placeholder="Mínimo 6 caracteres" /></label>
+            <button class="btn btn-primary" type="submit" style="width:100%">Crear cuenta</button>
+          </form>
+
+          <p class="auth-message" id="auth-message"></p>
+          <p class="auth-skip">
+            <button type="button" class="review-link" id="auth-skip-btn">Continuar sin cuenta →</button>
+          </p>
+        </div>
+
+        <!-- VISTA: Perfil -->
+        <div id="auth-view-profile" hidden>
+          <div class="auth-dialog-head">
+            <div class="auth-user-badge" id="auth-user-badge"></div>
+            <button class="icon-btn" type="button" id="close-auth-panel-2" aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="auth-profile-tabs">
+            <button class="auth-profile-tab is-active" type="button" data-ptab="orders">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Pedidos
+            </button>
+            <button class="auth-profile-tab" type="button" data-ptab="addresses">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Direcciones
+            </button>
+            <button class="auth-profile-tab" type="button" data-ptab="favs">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              Favoritos
+            </button>
+            <button class="auth-profile-tab" type="button" data-ptab="settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Perfil
+            </button>
+          </div>
+
+          <!-- Tab: Pedidos -->
+          <div class="auth-ptab-content" id="ptab-orders">
+            <div id="profile-orders-list" class="profile-orders-list"></div>
+          </div>
+
+          <!-- Tab: Direcciones -->
+          <div class="auth-ptab-content" id="ptab-addresses" hidden>
+            <div id="profile-addresses-list" class="profile-addresses-list"></div>
+            <button class="btn btn-outline" type="button" id="add-address-btn" style="width:100%;margin-top:.75rem">
+              + Agregar dirección
+            </button>
+            <form class="auth-form address-form" id="address-form" hidden>
+              <label>Etiqueta<input name="label" placeholder="Casa, Trabajo..." value="Casa" /></label>
+              <label>Dirección<input name="line1" required placeholder="Calle, número, piso..." /></label>
+              <label>Ciudad<input name="city" placeholder="Buenos Aires..." /></label>
+              <label>Notas<input name="notes" placeholder="Timbre, referencias..." /></label>
+              <input type="hidden" name="id" />
+              <div style="display:flex;gap:.5rem;margin-top:.5rem">
+                <button class="btn btn-outline" type="button" id="cancel-address-btn" style="flex:1">Cancelar</button>
+                <button class="btn btn-primary" type="submit" style="flex:1">Guardar</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tab: Favoritos sincronizados -->
+          <div class="auth-ptab-content" id="ptab-favs" hidden>
+            <div id="profile-favs-list" class="favs-list"></div>
+          </div>
+
+          <!-- Tab: Configuración de perfil -->
+          <div class="auth-ptab-content" id="ptab-settings" hidden>
+            <form class="auth-form" id="profile-edit-form">
+              <label>Nombre<input name="name" required /></label>
+              <label>WhatsApp<input name="phone" type="tel" /></label>
+              <button class="btn btn-primary" type="submit" style="width:100%">Guardar cambios</button>
+              <p class="auth-message" id="profile-edit-message"></p>
+            </form>
+            <button class="btn btn-outline danger" type="button" id="logout-user-btn" style="width:100%;margin-top:1rem">
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
 
     <script src="app.js"></script>
   </body>

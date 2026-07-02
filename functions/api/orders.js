@@ -7,6 +7,7 @@ export async function onRequestPost({ request, env }) {
   const customerName = String(payload.customer?.name || "").trim();
   const customerPhone = String(payload.customer?.phone || "").trim();
   const customerNote = String(payload.customer?.note || "").trim();
+  const userId = payload.user_id ? Number(payload.user_id) : null;
 
   if (!customerName || !customerPhone) {
     return Response.json({ error: "Falta nombre o telefono." }, { status: 400 });
@@ -65,10 +66,10 @@ export async function onRequestPost({ request, env }) {
   statements.push(
     env.canopia_db
       .prepare(
-        `INSERT INTO orders (customer_name, customer_phone, customer_note, total, items_json)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO orders (customer_name, customer_phone, customer_note, total, items_json, user_id)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
-      .bind(customerName, customerPhone, customerNote, total, JSON.stringify(enrichedItems)),
+      .bind(customerName, customerPhone, customerNote, total, JSON.stringify(enrichedItems), userId),
   );
 
   await env.canopia_db.batch(statements);

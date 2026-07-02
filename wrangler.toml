@@ -5,3 +5,9 @@ pages_build_output_dir = "."
 binding = "canopia_db"
 database_name = "canopia-db"
 database_id = "a47f1a66-798c-4620-8c0b-36633ad81675"
+
+# Variables de entorno para desarrollo local
+# En producción (Cloudflare Pages) agregar JWT_SECRET como secret en el dashboard:
+# Settings → Environment variables → Add variable → JWT_SECRET
+[vars]
+JWT_SECRET = "canopia-dev-secret-cambiar-en-produccion"

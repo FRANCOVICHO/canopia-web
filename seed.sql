@@ -7,3 +7,6 @@ VALUES
   ('grinder-metal', 'Picador metalico', 'picadores', 'Grinder resistente de cuatro partes con cierre magnetico.', 15500, 'Destacado', '', 0, 1, 12),
   ('fertilizante-flora', 'Fertilizante flora', 'grow', 'Nutriente para etapa de floracion. Consultar marcas disponibles.', 18500, 'Grow', '', 0, 1, 10),
   ('bandeja-rolling', 'Bandeja rolling', 'parafernalia', 'Bandeja practica para preparar y mantener todo ordenado.', 9800, 'Smoke', '', 0, 1, 15);
+
+-- Migración: columna user_id en orders (ejecutar si la tabla ya existe)
+-- ALTER TABLE orders ADD COLUMN user_id INTEGER;
