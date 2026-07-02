@@ -2287,3 +2287,91 @@ button { font: inherit; cursor: pointer; }
 }
 .modal-thumb:hover { opacity: 0.85; }
 .modal-thumb.is-active { border-color: var(--green); opacity: 1; }
+
+/* ── Admin: lista de pedidos ── */
+.orders-list { display: flex; flex-direction: column; gap: 0; }
+
+.order-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: start;
+  gap: 1rem;
+  padding: 1rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.order-row:last-child { border-bottom: none; }
+
+.order-row-id {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.order-row-info strong { display: block; font-size: 0.9rem; }
+.order-row-info small  { font-size: 0.78rem; color: var(--muted); display: block; margin-bottom: .3rem; }
+
+.order-row-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: .25rem;
+}
+.order-item-tag {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: .15rem .5rem;
+  font-size: .72rem;
+  color: var(--muted);
+}
+
+.order-row-total {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--green);
+  white-space: nowrap;
+  text-align: right;
+}
+
+.order-row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  min-width: 6rem;
+}
+.order-row-actions .button {
+  min-height: auto;
+  padding: .4rem .7rem;
+  font-size: .78rem;
+  text-align: center;
+}
+
+.order-status-badge {
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+  padding: .15rem .55rem;
+  font-size: .72rem;
+  font-weight: 800;
+  margin-bottom: .3rem;
+}
+.order-status-badge.pendiente  { background: rgba(245,158,11,.15); color: #fbbf24; }
+.order-status-badge.confirmado { background: var(--green-dim);     color: var(--green); }
+.order-status-badge.rechazado  { background: rgba(239,68,68,.12);  color: #f87171; }
+
+.orders-empty {
+  padding: 2.5rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+@media (max-width: 640px) {
+  .order-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto auto;
+  }
+  .order-row-id    { grid-column: 1; }
+  .order-row-total { grid-column: 2; grid-row: 1; }
+  .order-row-info  { grid-column: 1 / -1; }
+  .order-row-actions { grid-column: 1 / -1; flex-direction: row; }
+}

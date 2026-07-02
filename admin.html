@@ -57,34 +57,62 @@
             <h1>Productos y stock</h1>
             <p class="help" id="sync-status">Sincronizado con la tienda.</p>
           </div>
-          <button class="button primary" type="button" id="new-product-btn">Nuevo producto</button>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <button class="button ghost" type="button" id="show-orders-btn">📦 Pedidos <span id="orders-badge" class="status-pill is-on" hidden></span></button>
+            <button class="button primary" type="button" id="new-product-btn">Nuevo producto</button>
+          </div>
         </div>
 
         <div class="admin-stats" id="admin-stats"></div>
 
-        <div class="admin-card">
-          <div class="admin-toolbar">
-            <input type="search" id="search-products" placeholder="Buscar producto..." />
-            <select id="filter-category">
-              <option value="todos">Todas las categorias</option>
-            </select>
+        <!-- ── SECCIÓN PEDIDOS ── -->
+        <section id="orders-section" hidden>
+          <div class="admin-top" style="margin-top:1rem">
+            <div>
+              <p class="eyebrow">Gestión de pedidos</p>
+              <h2 style="font-size:1.4rem">Pedidos recibidos</h2>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <select id="orders-filter" class="admin-toolbar" style="padding:.5rem .8rem;border-radius:.45rem;border:1px solid var(--border);background:var(--panel-2);color:var(--text);font:inherit">
+                <option value="pendiente">Pendientes</option>
+                <option value="confirmado">Confirmados</option>
+                <option value="rechazado">Rechazados</option>
+                <option value="todos">Todos</option>
+              </select>
+              <button class="button ghost" type="button" id="refresh-orders-btn">↺ Actualizar</button>
+            </div>
           </div>
-          <div class="product-table-wrap">
-            <table class="product-table" id="product-table">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Categoria</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th>Estado</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="product-table-body"></tbody>
-            </table>
+          <div class="admin-card" style="margin-top:.75rem">
+            <div id="orders-list" class="orders-list"></div>
           </div>
-        </div>
+        </section>
+
+        <!-- ── SECCIÓN PRODUCTOS ── -->
+        <section id="products-section">
+          <div class="admin-card" style="margin-top:.75rem">
+            <div class="admin-toolbar">
+              <input type="search" id="search-products" placeholder="Buscar producto..." />
+              <select id="filter-category">
+                <option value="todos">Todas las categorias</option>
+              </select>
+            </div>
+            <div class="product-table-wrap">
+              <table class="product-table" id="product-table">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Categoria</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="product-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
 

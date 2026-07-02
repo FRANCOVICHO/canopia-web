@@ -381,13 +381,150 @@ async function pollCatalog() {
 
 document.querySelector("#add-image-btn").addEventListener("click", () => addImageRow());
 
+// ── Pedidos ───────────────────────────────────────────────────────────────────
+let orders = [];
+
+async function loadOrders(status = "pendiente") {
+  try {
+    const data = await api(`/api/orders?status=${status}&limit=100`);
+    orders = data.orders || [];
+    renderOrders();
+    updateOrdersBadge();
+  } catch (err) {
+    document.querySelector("#orders-list").innerHTML =
+      `<div class="orders-empty">No se pudieron cargar los pedidos.<br><small>${err.message}</small></div>`;
+  }
+}
+
+function renderOrders() {
+  const container = document.querySelector("#orders-list");
+  if (!orders.length) {
+    container.innerHTML = `<div class="orders-empty">No hay pedidos en este estado.</div>`;
+    return;
+  }
+
+  container.innerHTML = orders.map((o) => {
+    const isPending = o.status === "pendiente";
+    return `
+      <div class="order-row" id="order-row-${o.id}">
+        <div class="order-row-id">#${o.id}<br><span style="font-weight:400;color:var(--muted-2)">${formatDate(o.created_at)}</span></div>
+        <div class="order-row-info">
+          <span class="order-status-badge ${o.status}">${o.status}</span>
+          <strong>${escapeAdmin(o.customer_name)}</strong>
+          <small>📱 ${escapeAdmin(o.customer_phone)}${o.customer_note ? ` · ${escapeAdmin(o.customer_note)}` : ""}</small>
+          <div class="order-row-items">
+            ${(o.items || []).map((item) =>
+              `<span class="order-item-tag">${escapeAdmin(item.name)} ×${item.quantity}</span>`
+            ).join("")}
+          </div>
+        </div>
+        <div class="order-row-total">${formatPrice(o.total)}</div>
+        <div class="order-row-actions">
+          ${isPending ? `
+            <button class="button primary" type="button" data-confirm-order="${o.id}">✓ Confirmar</button>
+            <button class="button ghost danger" type="button" data-reject-order="${o.id}">✕ Rechazar</button>
+          ` : `<span style="font-size:.78rem;color:var(--muted)">Sin acciones</span>`}
+        </div>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll("[data-confirm-order]").forEach((btn) => {
+    btn.addEventListener("click", () => handleOrderAction(Number(btn.dataset.confirmOrder), "confirm"));
+  });
+  container.querySelectorAll("[data-reject-order]").forEach((btn) => {
+    btn.addEventListener("click", () => handleOrderAction(Number(btn.dataset.rejectOrder), "reject"));
+  });
+}
+
+async function handleOrderAction(orderId, action) {
+  const label = action === "confirm" ? "confirmar" : "rechazar";
+  const order = orders.find((o) => o.id === orderId);
+  if (!order) return;
+
+  const itemsText = (order.items || []).map((i) => `${i.name} ×${i.quantity}`).join(", ");
+  if (!confirm(`¿${label.charAt(0).toUpperCase() + label.slice(1)} el pedido #${orderId}?\n${order.customer_name} — ${itemsText}`)) return;
+
+  // Deshabilitar botones de esa fila mientras procesa
+  const row = document.querySelector(`#order-row-${orderId}`);
+  row?.querySelectorAll("button").forEach((b) => { b.disabled = true; b.textContent = "..."; });
+
+  try {
+    await api(`/api/orders?action=${action}`, {
+      method: "POST",
+      body: JSON.stringify({ order_id: orderId }),
+    });
+    // Refrescar la lista con el filtro activo
+    const status = document.querySelector("#orders-filter").value;
+    await loadOrders(status);
+    await loadProducts(); // refrescar stock si se confirmó
+  } catch (err) {
+    alert(`Error al ${label}: ${err.message}`);
+    // Re-habilitar botones
+    row?.querySelectorAll("button").forEach((b) => { b.disabled = false; });
+    renderOrders();
+  }
+}
+
+async function updateOrdersBadge() {
+  try {
+    const data = await api("/api/orders?status=pendiente&limit=200");
+    const count = (data.orders || []).length;
+    const badge = document.querySelector("#orders-badge");
+    if (count > 0) {
+      badge.textContent = count;
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  } catch { /* silencioso */ }
+}
+
+function formatDate(str) {
+  if (!str) return "";
+  try { return new Date(str).toLocaleDateString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
+  catch { return str; }
+}
+
+function escapeAdmin(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Toggle sección pedidos / productos
+document.querySelector("#show-orders-btn").addEventListener("click", () => {
+  const ordersSection  = document.querySelector("#orders-section");
+  const productsSection = document.querySelector("#products-section");
+  const btn = document.querySelector("#show-orders-btn");
+  const showing = !ordersSection.hidden;
+  ordersSection.hidden  = showing;
+  productsSection.hidden = !showing;
+  btn.textContent = showing ? "📦 Pedidos" : "📦 Ocultar pedidos";
+  // Reponer badge
+  updateOrdersBadge().then(() => {
+    const badge = document.querySelector("#orders-badge");
+    if (badge && !badge.hidden) btn.innerHTML = `📦 Pedidos <span class="status-pill is-on" id="orders-badge">${badge.textContent}</span>`;
+  });
+  if (!showing) {
+    const status = document.querySelector("#orders-filter").value;
+    loadOrders(status);
+  }
+});
+
+document.querySelector("#orders-filter").addEventListener("change", (e) => loadOrders(e.target.value));
+document.querySelector("#refresh-orders-btn").addEventListener("click", () => {
+  const status = document.querySelector("#orders-filter").value;
+  loadOrders(status);
+});
+
 async function init() {
   await loadCategories();
   if (token) {
     try {
       await loadProducts();
       showAdmin();
+      updateOrdersBadge(); // verificar pedidos pendientes al entrar
       setInterval(pollCatalog, 5000);
+      setInterval(updateOrdersBadge, 15000); // badge se refresca cada 15s
     } catch {
       token = "";
       sessionStorage.removeItem(TOKEN_KEY);
