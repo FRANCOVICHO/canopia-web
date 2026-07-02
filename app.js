@@ -2122,10 +2122,17 @@ function renderProductModalBody(product) {
 
   document.querySelector("#product-modal-body").innerHTML = `
     <!-- Imagen -->
-    <div class="product-modal-img-col">
+    <div class="product-modal-img-col" id="product-modal-img-col">
       ${product.image
-        ? `<img src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
+        ? `<img id="product-modal-main-img" src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
         : `<div class="product-modal-art">${initials(product.name)}</div>`}
+      ${product.images && product.images.length > 1 ? `
+        <div class="product-modal-thumbs">
+          ${product.images.map((url, i) => `
+            <button class="modal-thumb ${i === 0 ? "is-active" : ""}" type="button"
+              data-thumb="${url}" style="background-image:url('${url}')">
+            </button>`).join("")}
+        </div>` : ""}
     </div>
 
     <!-- Info -->
@@ -2200,6 +2207,16 @@ function renderProductModalBody(product) {
       btn.classList.toggle("is-comparing", nowComp);
       btn.textContent = nowComp ? "✓ Comparando" : "⚖️ Comparar";
     }
+  });
+
+  // Galería: cambiar imagen principal al clickear miniatura
+  document.querySelectorAll(".modal-thumb").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const mainImg = document.querySelector("#product-modal-main-img");
+      if (mainImg) mainImg.src = btn.dataset.thumb;
+      document.querySelectorAll(".modal-thumb").forEach((t) => t.classList.remove("is-active"));
+      btn.classList.add("is-active");
+    });
   });
 }
 

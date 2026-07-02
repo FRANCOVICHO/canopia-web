@@ -1,4 +1,59 @@
+// ── Helpers de imágenes ────────────────────────────────────────────────────────
 const TOKEN_KEY = "canopia_admin_token";
+/** Convierte el campo image (string o JSON array) a un array de URLs. */
+function parseImages(raw) {
+  if (!raw) return [""];
+  const s = String(raw).trim();
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      return Array.isArray(arr) && arr.length ? arr : [""];
+    } catch { return [s]; }
+  }
+  return [s];
+}
+
+/** Llena el editor de imágenes con las URLs del producto. */
+function setImageInputs(raw) {
+  const urls = parseImages(raw);
+  const container = document.querySelector("#image-inputs");
+  container.innerHTML = "";
+  urls.forEach((url) => addImageRow(url));
+}
+
+/** Agrega una fila de input de imagen. */
+function addImageRow(value = "") {
+  const container = document.querySelector("#image-inputs");
+  const row = document.createElement("div");
+  row.className = "image-input-row";
+  row.innerHTML = `
+    <input name="images[]" placeholder="https://..." value="${value.replace(/"/g, "&quot;")}" />
+    <button type="button" class="img-row-remove" aria-label="Quitar">✕</button>`;
+  row.querySelector(".img-row-remove").addEventListener("click", () => {
+    if (container.querySelectorAll(".image-input-row").length > 1) row.remove();
+  });
+  container.appendChild(row);
+  // Ocultar botón de la primera fila
+  updateRemoveButtons();
+}
+
+function updateRemoveButtons() {
+  const rows = document.querySelectorAll("#image-inputs .image-input-row");
+  rows.forEach((row, i) => {
+    const btn = row.querySelector(".img-row-remove");
+    btn.style.opacity = i === 0 ? "0" : "1";
+    btn.style.pointerEvents = i === 0 ? "none" : "auto";
+  });
+}
+
+/** Lee los inputs de imagen y devuelve el array de URLs no vacías. */
+function getImageValues() {
+  return [...document.querySelectorAll("#image-inputs input[name='images[]']")]
+    .map((i) => i.value.trim())
+    .filter(Boolean);
+}
+
+
 const formatPrice = (value) =>
   new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -158,6 +213,7 @@ function openCreateDialog() {
   productForm.mode.value = "create";
   productForm.id.disabled = false;
   productForm.visible.checked = true;
+  setImageInputs("");
   document.querySelector("#dialog-title").textContent = "Nuevo producto";
   formMessage.textContent = "";
   productDialog.showModal();
@@ -176,7 +232,7 @@ function openEditDialog(id) {
   productForm.price.value = product.price;
   productForm.stock.value = product.stock;
   productForm.tag.value = product.tag;
-  productForm.image.value = product.image || "";
+  setImageInputs(product.image || "");
   productForm.description.value = product.description || "";
   productForm.featured.checked = Boolean(product.featured);
   productForm.visible.checked = Boolean(product.visible);
@@ -197,7 +253,8 @@ async function saveProduct(event) {
     description: form.get("description"),
     price: Number(form.get("price")),
     tag: form.get("tag"),
-    image: form.get("image"),
+    images: getImageValues(),          // array de URLs
+    image: getImageValues()[0] || "",  // primera (compatibilidad)
     stock: Number(form.get("stock")),
     featured: form.get("featured") === "on",
     visible: form.get("visible") === "on",
@@ -310,6 +367,8 @@ async function pollCatalog() {
     // ignore polling errors
   }
 }
+
+document.querySelector("#add-image-btn").addEventListener("click", () => addImageRow());
 
 async function init() {
   await loadCategories();

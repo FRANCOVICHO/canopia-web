@@ -1,6 +1,12 @@
 import { checkAdmin } from "../_lib/auth.js";
 
 function mapProduct(row) {
+  // "images" es un helper que siempre devuelve un array de URLs.
+  // El campo "image" en la DB puede ser:
+  //   - string simple:  "https://..."           → [" https://..."]
+  //   - JSON array:     '["url1","url2"]'        → ["url1","url2"]
+  // "image" (primera imagen) se mantiene por compatibilidad con el resto del código.
+  const images = parseImages(row.image);
   return {
     id: row.id,
     name: row.name,
@@ -8,12 +14,34 @@ function mapProduct(row) {
     description: row.description,
     price: row.price,
     tag: row.tag,
-    image: row.image,
+    image: images[0] || "",   // primera imagen (compatibilidad total con código existente)
+    images,                   // array completo (para galería)
     featured: Boolean(row.featured),
     visible: Boolean(row.visible),
     stock: row.stock,
     updated_at: row.updated_at,
   };
+}
+
+/** Convierte el campo image (string o JSON array) a un array de URLs limpias. */
+function parseImages(raw) {
+  if (!raw) return [];
+  const s = String(raw).trim();
+  if (s.startsWith("[")) {
+    try {
+      const arr = JSON.parse(s);
+      return Array.isArray(arr) ? arr.filter(Boolean) : [s];
+    } catch { return [s]; }
+  }
+  return [s];
+}
+
+/** Serializa un array de URLs al formato que se guarda en la DB. */
+function serializeImages(arr) {
+  const clean = arr.map((u) => String(u).trim()).filter(Boolean);
+  if (clean.length === 0) return "";
+  if (clean.length === 1) return clean[0];   // una sola → string simple (compatible)
+  return JSON.stringify(clean);              // varias   → JSON array
 }
 
 function slugify(value) {
@@ -83,7 +111,7 @@ export async function onRequestPost({ request, env }) {
       String(body.description || "").trim(),
       Math.max(0, Number(body.price || 0)),
       String(body.tag || "Producto").trim(),
-      String(body.image || "").trim(),
+      serializeImages(Array.isArray(body.images) ? body.images : [body.image || ""]),
       body.featured ? 1 : 0,
       body.visible === false ? 0 : 1,
       Math.max(0, Number(body.stock || 0)),
@@ -129,7 +157,7 @@ export async function onRequestPut({ request, env }) {
       String(body.description || "").trim(),
       Math.max(0, Number(body.price || 0)),
       String(body.tag || "Producto").trim(),
-      String(body.image || "").trim(),
+      serializeImages(Array.isArray(body.images) ? body.images : [body.image || ""]),
       body.featured ? 1 : 0,
       body.visible === false ? 0 : 1,
       Math.max(0, Number(body.stock || 0)),

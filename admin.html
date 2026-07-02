@@ -121,8 +121,14 @@
             <input name="tag" placeholder="Smoke, Grow, Nuevo..." />
           </label>
           <label class="full">
-            Imagen (URL)
-            <input name="image" placeholder="https://..." />
+            Imágenes (URLs)
+            <div class="image-inputs" id="image-inputs">
+              <div class="image-input-row">
+                <input name="images[]" placeholder="https://... (imagen principal)" />
+                <button type="button" class="img-row-remove" aria-label="Quitar">✕</button>
+              </div>
+            </div>
+            <button type="button" class="button ghost" id="add-image-btn" style="margin-top:.4rem;width:100%;font-size:.82rem">+ Agregar otra imagen</button>
           </label>
           <label class="full">
             Descripcion
