@@ -400,6 +400,7 @@
             <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
             <label>Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="••••••" /></label>
             <button class="btn btn-primary" type="submit" style="width:100%">Ingresar</button>
+            <button type="button" class="auth-forgot-btn" id="forgot-password-btn">¿Olvidaste tu contraseña?</button>
           </form>
 
           <!-- Form registro (oculto por defecto) -->
@@ -415,6 +416,46 @@
           <p class="auth-skip">
             <button type="button" class="review-link" id="auth-skip-btn">Continuar sin cuenta →</button>
           </p>
+        </div>
+
+        <!-- VISTA: Recuperar contraseña -->
+        <div id="auth-view-recovery" hidden>
+          <div class="auth-dialog-head">
+            <h2>Recuperar contraseña</h2>
+            <button class="icon-btn" type="button" id="close-auth-panel-recovery" aria-label="Cerrar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <!-- Paso 1: ingresar email -->
+          <div id="recovery-step-1">
+            <form class="auth-form" id="forgot-form">
+              <p style="padding:0 1.2rem;font-size:.85rem;color:var(--muted);margin-bottom:.5rem">
+                Ingresá tu email y te generamos un código de 6 dígitos para que puedas cambiar tu contraseña.
+              </p>
+              <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
+              <button class="btn btn-primary" type="submit" style="width:100%">Generar código</button>
+            </form>
+            <p class="auth-message" id="forgot-message"></p>
+            <p class="auth-skip"><button type="button" class="review-link" id="back-to-login-btn">← Volver al login</button></p>
+          </div>
+
+          <!-- Paso 2: mostrar código + ingresar nueva contraseña -->
+          <div id="recovery-step-2" hidden>
+            <div class="auth-form">
+              <div class="recovery-code-box" id="recovery-code-display"></div>
+              <p style="font-size:.8rem;color:var(--muted);margin-bottom:.8rem;padding:0">
+                Mandá este código al cliente por WhatsApp. Tiene 15 minutos de validez.
+              </p>
+            </div>
+            <form class="auth-form" id="reset-form">
+              <input type="hidden" name="email" id="reset-email-hidden" />
+              <label>Código de 6 dígitos<input name="code" required placeholder="123456" maxlength="6" inputmode="numeric" /></label>
+              <label>Nueva contraseña<input name="password" type="password" required placeholder="Mínimo 6 caracteres" autocomplete="new-password" /></label>
+              <button class="btn btn-primary" type="submit" style="width:100%">Cambiar contraseña</button>
+            </form>
+            <p class="auth-message" id="reset-message"></p>
+          </div>
         </div>
 
         <!-- VISTA: Perfil -->

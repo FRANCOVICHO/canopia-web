@@ -121,15 +121,17 @@ export async function onRequest({ request, env }) {
   const action = url.searchParams.get("action");
 
   try {
-    if (request.method === "POST" && action === "register") return register(request, env);
-    if (request.method === "POST" && action === "login")    return login(request, env);
-    if (request.method === "GET"  && action === "me")       return me(request, env);
-    if (request.method === "PUT"  && action === "profile")  return updateProfile(request, env);
-    if (request.method === "GET"  && action === "orders")   return myOrders(request, env);
-    if (request.method === "POST" && action === "address")  return saveAddress(request, env);
-    if (request.method === "GET"  && action === "addresses") return getAddresses(request, env);
-    if (request.method === "DELETE" && action === "address") return deleteAddress(request, env);
-    if (request.method === "POST" && action === "sync-favs") return syncFavs(request, env);
+    if (request.method === "POST" && action === "register")       return register(request, env);
+    if (request.method === "POST" && action === "login")          return login(request, env);
+    if (request.method === "GET"  && action === "me")             return me(request, env);
+    if (request.method === "PUT"  && action === "profile")        return updateProfile(request, env);
+    if (request.method === "GET"  && action === "orders")         return myOrders(request, env);
+    if (request.method === "POST" && action === "address")        return saveAddress(request, env);
+    if (request.method === "GET"  && action === "addresses")      return getAddresses(request, env);
+    if (request.method === "DELETE" && action === "address")      return deleteAddress(request, env);
+    if (request.method === "POST" && action === "sync-favs")      return syncFavs(request, env);
+    if (request.method === "POST" && action === "forgot")         return forgotPassword(request, env);
+    if (request.method === "POST" && action === "reset-password") return resetPassword(request, env);
     return Response.json({ error: "Acción no encontrada." }, { status: 404, headers: CORS });
   } catch (err) {
     return Response.json({ error: "Error interno." }, { status: 500, headers: CORS });
@@ -306,4 +308,89 @@ async function syncFavs(request, env) {
     .bind(JSON.stringify(ids), payload.uid).run();
 
   return Response.json({ ok: true, favs: ids }, { headers: CORS });
+}
+
+// ── Recuperación de contraseña ────────────────────────────────────────────────
+// Genera un código de 6 dígitos y lo guarda en la DB con expiración de 15 min.
+// El código se muestra en pantalla para que el admin lo comparta por WhatsApp.
+
+async function forgotPassword(request, env) {
+  const body  = await request.json().catch(() => ({}));
+  const email = String(body.email || "").toLowerCase().trim();
+
+  if (!validEmail(email))
+    return Response.json({ error: "Email inválido." }, { status: 400, headers: CORS });
+
+  const user = await env.canopia_db
+    .prepare("SELECT id, name, phone FROM users WHERE email = ?").bind(email).first();
+
+  // Siempre responder igual para no revelar si el email existe
+  if (!user)
+    return Response.json({ ok: true, hint: "Si el email existe, el código fue generado." }, { headers: CORS });
+
+  // Código de 6 dígitos
+  const code    = String(Math.floor(100000 + Math.random() * 900000));
+  const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
+
+  // Guardar en la tabla reset_codes (la creamos si no existe)
+  await env.canopia_db.prepare(`
+    CREATE TABLE IF NOT EXISTS reset_codes (
+      user_id  INTEGER PRIMARY KEY,
+      code     TEXT NOT NULL,
+      expires  TEXT NOT NULL
+    )
+  `).run();
+
+  await env.canopia_db
+    .prepare("INSERT OR REPLACE INTO reset_codes (user_id, code, expires) VALUES (?, ?, ?)")
+    .bind(user.id, code, expires).run();
+
+  // Devolver el código para que puedas mandarlo por WhatsApp
+  return Response.json({
+    ok: true,
+    code,                        // visible solo para el admin/propietario
+    name: user.name,
+    phone: user.phone || "",
+    expires_in: "15 minutos",
+    message: `Tu código de recuperación de Canopia es: ${code} (válido 15 min)`,
+  }, { headers: CORS });
+}
+
+async function resetPassword(request, env) {
+  const body     = await request.json().catch(() => ({}));
+  const email    = String(body.email    || "").toLowerCase().trim();
+  const code     = String(body.code     || "").trim();
+  const password = String(body.password || "");
+
+  if (!validEmail(email) || !code || password.length < 6)
+    return Response.json({ error: "Datos incompletos." }, { status: 400, headers: CORS });
+
+  const user = await env.canopia_db
+    .prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
+  if (!user)
+    return Response.json({ error: "Email incorrecto." }, { status: 400, headers: CORS });
+
+  const row = await env.canopia_db
+    .prepare("SELECT code, expires FROM reset_codes WHERE user_id = ?").bind(user.id).first();
+
+  if (!row)
+    return Response.json({ error: "No hay código de recuperación para este usuario." }, { status: 400, headers: CORS });
+
+  if (new Date(row.expires) < new Date())
+    return Response.json({ error: "El código expiró. Solicitá uno nuevo." }, { status: 400, headers: CORS });
+
+  if (!timingSafeEqual(row.code, code))
+    return Response.json({ error: "Código incorrecto." }, { status: 400, headers: CORS });
+
+  // Actualizar contraseña y borrar el código
+  const newHash = await hashPassword(password);
+  await env.canopia_db.batch([
+    env.canopia_db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(newHash, user.id),
+    env.canopia_db.prepare("DELETE FROM reset_codes WHERE user_id = ?").bind(user.id),
+  ]);
+
+  const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
+  const updatedUser = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
+
+  return Response.json({ ok: true, token, user: userPublic(updatedUser) }, { headers: CORS });
 }

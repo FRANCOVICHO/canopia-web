@@ -2375,3 +2375,51 @@ button { font: inherit; cursor: pointer; }
   .order-row-info  { grid-column: 1 / -1; }
   .order-row-actions { grid-column: 1 / -1; flex-direction: row; }
 }
+
+/* ── Recuperación de contraseña ── */
+.auth-forgot-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.3rem 0;
+  text-align: center;
+  width: 100%;
+  margin-top: 0.25rem;
+  transition: color 0.15s;
+}
+.auth-forgot-btn:hover { color: var(--green); }
+
+.recovery-code-box {
+  background: var(--panel-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+}
+.recovery-code-box .code-number {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: var(--green);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.recovery-code-box .code-user {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.recovery-code-box .code-wa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--green);
+  text-decoration: underline;
+  cursor: pointer;
+}
