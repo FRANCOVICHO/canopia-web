@@ -415,8 +415,13 @@ async function resetPassword(request, env) {
 
 // ── Ver códigos pendientes (solo admin) ───────────────────────────────────────
 async function getRecoveryCodes(request, env) {
-  const auth = checkAdmin(request, env);
-  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: getCorsHeaders(request) });
+  // Acepta tanto "Authorization: Bearer TOKEN" como "x-admin-password: TOKEN"
+  const bearerHeader = request.headers.get("Authorization") || "";
+  const xHeader      = request.headers.get("x-admin-password") || "";
+  const token = bearerHeader.startsWith("Bearer ") ? bearerHeader.slice(7) : xHeader;
+
+  if (!env.ADMIN_TOKEN) return Response.json({ error: "Admin no configurado." }, { status: 401, headers: getCorsHeaders(request) });
+  if (!token || token !== env.ADMIN_TOKEN) return Response.json({ error: "Clave incorrecta." }, { status: 401, headers: getCorsHeaders(request) });
 
   // Asegurar que la tabla existe
   await env.canopia_db.prepare(`
