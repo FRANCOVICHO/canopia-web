@@ -1,6 +1,11 @@
 import { signJwt, verifyJwt, getUserFromRequest } from "../_lib/jwt.js";
 
-const CORS = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password",
+  "Content-Type": "application/json",
+};
 
 // ── Password hashing con PBKDF2 + salt aleatorio ──────────────────────────────
 // OWASP recomienda PBKDF2-HMAC-SHA256 con ≥600.000 iteraciones (2023).
@@ -132,6 +137,7 @@ export async function onRequest({ request, env }) {
     if (request.method === "POST" && action === "sync-favs")      return syncFavs(request, env);
     if (request.method === "POST" && action === "forgot")         return forgotPassword(request, env);
     if (request.method === "POST" && action === "reset-password") return resetPassword(request, env);
+    if (request.method === "GET"  && action === "recovery-codes") return getRecoveryCodes(request, env);
     return Response.json({ error: "Acción no encontrada." }, { status: 404, headers: CORS });
   } catch (err) {
     return Response.json({ error: "Error interno." }, { status: 500, headers: CORS });
@@ -393,4 +399,29 @@ async function resetPassword(request, env) {
   const updatedUser = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
 
   return Response.json({ ok: true, token, user: userPublic(updatedUser) }, { headers: CORS });
+}
+
+// ── Ver códigos pendientes (solo admin) ───────────────────────────────────────
+async function getRecoveryCodes(request, env) {
+  const auth = checkAdmin(request, env);
+  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
+
+  // Asegurar que la tabla existe
+  await env.canopia_db.prepare(`
+    CREATE TABLE IF NOT EXISTS reset_codes (
+      user_id  INTEGER PRIMARY KEY,
+      code     TEXT NOT NULL,
+      expires  TEXT NOT NULL
+    )
+  `).run();
+
+  const { results } = await env.canopia_db.prepare(`
+    SELECT r.code, r.expires, u.name, u.email, u.phone
+    FROM reset_codes r
+    JOIN users u ON u.id = r.user_id
+    WHERE r.expires > datetime('now')
+    ORDER BY r.expires ASC
+  `).all();
+
+  return Response.json({ codes: results }, { headers: CORS });
 }
