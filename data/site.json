@@ -18,7 +18,7 @@
   },
   "contact": {
     "whatsapp": "5491100000000",
-    "instagram": "https://instagram.com/canopia",
+    "instagram": "https://www.instagram.com/canopiagrow/",
     "message": "Hola Canopia, quiero consultar por productos.",
     "text": "Escribinos por WhatsApp o Instagram para confirmar stock, precios, retiros y envios."
   },
@@ -29,19 +29,9 @@
       "description": "Pipas, bongs, bandejas, sedas, filtros y accesorios smoke."
     },
     {
-      "id": "grow",
-      "name": "Grow indoor",
-      "description": "Sustratos, fertilizantes, macetas, carpas, luces y control."
-    },
-    {
       "id": "picadores",
       "name": "Picadores",
       "description": "Grinders metalicos, acrilicos y accesorios de preparado."
-    },
-    {
-      "id": "combos",
-      "name": "Combos",
-      "description": "Kits smoke y grow listos para arrancar con precio cerrado."
     }
   ],
   "products": [
@@ -95,22 +85,5 @@
       "tag": "Smoke"
     }
   ],
-  "combos": [
-    {
-      "id": "combo-smoke",
-      "name": "Combo smoke diario",
-      "description": "Para resolver lo basico sin dar vueltas.",
-      "items": ["Sedas premium", "Filtros", "Bandeja rolling", "Encendedor"],
-      "price": 14500,
-      "tag": "Smoke"
-    },
-    {
-      "id": "combo-grow",
-      "name": "Combo grow inicio",
-      "description": "Una base simple para empezar cultivo indoor.",
-      "items": ["Sustrato", "Maceta", "Medidor", "Fertilizante inicial"],
-      "price": 36500,
-      "tag": "Grow"
-    }
-  ]
+  "combos": []
 }

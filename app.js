@@ -110,7 +110,6 @@ function setLiveStatus(isLive) {
 function refreshCatalogViews() {
   renderFilters();
   renderProducts();
-  renderCombos();
   renderCart();
   renderFavs();
 }
@@ -243,8 +242,7 @@ const CAT_DATA = {
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22V12M12 12C12 12 7 8 7 4a5 5 0 0 1 10 0c0 4-5 8-5 8z"/></svg>`,
     img: "assets/grow.png",
     sub: "Todo para tu cultivo",
-  },
-  parafernalia: {
+  },  parafernalia: {
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
     img: "assets/parafernalia.png",
     sub: "Para tu ritual",
@@ -2358,7 +2356,6 @@ async function init() {
   renderCategories();
   renderFilters();
   renderProducts();
-  renderCombos();
   setupContact();
   setupNav();
   setupCart();
