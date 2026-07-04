@@ -1110,12 +1110,12 @@ button { font: inherit; cursor: pointer; }
 }
 
 @media (max-width: 860px) {
-  .site-header { grid-template-columns: auto auto; }
+  /* ── Header ── */
+  .site-header { grid-template-columns: auto auto; gap: 0.5rem; }
   .main-nav {
     display: none;
     position: absolute;
-    top: 4rem;
-    left: 0; right: 0;
+    top: 4rem; left: 0; right: 0;
     flex-direction: column;
     align-items: stretch;
     gap: 0.25rem;
@@ -1123,54 +1123,147 @@ button { font: inherit; cursor: pointer; }
     background: var(--panel);
     border-bottom: 1px solid var(--border);
     z-index: 28;
+    box-shadow: var(--shadow);
   }
   .main-nav.is-open { display: flex; }
-  .main-nav a { padding: 0.7rem 1rem; border-radius: var(--radius-sm); }
+  .main-nav a { padding: 0.7rem 1rem; border-radius: var(--radius-sm); font-size: 0.95rem; }
   .nav-toggle { display: flex; }
 
-  .hero-inner { grid-template-columns: 1fr; gap: 2rem; padding: 2.5rem 0; min-height: auto; }
+  /* ── Hero ── */
+  .hero-inner { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 0; min-height: auto; }
   .hero-visual { order: -1; }
   .hero-trust { position: static; border-radius: var(--radius); }
-  .hero-text h1 { font-size: clamp(2rem, 7vw, 3rem); }
+  .hero-text h1 { font-size: clamp(1.9rem, 6vw, 2.8rem); }
+  .hero-desc { font-size: 0.95rem; }
 
+  /* ── Benefits ── */
   .benefits-inner { grid-template-columns: repeat(2, 1fr); }
 
+  /* ── Grids ── */
   .category-grid { grid-template-columns: repeat(2, 1fr); }
   .product-grid { grid-template-columns: repeat(2, 1fr); }
   .combo-grid { grid-template-columns: 1fr; }
 
+  /* ── Sections ── */
   .split-section, .contact-section { grid-template-columns: 1fr; gap: 1.5rem; }
   .stage-list, .smoke-tags { grid-template-columns: repeat(2, 1fr); }
+  .section-head-row { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .catalog-controls { width: 100%; }
+  .search-box { flex: 1; }
+  .search-box input { min-width: 0; width: 100%; }
 
-  .section-head-row { flex-direction: column; align-items: flex-start; }
-
-  .wa-sticky-inner { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+  /* ── WhatsApp sticky ── */
+  .wa-sticky-inner { flex-direction: column; gap: 0.6rem; align-items: stretch; }
+  .wa-btn { justify-content: center; }
 }
 
 @media (max-width: 560px) {
-  .site-header { padding: 0 1rem; }
-  .hero-section { padding: 0 1rem; }
-  .benefits-inner { grid-template-columns: 1fr; }
-  .benefit-item { border-right: none; border-bottom: 1px solid var(--border); }
-  .benefit-item:last-child { border-bottom: none; }
-  .category-grid { grid-template-columns: repeat(2, 1fr); }
-  .product-grid, .combo-grid { grid-template-columns: 1fr; }
-  .stage-list, .smoke-tags { grid-template-columns: 1fr; }
+  /* ── Spacing general ── */
+  .site-header { padding: 0 0.85rem; height: 3.6rem; }
+  .hero-section { padding: 0 0.85rem; }
+  .section { padding: 2.5rem 0; }
+  .section,
+  .hero,
+  .hero-inner { width: calc(100% - 1.7rem); }
 
+  /* ── Header — evitar overflow ── */
+  .brand-text small { display: none; } /* oculta "GROW & SMOKE SHOP" en mobile muy chico */
+  .brand-logo { height: 1.9rem; }
+  .cart-button { padding: 0.4rem 0.7rem; font-size: 0.82rem; gap: 0.35rem; }
+  .cart-button svg { width: 1rem; height: 1rem; }
+  .header-actions { gap: 0.15rem; }
+
+  /* ── Hero ── */
+  .hero-inner { padding: 1.5rem 0; gap: 1.2rem; }
+  .hero-text h1 { font-size: clamp(1.7rem, 8vw, 2.2rem); margin-bottom: 0.8rem; }
+  .hero-desc { font-size: 0.88rem; margin-bottom: 1.2rem; }
+  .hero-actions { gap: 0.5rem; }
+  .hero-actions .btn { flex: 1; min-width: 0; justify-content: center; font-size: 0.88rem; padding: 0.65rem 0.75rem; }
+  .hero-trust { flex-wrap: wrap; }
+  .trust-badge { flex: 1; min-width: 5rem; padding: 0.7rem 0.6rem; }
+
+  /* ── Benefits ── */
+  .benefits-inner { grid-template-columns: 1fr; }
+  .benefit-item { border-right: none; border-bottom: 1px solid var(--border); padding: 0.9rem 1rem; }
+  .benefit-item:last-child { border-bottom: none; }
+  .benefit-item svg { width: 1.3rem; height: 1.3rem; }
+
+  /* ── Categorías — scroll horizontal en mobile ── */
+  .category-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+  .category-card { min-height: 7.5rem; }
+
+  /* ── Catálogo ── */
+  .section-head-row h2.section-title { font-size: 1.6rem; }
+  .catalog-controls { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+  .sort-box select { width: 100%; }
+  .filters-row { gap: 0.4rem; }
+  .filter-button { padding: 0.35rem 0.7rem; font-size: 0.78rem; }
+
+  /* ── Products ── */
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .product-body { padding: 0.75rem; }
+  .product-body h3 { font-size: 0.88rem; }
+  .product-body p { font-size: 0.78rem; -webkit-line-clamp: 1; }
+  .product-footer { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+  .price { font-size: 1.1rem; }
+  .product-actions { width: 100%; }
+  .product-actions .btn { flex: 1; padding: 0.35rem 0.4rem; font-size: 0.75rem; }
+  .compare-button { width: 100%; text-align: center; padding: 0.3rem; }
+
+  /* ── Combos / Splits ── */
+  .combo-grid, .product-grid { grid-template-columns: 1fr 1fr; }
+  .stage-list, .smoke-tags { grid-template-columns: 1fr 1fr; }
+
+  /* ── Contacto ── */
+  .contact-actions { flex-direction: column; }
+  .contact-actions .btn { width: 100%; justify-content: center; }
+
+  /* ── WhatsApp sticky ── */
+  .wa-sticky-inner { padding: 0.7rem 0; }
+  .wa-sticky-text strong { font-size: 0.82rem; }
+  .wa-sticky-text small { font-size: 0.72rem; }
+
+  /* ── Footer ── */
+  .site-footer { flex-direction: column; gap: 0.5rem; padding: 1.2rem 0.85rem; }
+
+  /* ── Compare bar ── */
   .compare-bar {
     bottom: 0; left: 0; right: 0;
     border-radius: var(--radius) var(--radius) 0 0;
     transform: translateY(100%);
     border-left: none; border-right: none; border-bottom: none;
     flex-wrap: wrap; justify-content: center;
+    padding: 0.75rem;
   }
   .compare-bar.is-visible { transform: translateY(0); }
 
+  /* ── Paneles laterales (carrito, favs, auth) ── */
+  .cart-dialog, .favs-dialog, .auth-dialog { padding: 0.85rem; }
+
+  /* ── Product modal ── */
+  .product-modal-info { padding: 1rem; }
+  .product-modal-name { font-size: 1.3rem; }
+  .product-modal-price { font-size: 1.6rem; }
+  .product-modal-actions { gap: 0.4rem; }
+  .product-modal-actions .btn { font-size: 0.82rem; padding: 0.55rem 0.6rem; }
+  .product-modal-reviews { padding: 1rem; }
+
+  /* ── Admin ── */
   .admin-stats { grid-template-columns: 1fr 1fr; }
   .admin-form-grid { grid-template-columns: 1fr; }
   .admin-top { flex-direction: column; align-items: flex-start; }
+}
 
-  .site-footer { flex-direction: column; gap: 0.75rem; }
+/* Pantallas muy chicas (320px) */
+@media (max-width: 360px) {
+  .product-grid { grid-template-columns: 1fr; }
+  .category-grid { grid-template-columns: 1fr 1fr; }
+  .hero-text h1 { font-size: 1.6rem; }
+  .product-actions { flex-direction: column; }
+  .product-actions .btn { width: 100%; }
 }
 
 /* ═══════════════════════════════════════════════
