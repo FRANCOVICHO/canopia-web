@@ -5,7 +5,7 @@ const CORS = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/
 // ── Password hashing con PBKDF2 + salt aleatorio ──────────────────────────────
 // OWASP recomienda PBKDF2-HMAC-SHA256 con ≥600.000 iteraciones (2023).
 // Cloudflare Workers no tiene bcrypt/Argon2, pero sí Web Crypto con PBKDF2.
-const PBKDF2_ITERATIONS = 600_000;
+const PBKDF2_ITERATIONS = 10_000;
 const SALT_BYTES        = 32; // 256 bits
 const KEY_BYTES         = 32; // 256 bits
 
