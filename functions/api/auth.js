@@ -1,11 +1,23 @@
 import { signJwt, verifyJwt, getUserFromRequest } from "../_lib/jwt.js";
+import { checkAdmin } from "../_lib/auth.js";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password",
-  "Content-Type": "application/json",
-};
+// ── CORS dinámico — acepta cualquier origen pero refleja el header correcto ──
+const ALLOWED_ORIGINS = [
+  "https://canopia-webeditor.pages.dev",
+  "https://canopiagrow.pages.dev",
+];
+
+function getCorsHeaders(request) {
+  const origin = request.headers.get("Origin") || "";
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin":  allowed,
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+    "Content-Type": "application/json",
+  };
+}
 
 // ── Password hashing con PBKDF2 + salt aleatorio ──────────────────────────────
 // OWASP recomienda PBKDF2-HMAC-SHA256 con ≥600.000 iteraciones (2023).
@@ -120,7 +132,7 @@ function userPublic(row) {
 
 // ── Router ───────────────────────────────────────────────────────────────────
 export async function onRequest({ request, env }) {
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: getCorsHeaders(request) });
 
   const url = new URL(request.url);
   const action = url.searchParams.get("action");
@@ -138,9 +150,9 @@ export async function onRequest({ request, env }) {
     if (request.method === "POST" && action === "forgot")         return forgotPassword(request, env);
     if (request.method === "POST" && action === "reset-password") return resetPassword(request, env);
     if (request.method === "GET"  && action === "recovery-codes") return getRecoveryCodes(request, env);
-    return Response.json({ error: "Acción no encontrada." }, { status: 404, headers: CORS });
+    return Response.json({ error: "Acción no encontrada." }, { status: 404, headers: getCorsHeaders(request) });
   } catch (err) {
-    return Response.json({ error: "Error interno." }, { status: 500, headers: CORS });
+    return Response.json({ error: "Error interno." }, { status: 500, headers: getCorsHeaders(request) });
   }
 }
 
@@ -152,12 +164,12 @@ async function register(request, env) {
   const phone = String(body.phone || "").trim();
   const pass  = String(body.password || "");
 
-  if (!name)               return Response.json({ error: "Falta el nombre." }, { status: 400, headers: CORS });
-  if (!validEmail(email))  return Response.json({ error: "Email inválido." }, { status: 400, headers: CORS });
-  if (pass.length < 6)     return Response.json({ error: "La contraseña debe tener al menos 6 caracteres." }, { status: 400, headers: CORS });
+  if (!name)               return Response.json({ error: "Falta el nombre." }, { status: 400, headers: getCorsHeaders(request) });
+  if (!validEmail(email))  return Response.json({ error: "Email inválido." }, { status: 400, headers: getCorsHeaders(request) });
+  if (pass.length < 6)     return Response.json({ error: "La contraseña debe tener al menos 6 caracteres." }, { status: 400, headers: getCorsHeaders(request) });
 
   const existing = await env.canopia_db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
-  if (existing)            return Response.json({ error: "Ya existe una cuenta con ese email." }, { status: 409, headers: CORS });
+  if (existing)            return Response.json({ error: "Ya existe una cuenta con ese email." }, { status: 409, headers: getCorsHeaders(request) });
 
   const hash = await hashPassword(pass);
   const result = await env.canopia_db
@@ -166,7 +178,7 @@ async function register(request, env) {
 
   const user = await env.canopia_db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
   const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
-  return Response.json({ ok: true, token, user: userPublic(user) }, { status: 201, headers: CORS });
+  return Response.json({ ok: true, token, user: userPublic(user) }, { status: 201, headers: getCorsHeaders(request) });
 }
 
 // ── Login ─────────────────────────────────────────────────────────────────────
@@ -176,57 +188,57 @@ async function login(request, env) {
   const pass  = String(body.password || "");
 
   if (!validEmail(email) || !pass)
-    return Response.json({ error: "Email o contraseña inválidos." }, { status: 400, headers: CORS });
+    return Response.json({ error: "Email o contraseña inválidos." }, { status: 400, headers: getCorsHeaders(request) });
 
   const user = await env.canopia_db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
   if (!user)
-    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: CORS });
+    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: getCorsHeaders(request) });
 
   const valid = await verifyPassword(pass, user.password_hash);
   if (!valid)
-    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: CORS });
+    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: getCorsHeaders(request) });
 
   const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
-  return Response.json({ ok: true, token, user: userPublic(user) }, { headers: CORS });
+  return Response.json({ ok: true, token, user: userPublic(user) }, { headers: getCorsHeaders(request) });
 }
 
 // ── Me (perfil actual) ────────────────────────────────────────────────────────
 async function me(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const user = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(payload.uid).first();
-  if (!user)   return Response.json({ error: "Usuario no encontrado." }, { status: 404, headers: CORS });
+  if (!user)   return Response.json({ error: "Usuario no encontrado." }, { status: 404, headers: getCorsHeaders(request) });
 
-  return Response.json({ ok: true, user: userPublic(user) }, { headers: CORS });
+  return Response.json({ ok: true, user: userPublic(user) }, { headers: getCorsHeaders(request) });
 }
 
 // ── Update profile ────────────────────────────────────────────────────────────
 async function updateProfile(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const body = await request.json().catch(() => ({}));
   const name  = String(body.name  || "").trim();
   const phone = String(body.phone || "").trim();
 
-  if (!name) return Response.json({ error: "Falta el nombre." }, { status: 400, headers: CORS });
+  if (!name) return Response.json({ error: "Falta el nombre." }, { status: 400, headers: getCorsHeaders(request) });
 
   await env.canopia_db
     .prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?")
     .bind(name, phone, payload.uid).run();
 
   const user = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(payload.uid).first();
-  return Response.json({ ok: true, user: userPublic(user) }, { headers: CORS });
+  return Response.json({ ok: true, user: userPublic(user) }, { headers: getCorsHeaders(request) });
 }
 
 // ── My orders ─────────────────────────────────────────────────────────────────
 async function myOrders(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const user = await env.canopia_db.prepare("SELECT phone FROM users WHERE id = ?").bind(payload.uid).first();
-  if (!user) return Response.json({ ok: true, orders: [] }, { headers: CORS });
+  if (!user) return Response.json({ ok: true, orders: [] }, { headers: getCorsHeaders(request) });
 
   // Match por teléfono (el checkout guarda customer_phone)
   const { results } = await env.canopia_db
@@ -242,13 +254,13 @@ async function myOrders(request, env) {
     created_at: o.created_at,
   }));
 
-  return Response.json({ ok: true, orders }, { headers: CORS });
+  return Response.json({ ok: true, orders }, { headers: getCorsHeaders(request) });
 }
 
 // ── Addresses ─────────────────────────────────────────────────────────────────
 async function saveAddress(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const body  = await request.json().catch(() => ({}));
   const label = String(body.label || "Casa").trim();
@@ -256,7 +268,7 @@ async function saveAddress(request, env) {
   const city  = String(body.city  || "").trim();
   const notes = String(body.notes || "").trim();
 
-  if (!line1) return Response.json({ error: "Falta la dirección." }, { status: 400, headers: CORS });
+  if (!line1) return Response.json({ error: "Falta la dirección." }, { status: 400, headers: getCorsHeaders(request) });
 
   if (body.id) {
     // Update
@@ -274,36 +286,36 @@ async function saveAddress(request, env) {
     .prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY id DESC")
     .bind(payload.uid).all();
 
-  return Response.json({ ok: true, addresses: results }, { headers: CORS });
+  return Response.json({ ok: true, addresses: results }, { headers: getCorsHeaders(request) });
 }
 
 async function getAddresses(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const { results } = await env.canopia_db
     .prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY id DESC")
     .bind(payload.uid).all();
 
-  return Response.json({ ok: true, addresses: results }, { headers: CORS });
+  return Response.json({ ok: true, addresses: results }, { headers: getCorsHeaders(request) });
 }
 
 async function deleteAddress(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const id = new URL(request.url).searchParams.get("id");
   await env.canopia_db
     .prepare("DELETE FROM user_addresses WHERE id = ? AND user_id = ?")
     .bind(id, payload.uid).run();
 
-  return Response.json({ ok: true }, { headers: CORS });
+  return Response.json({ ok: true }, { headers: getCorsHeaders(request) });
 }
 
 // ── Sync favs ─────────────────────────────────────────────────────────────────
 async function syncFavs(request, env) {
   const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: CORS });
+  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
 
   const body = await request.json().catch(() => ({}));
   const ids  = Array.isArray(body.favs) ? body.favs.map(String) : [];
@@ -313,7 +325,7 @@ async function syncFavs(request, env) {
     .prepare("UPDATE users SET favs_json = ? WHERE id = ?")
     .bind(JSON.stringify(ids), payload.uid).run();
 
-  return Response.json({ ok: true, favs: ids }, { headers: CORS });
+  return Response.json({ ok: true, favs: ids }, { headers: getCorsHeaders(request) });
 }
 
 // ── Recuperación de contraseña ────────────────────────────────────────────────
@@ -325,14 +337,14 @@ async function forgotPassword(request, env) {
   const email = String(body.email || "").toLowerCase().trim();
 
   if (!validEmail(email))
-    return Response.json({ error: "Email inválido." }, { status: 400, headers: CORS });
+    return Response.json({ error: "Email inválido." }, { status: 400, headers: getCorsHeaders(request) });
 
   const user = await env.canopia_db
     .prepare("SELECT id, name, phone FROM users WHERE email = ?").bind(email).first();
 
   // Siempre responder igual para no revelar si el email existe
   if (!user)
-    return Response.json({ ok: true, hint: "Si el email existe, el código fue generado." }, { headers: CORS });
+    return Response.json({ ok: true, hint: "Si el email existe, el código fue generado." }, { headers: getCorsHeaders(request) });
 
   // Código de 6 dígitos
   const code    = String(Math.floor(100000 + Math.random() * 900000));
@@ -359,7 +371,7 @@ async function forgotPassword(request, env) {
     phone: user.phone || "",
     expires_in: "15 minutos",
     message: `Tu código de recuperación de Canopia es: ${code} (válido 15 min)`,
-  }, { headers: CORS });
+  }, { headers: getCorsHeaders(request) });
 }
 
 async function resetPassword(request, env) {
@@ -369,24 +381,24 @@ async function resetPassword(request, env) {
   const password = String(body.password || "");
 
   if (!validEmail(email) || !code || password.length < 6)
-    return Response.json({ error: "Datos incompletos." }, { status: 400, headers: CORS });
+    return Response.json({ error: "Datos incompletos." }, { status: 400, headers: getCorsHeaders(request) });
 
   const user = await env.canopia_db
     .prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
   if (!user)
-    return Response.json({ error: "Email incorrecto." }, { status: 400, headers: CORS });
+    return Response.json({ error: "Email incorrecto." }, { status: 400, headers: getCorsHeaders(request) });
 
   const row = await env.canopia_db
     .prepare("SELECT code, expires FROM reset_codes WHERE user_id = ?").bind(user.id).first();
 
   if (!row)
-    return Response.json({ error: "No hay código de recuperación para este usuario." }, { status: 400, headers: CORS });
+    return Response.json({ error: "No hay código de recuperación para este usuario." }, { status: 400, headers: getCorsHeaders(request) });
 
   if (new Date(row.expires) < new Date())
-    return Response.json({ error: "El código expiró. Solicitá uno nuevo." }, { status: 400, headers: CORS });
+    return Response.json({ error: "El código expiró. Solicitá uno nuevo." }, { status: 400, headers: getCorsHeaders(request) });
 
   if (!timingSafeEqual(row.code, code))
-    return Response.json({ error: "Código incorrecto." }, { status: 400, headers: CORS });
+    return Response.json({ error: "Código incorrecto." }, { status: 400, headers: getCorsHeaders(request) });
 
   // Actualizar contraseña y borrar el código
   const newHash = await hashPassword(password);
@@ -398,13 +410,13 @@ async function resetPassword(request, env) {
   const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
   const updatedUser = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
 
-  return Response.json({ ok: true, token, user: userPublic(updatedUser) }, { headers: CORS });
+  return Response.json({ ok: true, token, user: userPublic(updatedUser) }, { headers: getCorsHeaders(request) });
 }
 
 // ── Ver códigos pendientes (solo admin) ───────────────────────────────────────
 async function getRecoveryCodes(request, env) {
   const auth = checkAdmin(request, env);
-  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
+  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: getCorsHeaders(request) });
 
   // Asegurar que la tabla existe
   await env.canopia_db.prepare(`
@@ -423,5 +435,5 @@ async function getRecoveryCodes(request, env) {
     ORDER BY r.expires ASC
   `).all();
 
-  return Response.json({ codes: results }, { headers: CORS });
+  return Response.json({ codes: results }, { headers: getCorsHeaders(request) });
 }
