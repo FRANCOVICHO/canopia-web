@@ -32,6 +32,11 @@
       "id": "picadores",
       "name": "Picadores",
       "description": "Grinders metalicos, acrilicos y accesorios de preparado."
+    },
+    {
+      "id": "combos",
+      "name": "Combos",
+      "description": "Kits smoke y grow listos para arrancar con precio cerrado."
     }
   ],
   "products": [
