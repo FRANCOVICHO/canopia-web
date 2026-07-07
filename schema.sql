@@ -49,3 +49,10 @@ CREATE TABLE IF NOT EXISTS categories (
   description TEXT    NOT NULL DEFAULT '',
   sort_order  INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS analytics (
+  id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+  event      TEXT     NOT NULL,
+  product_id TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

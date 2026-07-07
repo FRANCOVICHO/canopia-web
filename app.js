@@ -807,6 +807,7 @@ function saveCart() {
 function addToCart(productId) {
   const product = store.products.find((p) => p.id === productId);
   if (!product || Number(product.stock) <= 0) return;
+  trackEvent("add_to_cart", productId);
   const existing = cart.find((i) => i.id === productId);
   if (existing) {
     if (existing.quantity < Number(product.stock)) existing.quantity += 1;
@@ -2018,21 +2019,18 @@ function setupAuth() {
       const data = await authApi("forgot", "POST", { email });
 
       if (data.code) {
-        // Mostrar paso 2 con el código y botón de WhatsApp
+        // Mostrar paso 2 — el código lo ve solo el admin, el usuario espera
         document.querySelector("#recovery-step-1").hidden = true;
         document.querySelector("#recovery-step-2").hidden = false;
         document.querySelector("#reset-email-hidden").value = email;
-
-        const waMsg = encodeURIComponent(data.message);
-        const waPhone = store.contact?.whatsapp || "";
         document.querySelector("#recovery-code-display").innerHTML = `
-          <span class="code-number">${data.code}</span>
-          <span class="code-user">Para: ${escapeHtml(data.name || email)}</span>
-          ${waPhone ? `
-            <a class="code-wa-link" href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" rel="noreferrer">
-              <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
-              Enviar por WhatsApp
-            </a>` : ""}`;
+          <span style="font-size:2rem">📱</span>
+          <span class="code-user" style="display:block;margin-top:.5rem;font-size:.9rem;color:var(--text);font-weight:700">
+            ¡Listo! Te mandamos el código por WhatsApp.
+          </span>
+          <span class="code-user" style="display:block;margin-top:.3rem">
+            Revisá tu WhatsApp y usá el código de 6 dígitos que te enviamos.
+          </span>`;
       }
       msg.textContent = "";
     } catch (err) {
@@ -2174,6 +2172,9 @@ let modalReviewsShowAll = false;
 function openProductModal(productId) {
   const product = store.products.find((p) => p.id === productId);
   if (!product) return;
+
+  // Registrar vista de producto
+  trackEvent("product_view", productId);
 
   modalReviewsShowAll = false;
   renderProductModalBody(product);
@@ -2408,6 +2409,20 @@ function setupProductModal() {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// ANALYTICS — tracking de visitas y vistas de producto
+// ═══════════════════════════════════════════════════════════════
+
+function trackEvent(event, productId = null) {
+  const body = { event };
+  if (productId) body.product_id = productId;
+  fetch(`${apiBase}/api/analytics`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch(() => {}); // silencioso — nunca bloquea la UI
+}
+
 // ─── Setup catalog controls ───────────────────────────────────────────────────
 function setupCatalogControls() {
   // Solo el sort — el search lo maneja setupSmartSearch
@@ -2437,6 +2452,9 @@ async function init() {
   setupSmartSearch();
   setupCatalogControls();
   setupAuth();
+
+  // Registrar visita a la página
+  trackEvent("pageview");
 
   // Mostrar relacionados cuando se agrega al carrito
   document.querySelector("#product-grid").addEventListener("click", (e) => {

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS analytics (
+  id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+  event      TEXT     NOT NULL,
+  product_id TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
