@@ -1,7 +1,7 @@
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password",
 };
 
 export async function onRequestOptions() {
@@ -22,10 +22,12 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestGet({ request, env }) {
-  // Solo admin puede leer
-  const { checkAdmin } = await import("../_lib/auth.js");
-  const auth = checkAdmin(request, env);
-  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: cors });
+  // Acepta Authorization: Bearer TOKEN o x-admin-password: TOKEN
+  const bearer = (request.headers.get("Authorization") || "").replace("Bearer ", "");
+  const xpass  = request.headers.get("x-admin-password") || "";
+  const token  = bearer || xpass;
+  if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN)
+    return Response.json({ error: "No autorizado." }, { status: 401, headers: cors });
 
   const url    = new URL(request.url);
   const days   = Math.min(Number(url.searchParams.get("days") || 30), 90);
