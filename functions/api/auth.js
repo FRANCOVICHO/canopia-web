@@ -1,14 +1,32 @@
-import { signJwt, verifyJwt, getUserFromRequest } from "../_lib/jwt.js";
+/**
+ * auth.js — Sistema de autenticación usando PocketBase como backend
+ *
+ * Endpoints:
+ *   POST ?action=register       — Crea cuenta en PocketBase
+ *   POST ?action=login          — Inicia sesión en PocketBase
+ *   GET  ?action=me             — Devuelve perfil (valida token con PocketBase)
+ *   PUT  ?action=profile        — Actualiza nombre/teléfono
+ *   GET  ?action=orders         — Pedidos del usuario (D1, por teléfono/userId)
+ *   POST ?action=address        — Guardar dirección (D1)
+ *   GET  ?action=addresses      — Listar direcciones (D1)
+ *   DELETE ?action=address      — Borrar dirección (D1)
+ *   POST ?action=sync-favs      — Sincronizar favoritos (PocketBase)
+ *   POST ?action=forgot         — Generar código de recuperación (D1)
+ *   POST ?action=reset-password — Cambiar contraseña con código (PocketBase)
+ *   GET  ?action=recovery-codes — Ver códigos pendientes (admin)
+ */
+
 import { checkAdmin } from "../_lib/auth.js";
 
-// ── CORS dinámico — acepta cualquier origen pero refleja el header correcto ──
+// ── CORS ──────────────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
-  "https://canopia-webeditor.pages.dev",
+  "https://canopiagrow.com",
   "https://canopiagrow.pages.dev",
+  "https://canopia-webeditor.pages.dev",
 ];
 
-function getCorsHeaders(request) {
-  const origin = request.headers.get("Origin") || "";
+function corsHeaders(request) {
+  const origin  = request.headers.get("Origin") || "";
   const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin":      allowed,
@@ -19,248 +37,207 @@ function getCorsHeaders(request) {
   };
 }
 
-// ── Password hashing con PBKDF2 + salt aleatorio ──────────────────────────────
-// OWASP recomienda PBKDF2-HMAC-SHA256 con ≥600.000 iteraciones (2023).
-// Cloudflare Workers no tiene bcrypt/Argon2, pero sí Web Crypto con PBKDF2.
-const PBKDF2_ITERATIONS = 10_000;
-const SALT_BYTES        = 32; // 256 bits
-const KEY_BYTES         = 32; // 256 bits
+function json(data, status = 200, req) {
+  return new Response(JSON.stringify(data), { status, headers: corsHeaders(req) });
+}
 
-const enc = new TextEncoder();
-
-/**
- * Deriva una clave PBKDF2 y la devuelve como hex.
- * Formato almacenado: "pbkdf2:<iterations>:<salt_hex>:<key_hex>"
- */
-async function hashPassword(password) {
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_BYTES));
-
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw", enc.encode(password),
-    { name: "PBKDF2" },
-    false, ["deriveBits"]
-  );
-
-  const derived = await crypto.subtle.deriveBits(
-    {
-      name: "PBKDF2",
-      hash: "SHA-256",
-      salt,
-      iterations: PBKDF2_ITERATIONS,
+// ── PocketBase helper ─────────────────────────────────────────────────────────
+async function pbFetch(env, path, options = {}) {
+  const base = (env.PB_URL || "https://pb.canopiagrow.com").replace(/\/$/, "");
+  const res  = await fetch(`${base}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
     },
-    keyMaterial,
-    KEY_BYTES * 8
-  );
-
-  const saltHex = toHex(salt);
-  const keyHex  = toHex(new Uint8Array(derived));
-  return `pbkdf2:${PBKDF2_ITERATIONS}:${saltHex}:${keyHex}`;
+  });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { message: text }; }
+  return { ok: res.ok, status: res.status, data };
 }
 
-/**
- * Verifica una contraseña contra el hash almacenado.
- * Soporta el formato pbkdf2 nuevo Y el SHA-256 legacy (migración transparente).
- */
-async function verifyPassword(password, stored) {
-  // Formato legacy SHA-256 (antes de esta migración)
-  if (!stored.startsWith("pbkdf2:")) {
-    const legacyHash = toHex(
-      new Uint8Array(
-        await crypto.subtle.digest("SHA-256", enc.encode(password))
-      )
-    );
-    return timingSafeEqual(legacyHash, stored);
+/** Verifica un token de PocketBase y devuelve el record del usuario */
+async function pbVerifyToken(env, token) {
+  if (!token) return null;
+  const { ok, data } = await pbFetch(env, "/api/collections/users/auth-refresh", {
+    method: "POST",
+    headers: { Authorization: token },
+  });
+  if (!ok) return null;
+  return data?.record || null;
+}
+
+// ── Router ────────────────────────────────────────────────────────────────────
+export async function onRequest({ request, env }) {
+  if (request.method === "OPTIONS")
+    return new Response(null, { status: 204, headers: corsHeaders(request) });
+
+  const action = new URL(request.url).searchParams.get("action");
+
+  try {
+    if (request.method === "POST" && action === "register")        return register(request, env);
+    if (request.method === "POST" && action === "login")           return login(request, env);
+    if (request.method === "GET"  && action === "me")              return me(request, env);
+    if (request.method === "PUT"  && action === "profile")         return updateProfile(request, env);
+    if (request.method === "GET"  && action === "orders")          return myOrders(request, env);
+    if (request.method === "POST" && action === "address")         return saveAddress(request, env);
+    if (request.method === "GET"  && action === "addresses")       return getAddresses(request, env);
+    if (request.method === "DELETE" && action === "address")       return deleteAddress(request, env);
+    if (request.method === "POST" && action === "sync-favs")       return syncFavs(request, env);
+    if (request.method === "POST" && action === "forgot")          return forgotPassword(request, env);
+    if (request.method === "POST" && action === "reset-password")  return resetPassword(request, env);
+    if (request.method === "GET"  && action === "recovery-codes")  return getRecoveryCodes(request, env);
+    return json({ error: "Acción no encontrada." }, 404, request);
+  } catch (err) {
+    console.error("auth error:", err);
+    return json({ error: "Error interno." }, 500, request);
   }
-
-  // Formato pbkdf2:<iterations>:<salt_hex>:<key_hex>
-  const parts = stored.split(":");
-  if (parts.length !== 4) return false;
-  const [, iterStr, saltHex, storedKeyHex] = parts;
-  const iterations = parseInt(iterStr, 10);
-  const salt = fromHex(saltHex);
-
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw", enc.encode(password),
-    { name: "PBKDF2" },
-    false, ["deriveBits"]
-  );
-
-  const derived = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", hash: "SHA-256", salt, iterations },
-    keyMaterial,
-    KEY_BYTES * 8
-  );
-
-  return timingSafeEqual(toHex(new Uint8Array(derived)), storedKeyHex);
 }
 
-/** Comparación en tiempo constante para evitar timing attacks */
-function timingSafeEqual(a, b) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-  return diff === 0;
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
 
-function toHex(buf) {
-  return Array.from(buf).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function fromHex(hex) {
-  const arr = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  }
-  return arr;
-}
-
-function validEmail(email) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function userPublic(row) {
+function userPublic(record) {
   return {
-    id: row.id,
-    name: row.name,
-    email: row.email,
-    phone: row.phone || "",
-    created_at: row.created_at,
+    id:         record.id,
+    name:       record.name  || "",
+    email:      record.email || "",
+    phone:      record.phone || "",
+    favs_json:  record.favs_json || "[]",
+    created:    record.created,
   };
 }
 
-// ── Router ───────────────────────────────────────────────────────────────────
-export async function onRequest({ request, env }) {
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: getCorsHeaders(request) });
-
-  const url = new URL(request.url);
-  const action = url.searchParams.get("action");
-
-  try {
-    if (request.method === "POST" && action === "register")       return register(request, env);
-    if (request.method === "POST" && action === "login")          return login(request, env);
-    if (request.method === "GET"  && action === "me")             return me(request, env);
-    if (request.method === "PUT"  && action === "profile")        return updateProfile(request, env);
-    if (request.method === "GET"  && action === "orders")         return myOrders(request, env);
-    if (request.method === "POST" && action === "address")        return saveAddress(request, env);
-    if (request.method === "GET"  && action === "addresses")      return getAddresses(request, env);
-    if (request.method === "DELETE" && action === "address")      return deleteAddress(request, env);
-    if (request.method === "POST" && action === "sync-favs")      return syncFavs(request, env);
-    if (request.method === "POST" && action === "forgot")         return forgotPassword(request, env);
-    if (request.method === "POST" && action === "reset-password") return resetPassword(request, env);
-    if (request.method === "GET"  && action === "recovery-codes") return getRecoveryCodes(request, env);
-    return Response.json({ error: "Acción no encontrada." }, { status: 404, headers: getCorsHeaders(request) });
-  } catch (err) {
-    return Response.json({ error: "Error interno." }, { status: 500, headers: getCorsHeaders(request) });
-  }
+function getToken(request) {
+  const auth = request.headers.get("Authorization") || "";
+  return auth.startsWith("Bearer ") ? auth.slice(7) : auth || null;
 }
 
-// ── Register ─────────────────────────────────────────────────────────────────
+// ── Register ──────────────────────────────────────────────────────────────────
 async function register(request, env) {
-  const body = await request.json().catch(() => ({}));
-  const name  = String(body.name  || "").trim();
-  const email = String(body.email || "").toLowerCase().trim();
-  const phone = String(body.phone || "").trim();
+  const body  = await request.json().catch(() => ({}));
+  const name  = String(body.name     || "").trim();
+  const email = String(body.email    || "").toLowerCase().trim();
+  const phone = String(body.phone    || "").trim();
   const pass  = String(body.password || "");
 
-  if (!name)               return Response.json({ error: "Falta el nombre." }, { status: 400, headers: getCorsHeaders(request) });
-  if (!validEmail(email))  return Response.json({ error: "Email inválido." }, { status: 400, headers: getCorsHeaders(request) });
-  if (pass.length < 6)     return Response.json({ error: "La contraseña debe tener al menos 6 caracteres." }, { status: 400, headers: getCorsHeaders(request) });
+  if (!name)              return json({ error: "Falta el nombre." },  400, request);
+  if (!validEmail(email)) return json({ error: "Email inválido." },   400, request);
+  if (pass.length < 6)    return json({ error: "La contraseña debe tener al menos 6 caracteres." }, 400, request);
 
-  const existing = await env.canopia_db.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
-  if (existing)            return Response.json({ error: "Ya existe una cuenta con ese email." }, { status: 409, headers: getCorsHeaders(request) });
+  // Crear usuario en PocketBase
+  const { ok, data } = await pbFetch(env, "/api/collections/users/records", {
+    method: "POST",
+    body: JSON.stringify({
+      name,
+      email,
+      phone,
+      password:        pass,
+      passwordConfirm: pass,
+      favs_json:       "[]",
+    }),
+  });
 
-  const hash = await hashPassword(pass);
-  const result = await env.canopia_db
-    .prepare("INSERT INTO users (name, email, phone, password_hash) VALUES (?, ?, ?, ?)")
-    .bind(name, email, phone, hash).run();
+  if (!ok) {
+    // Mensaje amigable para email duplicado
+    const msg = data?.data?.email?.message || data?.message || "No se pudo crear la cuenta.";
+    const isDup = msg.toLowerCase().includes("already") || data?.data?.email?.code === "validation_not_unique";
+    return json({ error: isDup ? "Ya existe una cuenta con ese email." : msg }, 409, request);
+  }
 
-  const user = await env.canopia_db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
-  const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
-  return Response.json({ ok: true, token, user: userPublic(user) }, { status: 201, headers: getCorsHeaders(request) });
+  // Login automático tras el registro
+  const authRes = await pbFetch(env, "/api/collections/users/auth-with-password", {
+    method: "POST",
+    body: JSON.stringify({ identity: email, password: pass }),
+  });
+
+  if (!authRes.ok) return json({ error: "Cuenta creada. Iniciá sesión." }, 201, request);
+
+  return json({
+    ok:    true,
+    token: authRes.data.token,
+    user:  userPublic(authRes.data.record),
+  }, 201, request);
 }
 
 // ── Login ─────────────────────────────────────────────────────────────────────
 async function login(request, env) {
   const body  = await request.json().catch(() => ({}));
-  const email = String(body.email || "").toLowerCase().trim();
+  const email = String(body.email    || "").toLowerCase().trim();
   const pass  = String(body.password || "");
 
   if (!validEmail(email) || !pass)
-    return Response.json({ error: "Email o contraseña inválidos." }, { status: 400, headers: getCorsHeaders(request) });
+    return json({ error: "Email o contraseña inválidos." }, 400, request);
 
-  const user = await env.canopia_db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
-  if (!user)
-    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: getCorsHeaders(request) });
+  const { ok, data } = await pbFetch(env, "/api/collections/users/auth-with-password", {
+    method: "POST",
+    body: JSON.stringify({ identity: email, password: pass }),
+  });
 
-  const valid = await verifyPassword(pass, user.password_hash);
-  if (!valid)
-    return Response.json({ error: "Email o contraseña incorrectos." }, { status: 401, headers: getCorsHeaders(request) });
+  if (!ok)
+    return json({ error: "Email o contraseña incorrectos." }, 401, request);
 
-  const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
-  return Response.json({ ok: true, token, user: userPublic(user) }, { headers: getCorsHeaders(request) });
+  return json({ ok: true, token: data.token, user: userPublic(data.record) }, 200, request);
 }
 
-// ── Me (perfil actual) ────────────────────────────────────────────────────────
+// ── Me ────────────────────────────────────────────────────────────────────────
 async function me(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
-
-  const user = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(payload.uid).first();
-  if (!user)   return Response.json({ error: "Usuario no encontrado." }, { status: 404, headers: getCorsHeaders(request) });
-
-  return Response.json({ ok: true, user: userPublic(user) }, { headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
+  return json({ ok: true, user: userPublic(user) }, 200, request);
 }
 
 // ── Update profile ────────────────────────────────────────────────────────────
 async function updateProfile(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
-  const body = await request.json().catch(() => ({}));
+  const body  = await request.json().catch(() => ({}));
   const name  = String(body.name  || "").trim();
   const phone = String(body.phone || "").trim();
 
-  if (!name) return Response.json({ error: "Falta el nombre." }, { status: 400, headers: getCorsHeaders(request) });
+  if (!name) return json({ error: "Falta el nombre." }, 400, request);
 
-  await env.canopia_db
-    .prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?")
-    .bind(name, phone, payload.uid).run();
+  const { ok, data } = await pbFetch(env, `/api/collections/users/records/${user.id}`, {
+    method: "PATCH",
+    headers: { Authorization: token },
+    body: JSON.stringify({ name, phone }),
+  });
 
-  const user = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(payload.uid).first();
-  return Response.json({ ok: true, user: userPublic(user) }, { headers: getCorsHeaders(request) });
+  if (!ok) return json({ error: data.message || "No se pudo actualizar." }, 400, request);
+  return json({ ok: true, user: userPublic(data) }, 200, request);
 }
 
 // ── My orders ─────────────────────────────────────────────────────────────────
 async function myOrders(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
-  const user = await env.canopia_db.prepare("SELECT phone FROM users WHERE id = ?").bind(payload.uid).first();
-  if (!user) return Response.json({ ok: true, orders: [] }, { headers: getCorsHeaders(request) });
-
-  // Match por teléfono (el checkout guarda customer_phone)
   const { results } = await env.canopia_db
     .prepare("SELECT * FROM orders WHERE customer_phone = ? OR user_id = ? ORDER BY created_at DESC LIMIT 50")
-    .bind(user.phone || "", payload.uid).all();
+    .bind(user.phone || "", user.id).all();
 
   const orders = results.map((o) => ({
-    id: o.id,
-    total: o.total,
-    status: o.status,
-    items: JSON.parse(o.items_json || "[]"),
-    note: o.customer_note,
+    id:         o.id,
+    total:      o.total,
+    status:     o.status,
+    items:      JSON.parse(o.items_json || "[]"),
+    note:       o.customer_note,
     created_at: o.created_at,
   }));
 
-  return Response.json({ ok: true, orders }, { headers: getCorsHeaders(request) });
+  return json({ ok: true, orders }, 200, request);
 }
 
-// ── Addresses ─────────────────────────────────────────────────────────────────
+// ── Addresses (D1) ────────────────────────────────────────────────────────────
 async function saveAddress(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
   const body  = await request.json().catch(() => ({}));
   const label = String(body.label || "Casa").trim();
@@ -268,110 +245,109 @@ async function saveAddress(request, env) {
   const city  = String(body.city  || "").trim();
   const notes = String(body.notes || "").trim();
 
-  if (!line1) return Response.json({ error: "Falta la dirección." }, { status: 400, headers: getCorsHeaders(request) });
+  if (!line1) return json({ error: "Falta la dirección." }, 400, request);
 
   if (body.id) {
-    // Update
     await env.canopia_db
-      .prepare("UPDATE user_addresses SET label=?, line1=?, city=?, notes=? WHERE id=? AND user_id=?")
-      .bind(label, line1, city, notes, body.id, payload.uid).run();
+      .prepare("UPDATE user_addresses SET label=?,line1=?,city=?,notes=? WHERE id=? AND user_id=?")
+      .bind(label, line1, city, notes, body.id, user.id).run();
   } else {
-    // Insert
     await env.canopia_db
-      .prepare("INSERT INTO user_addresses (user_id, label, line1, city, notes) VALUES (?,?,?,?,?)")
-      .bind(payload.uid, label, line1, city, notes).run();
+      .prepare("INSERT INTO user_addresses (user_id,label,line1,city,notes) VALUES (?,?,?,?,?)")
+      .bind(user.id, label, line1, city, notes).run();
   }
 
   const { results } = await env.canopia_db
-    .prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY id DESC")
-    .bind(payload.uid).all();
+    .prepare("SELECT * FROM user_addresses WHERE user_id=? ORDER BY id DESC")
+    .bind(user.id).all();
 
-  return Response.json({ ok: true, addresses: results }, { headers: getCorsHeaders(request) });
+  return json({ ok: true, addresses: results }, 200, request);
 }
 
 async function getAddresses(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
   const { results } = await env.canopia_db
-    .prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY id DESC")
-    .bind(payload.uid).all();
+    .prepare("SELECT * FROM user_addresses WHERE user_id=? ORDER BY id DESC")
+    .bind(user.id).all();
 
-  return Response.json({ ok: true, addresses: results }, { headers: getCorsHeaders(request) });
+  return json({ ok: true, addresses: results }, 200, request);
 }
 
 async function deleteAddress(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
   const id = new URL(request.url).searchParams.get("id");
   await env.canopia_db
-    .prepare("DELETE FROM user_addresses WHERE id = ? AND user_id = ?")
-    .bind(id, payload.uid).run();
+    .prepare("DELETE FROM user_addresses WHERE id=? AND user_id=?")
+    .bind(id, user.id).run();
 
-  return Response.json({ ok: true }, { headers: getCorsHeaders(request) });
+  return json({ ok: true }, 200, request);
 }
 
-// ── Sync favs ─────────────────────────────────────────────────────────────────
+// ── Sync favs (PocketBase) ────────────────────────────────────────────────────
 async function syncFavs(request, env) {
-  const payload = await getUserFromRequest(request, env);
-  if (!payload) return Response.json({ error: "No autenticado." }, { status: 401, headers: getCorsHeaders(request) });
+  const token = getToken(request);
+  const user  = await pbVerifyToken(env, token);
+  if (!user) return json({ error: "No autenticado." }, 401, request);
 
   const body = await request.json().catch(() => ({}));
   const ids  = Array.isArray(body.favs) ? body.favs.map(String) : [];
 
-  // Guardar como JSON en el campo favs del usuario
-  await env.canopia_db
-    .prepare("UPDATE users SET favs_json = ? WHERE id = ?")
-    .bind(JSON.stringify(ids), payload.uid).run();
+  await pbFetch(env, `/api/collections/users/records/${user.id}`, {
+    method: "PATCH",
+    headers: { Authorization: token },
+    body: JSON.stringify({ favs_json: JSON.stringify(ids) }),
+  });
 
-  return Response.json({ ok: true, favs: ids }, { headers: getCorsHeaders(request) });
+  return json({ ok: true, favs: ids }, 200, request);
 }
 
 // ── Recuperación de contraseña ────────────────────────────────────────────────
-// Genera un código de 6 dígitos y lo guarda en la DB con expiración de 15 min.
-// El código se muestra en pantalla para que el admin lo comparta por WhatsApp.
-
 async function forgotPassword(request, env) {
   const body  = await request.json().catch(() => ({}));
   const email = String(body.email || "").toLowerCase().trim();
 
   if (!validEmail(email))
-    return Response.json({ error: "Email inválido." }, { status: 400, headers: getCorsHeaders(request) });
+    return json({ error: "Email inválido." }, 400, request);
 
-  const user = await env.canopia_db
-    .prepare("SELECT id, name, phone FROM users WHERE email = ?").bind(email).first();
+  // Verificar que el usuario existe en PocketBase
+  const { ok, data } = await pbFetch(env,
+    `/api/collections/users/records?filter=(email='${encodeURIComponent(email)}')&fields=id,name,phone`
+  );
 
-  // Siempre responder igual para no revelar si el email existe
-  if (!user)
-    return Response.json({ ok: true, hint: "Si el email existe, el código fue generado." }, { headers: getCorsHeaders(request) });
+  // Siempre responder igual para no revelar si existe
+  if (!ok || !data?.items?.length)
+    return json({ ok: true, hint: "Si el email existe, el código fue generado." }, 200, request);
 
-  // Código de 6 dígitos
+  const user = data.items[0];
   const code    = String(Math.floor(100000 + Math.random() * 900000));
-  const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 min
+  const expires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-  // Guardar en la tabla reset_codes (la creamos si no existe)
   await env.canopia_db.prepare(`
     CREATE TABLE IF NOT EXISTS reset_codes (
-      user_id  INTEGER PRIMARY KEY,
-      code     TEXT NOT NULL,
-      expires  TEXT NOT NULL
+      user_id TEXT PRIMARY KEY,
+      code    TEXT NOT NULL,
+      expires TEXT NOT NULL
     )
   `).run();
 
   await env.canopia_db
-    .prepare("INSERT OR REPLACE INTO reset_codes (user_id, code, expires) VALUES (?, ?, ?)")
+    .prepare("INSERT OR REPLACE INTO reset_codes (user_id,code,expires) VALUES (?,?,?)")
     .bind(user.id, code, expires).run();
 
-  // Devolver el código para que puedas mandarlo por WhatsApp
-  return Response.json({
-    ok: true,
-    code,                        // visible solo para el admin/propietario
-    name: user.name,
-    phone: user.phone || "",
+  return json({
+    ok:         true,
+    code,
+    name:       user.name,
+    phone:      user.phone || "",
     expires_in: "15 minutos",
-    message: `Tu código de recuperación de Canopia es: ${code} (válido 15 min)`,
-  }, { headers: getCorsHeaders(request) });
+    message:    `Tu código de recuperación de Canopia es: ${code} (válido 15 min)`,
+  }, 200, request);
 }
 
 async function resetPassword(request, env) {
@@ -381,64 +357,98 @@ async function resetPassword(request, env) {
   const password = String(body.password || "");
 
   if (!validEmail(email) || !code || password.length < 6)
-    return Response.json({ error: "Datos incompletos." }, { status: 400, headers: getCorsHeaders(request) });
+    return json({ error: "Datos incompletos." }, 400, request);
 
-  const user = await env.canopia_db
-    .prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
-  if (!user)
-    return Response.json({ error: "Email incorrecto." }, { status: 400, headers: getCorsHeaders(request) });
+  // Buscar usuario en PocketBase
+  const { ok, data } = await pbFetch(env,
+    `/api/collections/users/records?filter=(email='${encodeURIComponent(email)}')&fields=id`
+  );
+  if (!ok || !data?.items?.length)
+    return json({ error: "Email incorrecto." }, 400, request);
 
+  const userId = data.items[0].id;
+
+  // Verificar código en D1
   const row = await env.canopia_db
-    .prepare("SELECT code, expires FROM reset_codes WHERE user_id = ?").bind(user.id).first();
+    .prepare("SELECT code,expires FROM reset_codes WHERE user_id=?")
+    .bind(userId).first();
 
-  if (!row)
-    return Response.json({ error: "No hay código de recuperación para este usuario." }, { status: 400, headers: getCorsHeaders(request) });
+  if (!row) return json({ error: "No hay código de recuperación activo." }, 400, request);
+  if (new Date(row.expires) < new Date()) return json({ error: "El código expiró. Solicitá uno nuevo." }, 400, request);
 
-  if (new Date(row.expires) < new Date())
-    return Response.json({ error: "El código expiró. Solicitá uno nuevo." }, { status: 400, headers: getCorsHeaders(request) });
+  // Comparación en tiempo constante
+  let diff = 0;
+  const a = row.code, b = code;
+  if (a.length !== b.length) return json({ error: "Código incorrecto." }, 400, request);
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  if (diff !== 0) return json({ error: "Código incorrecto." }, 400, request);
 
-  if (!timingSafeEqual(row.code, code))
-    return Response.json({ error: "Código incorrecto." }, { status: 400, headers: getCorsHeaders(request) });
+  // Cambiar contraseña en PocketBase (requiere admin token o usar la API de reset)
+  // Usamos PocketBase request password reset y luego confirmamos con código
+  const updateRes = await pbFetch(env, `/api/collections/users/records/${userId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${env.PB_ADMIN_TOKEN || ""}` },
+    body: JSON.stringify({ password, passwordConfirm: password }),
+  });
 
-  // Actualizar contraseña y borrar el código
-  const newHash = await hashPassword(password);
-  await env.canopia_db.batch([
-    env.canopia_db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").bind(newHash, user.id),
-    env.canopia_db.prepare("DELETE FROM reset_codes WHERE user_id = ?").bind(user.id),
-  ]);
+  if (!updateRes.ok) {
+    // Fallback: si no hay admin token, pedir reset por email a PocketBase
+    return json({ error: "No se pudo cambiar la contraseña. Contactá soporte." }, 500, request);
+  }
 
-  const token = await signJwt({ uid: user.id, email }, env.JWT_SECRET);
-  const updatedUser = await env.canopia_db.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
+  // Borrar código usado
+  await env.canopia_db.prepare("DELETE FROM reset_codes WHERE user_id=?").bind(userId).run();
 
-  return Response.json({ ok: true, token, user: userPublic(updatedUser) }, { headers: getCorsHeaders(request) });
+  // Login automático
+  const authRes = await pbFetch(env, "/api/collections/users/auth-with-password", {
+    method: "POST",
+    body: JSON.stringify({ identity: email, password }),
+  });
+
+  if (!authRes.ok) return json({ ok: true, message: "Contraseña cambiada. Iniciá sesión." }, 200, request);
+
+  return json({
+    ok:    true,
+    token: authRes.data.token,
+    user:  userPublic(authRes.data.record),
+  }, 200, request);
 }
 
-// ── Ver códigos pendientes (solo admin) ───────────────────────────────────────
+// ── Recovery codes (admin) ────────────────────────────────────────────────────
 async function getRecoveryCodes(request, env) {
-  // Acepta tanto "Authorization: Bearer TOKEN" como "x-admin-password: TOKEN"
-  const bearerHeader = request.headers.get("Authorization") || "";
-  const xHeader      = request.headers.get("x-admin-password") || "";
-  const token = bearerHeader.startsWith("Bearer ") ? bearerHeader.slice(7) : xHeader;
+  const bearer = (request.headers.get("Authorization") || "").replace("Bearer ", "");
+  const xpass  = request.headers.get("x-admin-password") || "";
+  const token  = bearer || xpass;
 
-  if (!env.ADMIN_TOKEN) return Response.json({ error: "Admin no configurado." }, { status: 401, headers: getCorsHeaders(request) });
-  if (!token || token !== env.ADMIN_TOKEN) return Response.json({ error: "Clave incorrecta." }, { status: 401, headers: getCorsHeaders(request) });
+  if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN)
+    return json({ error: "No autorizado." }, 401, request);
 
-  // Asegurar que la tabla existe
   await env.canopia_db.prepare(`
     CREATE TABLE IF NOT EXISTS reset_codes (
-      user_id  INTEGER PRIMARY KEY,
-      code     TEXT NOT NULL,
-      expires  TEXT NOT NULL
+      user_id TEXT PRIMARY KEY,
+      code    TEXT NOT NULL,
+      expires TEXT NOT NULL
     )
   `).run();
 
+  // Los user_id ahora son IDs de PocketBase (strings), no integers
   const { results } = await env.canopia_db.prepare(`
-    SELECT r.code, r.expires, u.name, u.email, u.phone
-    FROM reset_codes r
-    JOIN users u ON u.id = r.user_id
-    WHERE r.expires > datetime('now')
-    ORDER BY r.expires ASC
+    SELECT user_id, code, expires FROM reset_codes
+    WHERE expires > datetime('now')
+    ORDER BY expires ASC
   `).all();
 
-  return Response.json({ codes: results }, { headers: getCorsHeaders(request) });
+  // Enriquecer con datos de PocketBase
+  const enriched = await Promise.all(results.map(async (r) => {
+    const { data } = await pbFetch(env, `/api/collections/users/records/${r.user_id}?fields=name,email,phone`);
+    return {
+      code:    r.code,
+      expires: r.expires,
+      name:    data?.name  || "—",
+      email:   data?.email || "—",
+      phone:   data?.phone || "",
+    };
+  }));
+
+  return json({ codes: enriched }, 200, request);
 }

@@ -6,5 +6,8 @@ binding = "canopia_db"
 database_name = "canopia-db"
 database_id = "a47f1a66-798c-4620-8c0b-36633ad81675"
 
-# JWT_SECRET se configura como Secret en el dashboard de Cloudflare Pages
-# Settings → Environment variables → Add secret → JWT_SECRET
+# Variables de entorno
+[vars]
+PB_URL = "https://pb.canopiagrow.com"
+
+# JWT_SECRET y ADMIN_TOKEN se configuran como Secrets en el dashboard de Cloudflare
