@@ -1,0 +1,26 @@
+{
+  "name": "canopia-web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "fast-check": "^4.10.0",
+    "vitest": "^5.0.0"
+  },
+  "description": "Web estatica para catalogo de parafernalia, grow shop, smoke shop y combos.",
+  "main": "admin.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FRANCOVICHO/canopia-web.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FRANCOVICHO/canopia-web/issues"
+  },
+  "homepage": "https://github.com/FRANCOVICHO/canopia-web#readme"
+}

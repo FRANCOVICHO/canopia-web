@@ -507,6 +507,7 @@ document.querySelector("#show-orders-btn").addEventListener("click", () => {
   if (!showing) {
     const status = document.querySelector("#orders-filter").value;
     loadOrders(status);
+    loadRecoveryCodes();
   }
 });
 
@@ -515,6 +516,55 @@ document.querySelector("#refresh-orders-btn").addEventListener("click", () => {
   const status = document.querySelector("#orders-filter").value;
   loadOrders(status);
 });
+
+document.querySelector("#refresh-codes-btn")?.addEventListener("click", loadRecoveryCodes);
+
+async function loadRecoveryCodes() {
+  const container = document.querySelector("#recovery-codes-list");
+  if (!container) return;
+  container.innerHTML = `<p style="color:var(--muted);padding:.8rem;font-size:.85rem">Cargando...</p>`;
+
+  try {
+    const data = await api("/api/auth?action=recovery-codes");
+    const codes = data.codes || [];
+
+    if (!codes.length) {
+      container.innerHTML = `<p style="color:var(--muted);padding:.8rem;font-size:.85rem">No hay códigos pendientes.</p>`;
+      return;
+    }
+
+    container.innerHTML = codes.map((c) => {
+      const expires = new Date(c.expires);
+      const minsLeft = Math.max(0, Math.round((expires - Date.now()) / 60000));
+      const waText = encodeURIComponent(`Hola ${c.name}, tu código de recuperación de Canopia es: ${c.code} (válido ${minsLeft} min)`);
+      const waLink = c.phone ? `https://wa.me/${c.phone.replace(/\D/g,'')}?text=${waText}` : "";
+
+      return `
+        <div class="order-row" style="grid-template-columns:auto 1fr auto">
+          <div>
+            <div style="font-size:2rem;font-weight:900;letter-spacing:.2em;color:var(--green)">${c.code}</div>
+            <div style="font-size:.72rem;color:var(--muted)">Expira en ${minsLeft} min</div>
+          </div>
+          <div class="order-row-info">
+            <strong>${escapeAdmin(c.name)}</strong>
+            <small>${escapeAdmin(c.email)}</small>
+            ${c.phone ? `<small>📱 ${escapeAdmin(c.phone)}</small>` : ""}
+          </div>
+          <div>
+            ${waLink ? `
+              <a href="${waLink}" target="_blank" rel="noreferrer" class="button primary"
+                style="min-height:auto;padding:.45rem .9rem;font-size:.82rem;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
+                Enviar por WhatsApp
+              </a>` : `<span style="font-size:.78rem;color:var(--muted)">Sin teléfono</span>`}
+          </div>
+        </div>`;
+    }).join("");
+
+  } catch (err) {
+    container.innerHTML = `<p style="color:#f87171;padding:.8rem;font-size:.85rem">${err.message}</p>`;
+  }
+}
 
 async function init() {
   await loadCategories();

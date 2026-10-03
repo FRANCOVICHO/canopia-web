@@ -1,13 +1,27 @@
-export function checkAdmin(request, env) {
+import { verifyJwt } from "./jwt.js";
+
+export async function checkAdmin(request, env) {
   const header = request.headers.get("Authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const adminToken = env.ADMIN_TOKEN;
 
-  if (!adminToken) {
-    return { ok: false, error: "Admin no configurado. Agrega ADMIN_TOKEN en Cloudflare Pages." };
+  if (!token) {
+    return { ok: false, error: "Token requerido." };
   }
-  if (!token || token !== adminToken) {
-    return { ok: false, error: "Clave incorrecta." };
+
+  // Fallback a ADMIN_TOKEN
+  const adminToken = env.ADMIN_TOKEN;
+  if (adminToken && token === adminToken) {
+    return { ok: true };
   }
-  return { ok: true };
+
+  // Validar como JWT
+  if (env.JWT_SECRET) {
+    const payload = await verifyJwt(token, env.JWT_SECRET);
+    const adminEmails = (env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
+    if (payload && payload.email && adminEmails.includes(payload.email)) {
+      return { ok: true };
+    }
+  }
+
+  return { ok: false, error: "Clave o acceso incorrecto." };
 }

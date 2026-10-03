@@ -1,0 +1,35 @@
+# robots.txt — canopiagrow.com
+# Última actualización: 2026-10
+
+# ── Bots genéricos ───────────────────────────────────────────────────────────
+User-agent: *
+Allow: /
+Allow: /producto/
+Allow: /categoria/
+Allow: /assets/
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /EDITAR_WEB.html
+Disallow: /api/
+Disallow: /_headers
+Disallow: /data/
+
+# ── Google ────────────────────────────────────────────────────────────────────
+User-agent: Googlebot
+Allow: /
+Allow: /producto/
+Allow: /categoria/
+Allow: /assets/
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /EDITAR_WEB.html
+Disallow: /api/
+Disallow: /_headers
+Disallow: /data/
+
+# ── Googlebot Image ────────────────────────────────────────────────────────────
+User-agent: Googlebot-Image
+Allow: /assets/
+
+# ── Sitemap ───────────────────────────────────────────────────────────────────
+Sitemap: https://canopiagrow.com/sitemap.xml

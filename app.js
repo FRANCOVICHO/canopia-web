@@ -1956,6 +1956,7 @@ function setupAuth() {
       const data = await authApi("login", "POST", {
         email: fd.get("email"),
         password: fd.get("password"),
+        "cf-turnstile-response": fd.get("cf-turnstile-response"),
       });
       saveUserSession(data.token, data.user);
       await loadFavsFromServer();
@@ -1980,6 +1981,7 @@ function setupAuth() {
         email:    fd.get("email"),
         phone:    fd.get("phone"),
         password: fd.get("password"),
+        "cf-turnstile-response": fd.get("cf-turnstile-response"),
       });
       saveUserSession(data.token, data.user);
       await syncFavsToServer();

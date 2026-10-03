@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sitemap.xml ESTÁTICO — canopiagrow.com
+  Este archivo sirve como fallback cuando el sitemap dinámico (/sitemap.xml via Cloudflare Function)
+  no está disponible. El sitemap dinámico se genera desde la DB y siempre tiene prioridad.
+  Actualizado: 2026-10
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ── Página principal ─────────────────────────────────────────────── -->
+  <url>
+    <loc>https://canopiagrow.com/</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://canopiagrow.com/assets/hero.png</image:loc>
+      <image:title>CanopiaGrow — Grow Shop y Smoke Shop</image:title>
+    </image:image>
+  </url>
+
+  <!-- ── Categorías ───────────────────────────────────────────────────── -->
+  <url>
+    <loc>https://canopiagrow.com/categoria/parafernalia</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/categoria/picadores</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/categoria/combos</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/categoria/grow</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- ── Productos base (seed data) ───────────────────────────────────── -->
+  <url>
+    <loc>https://canopiagrow.com/producto/kit-inicio-grow</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/producto/bong-neon</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/producto/grinder-metal</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/producto/fertilizante-flora</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/producto/bandeja-rolling</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://canopiagrow.com/producto/seda-premium</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

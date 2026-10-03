@@ -10,7 +10,7 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const body = await request.json().catch(() => ({}));
@@ -35,7 +35,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestPut({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const body = await request.json().catch(() => ({}));
@@ -53,7 +53,7 @@ export async function onRequestPut({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const name = new URL(request.url).searchParams.get("name")?.trim();

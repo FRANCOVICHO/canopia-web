@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin Canopia</title>
+    <title>Admin — CanopiaGrow</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://canopiagrow.com/admin" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo-icon.png" />
   </head>
   <body>
     <header class="site-header">
@@ -84,6 +87,19 @@
           </div>
           <div class="admin-card" style="margin-top:.75rem">
             <div id="orders-list" class="orders-list"></div>
+          </div>
+
+          <!-- Códigos de recuperación pendientes -->
+          <div class="admin-top" style="margin-top:2rem">
+            <div>
+              <p class="eyebrow">Seguridad</p>
+              <h2 style="font-size:1.4rem">Códigos de recuperación pendientes</h2>
+              <p class="help">Mandá el código al usuario por WhatsApp. Válido 15 minutos.</p>
+            </div>
+            <button class="button ghost" type="button" id="refresh-codes-btn">↺ Actualizar</button>
+          </div>
+          <div class="admin-card" style="margin-top:.75rem">
+            <div id="recovery-codes-list"></div>
           </div>
         </section>
 

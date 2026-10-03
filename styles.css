@@ -2516,3 +2516,102 @@ button { font: inherit; cursor: pointer; }
   text-decoration: underline;
   cursor: pointer;
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   SECCIÓN NOSOTROS / ABOUT — SEO de marca CanopiaGrow
+══════════════════════════════════════════════════════════════ */
+.about-section {
+  padding: 4rem 0;
+}
+.about-inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+@media (min-width: 768px) {
+  .about-inner {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+.about-text p {
+  margin-top: 0.8rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.about-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.about-stat {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.4rem;
+}
+.about-stat strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--green);
+  margin-bottom: 0.3rem;
+}
+.about-stat span {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FOOTER MEJORADO — info de contacto visible para Google
+══════════════════════════════════════════════════════════════ */
+.site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1200px;
+}
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.4rem;
+  justify-content: center;
+}
+.footer-nav a {
+  font-size: 0.875rem;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.footer-nav a:hover { color: var(--text); }
+.footer-contact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.footer-contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.footer-contact a:hover { color: var(--text); }
+.footer-copy {
+  font-size: 0.78rem;
+  color: var(--muted-2);
+}

@@ -61,7 +61,7 @@ async function getCatalogMeta(env) {
 }
 
 export async function onRequestGet({ request, env }) {
-  const isAdmin = checkAdmin(request, env).ok;
+  const isAdmin = (await checkAdmin(request, env)).ok;
   const query = isAdmin
     ? `SELECT id, name, category, description, price, tag, image, featured, visible, stock, updated_at
        FROM products
@@ -83,7 +83,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401 });
 
   const body = await request.json().catch(() => null);
@@ -134,7 +134,7 @@ export async function onRequestPost({ request, env }) {
 }
 
 export async function onRequestPut({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401 });
 
   const body = await request.json().catch(() => null);
@@ -181,7 +181,7 @@ export async function onRequestPut({ request, env }) {
 }
 
 export async function onRequestDelete({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401 });
 
   const id = new URL(request.url).searchParams.get("id")?.trim();

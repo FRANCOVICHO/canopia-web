@@ -77,7 +77,7 @@ export async function onRequestPost({ request, env }) {
 
 // ── GET /api/orders  →  lista pedidos (admin) ─────────────────────────────────
 export async function onRequestGet({ request, env }) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const url    = new URL(request.url);
@@ -108,7 +108,7 @@ export async function onRequestGet({ request, env }) {
 
 // ── Confirmar pedido (descuenta stock) ────────────────────────────────────────
 async function confirmOrder(request, env) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const body    = await request.json().catch(() => ({}));
@@ -153,7 +153,7 @@ async function confirmOrder(request, env) {
 
 // ── Rechazar pedido (no descuenta nada) ───────────────────────────────────────
 async function rejectOrder(request, env) {
-  const auth = checkAdmin(request, env);
+  const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
   const body    = await request.json().catch(() => ({}));
