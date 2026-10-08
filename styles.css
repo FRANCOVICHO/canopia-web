@@ -2354,6 +2354,43 @@ button { font: inherit; cursor: pointer; }
 /* Primera fila: no se puede borrar (siempre hay al menos 1) */
 .image-input-row:first-child .img-row-remove { opacity: 0; pointer-events: none; }
 
+/* Botones flecha prev/next sobre la imagen */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, transform 0.15s;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.gallery-arrow:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.gallery-arrow svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+.gallery-arrow-prev { left: 0.6rem; }
+.gallery-arrow-next { right: 0.6rem; }
+
+/* Ocultar flechas cuando solo hay 1 imagen o en el extremo */
+.gallery-arrow[disabled] {
+  opacity: 0.2;
+  pointer-events: none;
+}
+
 /* ── Galería de miniaturas en el modal de producto ── */
 .product-modal-thumbs {
   display: flex;

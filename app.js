@@ -2218,6 +2218,12 @@ function renderProductModalBody(product) {
         ? `<img id="product-modal-main-img" src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
         : `<div class="product-modal-art">${initials(product.name)}</div>`}
       ${product.images && product.images.length > 1 ? `
+        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Imagen anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Imagen siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
         <div class="product-modal-thumbs">
           ${product.images.map((url, i) => `
             <button class="modal-thumb ${i === 0 ? "is-active" : ""}" type="button"
@@ -2342,12 +2348,25 @@ function renderProductModalBody(product) {
       dotsContainer.querySelectorAll(".modal-gallery-dot").forEach((d, i) => {
         d.classList.toggle("is-active", i === index);
       });
+      // Deshabilitar flechas en los extremos
+      if (prevBtn) prevBtn.disabled = index === 0;
+      if (nextBtn) nextBtn.disabled = index === images.length - 1;
     }
+
+    // Estado inicial de las flechas
+    const prevBtn = imgCol.querySelector(".gallery-arrow-prev");
+    const nextBtn = imgCol.querySelector(".gallery-arrow-next");
+    if (prevBtn) prevBtn.disabled = true; // empieza en la primera
+    if (nextBtn) nextBtn.disabled = images.length <= 1;
 
     // Sincronizar click en miniatura con el índice actual
     document.querySelectorAll(".modal-thumb").forEach((btn, i) => {
       btn.addEventListener("click", () => goToImage(i));
     });
+
+    // Botones flecha prev/next
+    if (prevBtn) prevBtn.addEventListener("click", () => goToImage(currentIndex - 1));
+    if (nextBtn) nextBtn.addEventListener("click", () => goToImage(currentIndex + 1));
 
     // Swipe táctil
     let touchStartX = 0;
