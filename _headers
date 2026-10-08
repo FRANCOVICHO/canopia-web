@@ -7,7 +7,7 @@
   X-Content-Type-Options: nosniff
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
   Content-Security-Policy: default-src 'self' data: https:; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https:; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';
 
 # ── Assets estáticos — cache agresivo (inmutables con hash) ─────────────────
@@ -16,10 +16,10 @@
 
 # ── CSS y JS — cache largo ───────────────────────────────────────────────────
 /styles.css
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: no-cache, must-revalidate
 
 /app.js
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: no-cache, must-revalidate
 
 /theme-utils.js
   Cache-Control: public, max-age=86400, stale-while-revalidate=604800
