@@ -2245,12 +2245,12 @@ function renderProductModalBody(product) {
 
   const arrowsHtml = hasMultiple
     ? `<button class="pm-arrow pm-arrow-prev" type="button" aria-label="Imagen anterior" disabled>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path d="M15 18l-6-6 6-6"/>
         </svg>
       </button>
       <button class="pm-arrow pm-arrow-next" type="button" aria-label="Imagen siguiente">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <path d="M9 18l6-6-6-6"/>
         </svg>
       </button>`
@@ -2307,20 +2307,20 @@ function renderProductModalBody(product) {
       <!-- Features row -->
       <div class="pm-features">
         <div class="pm-feature">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
             <path d="M8 12l3 3 5-5"/>
           </svg>
           <span>Alta calidad</span>
         </div>
         <div class="pm-feature">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
           <span>Resistente</span>
         </div>
         <div class="pm-feature">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
           </svg>
           <span>Diseño exclusivo</span>
@@ -2339,7 +2339,7 @@ function renderProductModalBody(product) {
       <button class="pm-buy-btn" type="button"
         id="modal-buy-btn" data-modal-buy="${product.id}"
         ${outOfStock ? "disabled" : ""}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
           <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
         </svg>
@@ -2351,7 +2351,7 @@ function renderProductModalBody(product) {
         <button class="pm-action-btn ${isFav ? "is-active" : ""}" type="button"
           id="modal-fav-btn" data-modal-fav="${product.id}"
           aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
-          <svg viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
           ${isFav ? "Guardado" : "Guardar"}
@@ -2359,7 +2359,7 @@ function renderProductModalBody(product) {
         <a class="pm-action-btn" href="${whatsappUrl(product.name)}"
           target="_blank" rel="noreferrer"
           aria-label="Consultar por WhatsApp">
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/>
           </svg>
           WhatsApp
@@ -2367,7 +2367,7 @@ function renderProductModalBody(product) {
         <button class="pm-action-btn ${isComparing ? "is-active" : ""}" type="button"
           data-modal-compare="${product.id}"
           aria-label="Comparar producto">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M18 20V10M12 20V4M6 20v-6"/>
           </svg>
           ${isComparing ? "Comparando" : "Comparar"}
@@ -2496,7 +2496,7 @@ function renderProductModalReviews(product) {
 
   const listHtml = count === 0
     ? `<div class="pm-rev-empty">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
         <p>Aún no hay reseñas.</p>
@@ -2521,7 +2521,7 @@ function renderProductModalReviews(product) {
        ${!modalReviewsShowAll && reviews.length > MODAL_REVIEWS_PAGE
          ? `<button class="pm-rev-more" id="modal-show-more-btn" type="button">
               Ver ${reviews.length - MODAL_REVIEWS_PAGE} reseña${reviews.length - MODAL_REVIEWS_PAGE !== 1 ? "s" : ""} más
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>`
          : ""}`;
 
@@ -2532,7 +2532,7 @@ function renderProductModalReviews(product) {
     <div class="pm-rev-head">
       <h3 class="pm-rev-title">Reseñas</h3>
       <button class="pm-write-review-btn" type="button" id="modal-write-review-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
         </svg>
         Escribir reseña
