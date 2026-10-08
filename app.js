@@ -343,46 +343,58 @@ function renderFilters() {
 // ─── Product card ─────────────────────────────────────────────────────────────
 function productCardHtml(product) {
   const isFav = favs.has(product.id);
-  const isComparing = compareList.includes(product.id);
   const outOfStock = Number(product.stock) <= 0;
   const reviews = getProductReviews(product.id);
   const avg = avgStars(reviews);
   const count = reviews.length;
 
+  // Indicador de stock compacto para la card
+  const stockBadge = outOfStock
+    ? `<span class="card-stock card-stock--out">Agotado</span>`
+    : Number(product.stock) <= 3
+      ? `<span class="card-stock card-stock--low">Últimos ${product.stock}</span>`
+      : "";
+
   return `
-    <article class="product-card" data-product-id="${product.id}">
+    <article class="product-card" data-product-id="${product.id}" aria-label="${escapeHtml(product.name)}">
       <button class="fav-button ${isFav ? "is-fav" : ""}" type="button"
-        data-fav-toggle="${product.id}" aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
+        data-fav-toggle="${product.id}"
+        aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
         ${isFav ? "❤️" : "🤍"}
       </button>
       ${product.image
-        ? `<img class="product-image" src="${product.image}" alt="${product.name}" loading="lazy" />`
-        : `<div class="product-art">${initials(product.name)}</div>`}
+        ? `<img class="product-image" src="${product.image}" alt="${escapeHtml(product.name)}" loading="lazy" />`
+        : `<div class="product-art" aria-hidden="true">${initials(product.name)}</div>`}
       <div class="product-body">
-        <span class="badge">${product.tag}</span>
-        <h3>${product.name}</h3>
+        <div class="card-top-row">
+          <span class="badge">${escapeHtml(product.tag)}</span>
+          ${stockBadge}
+        </div>
+        <h3>${escapeHtml(product.name)}</h3>
         <div class="card-stars" data-stars-for="${product.id}">
           <div class="stars-row">
             <span class="stars-display">${starsHtml(avg)}</span>
             ${count > 0 ? `<span class="stars-count">${avg.toFixed(1)} (${count})</span>` : ""}
-            <button class="review-link" data-review-open="${product.id}">
+            <button class="review-link" data-review-open="${product.id}" type="button">
               ${count > 0 ? "Ver reseñas" : "Opinar"}
             </button>
           </div>
         </div>
-        <p>${product.description}</p>
-        <span class="stock-line">${stockLabel(product.stock)}</span>
+        <p>${escapeHtml(product.description)}</p>
         <div class="product-footer">
           <span class="price">${formatPrice(product.price)}</span>
           <div class="product-actions">
             <button class="btn btn-primary" type="button"
-              data-add-to-cart="${product.id}" ${outOfStock ? "disabled" : ""}>Comprar</button>
-            <a class="btn btn-outline" href="${whatsappUrl(product.name)}"
-              target="_blank" rel="noreferrer">Consultar</a>
-            <button class="compare-button ${isComparing ? "is-comparing" : ""}" type="button"
-              data-compare-toggle="${product.id}">
-              ${isComparing ? "✓ Comparando" : "Comparar"}
+              data-add-to-cart="${product.id}"
+              aria-label="Agregar ${escapeHtml(product.name)} al carrito"
+              ${outOfStock ? "disabled" : ""}>
+              Comprar
             </button>
+            <a class="btn btn-outline" href="${whatsappUrl(product.name)}"
+              target="_blank" rel="noreferrer"
+              aria-label="Consultar por ${escapeHtml(product.name)} vía WhatsApp">
+              Consultar
+            </a>
           </div>
         </div>
       </div>
@@ -436,9 +448,6 @@ function bindProductCardEvents(container) {
   });
   container.querySelectorAll("[data-add-to-cart]").forEach((btn) => {
     btn.addEventListener("click", (e) => { e.stopPropagation(); addToCart(btn.dataset.addToCart); });
-  });
-  container.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
-    btn.addEventListener("click", (e) => { e.stopPropagation(); toggleCompare(btn.dataset.compareToggle); });
   });
   container.querySelectorAll("[data-review-open]").forEach((btn) => {
     btn.addEventListener("click", (e) => { e.stopPropagation(); openReviewsPanel(btn.dataset.reviewOpen); });
@@ -813,6 +822,22 @@ function addToCart(productId) {
     if (existing.quantity < Number(product.stock)) existing.quantity += 1;
   } else {
     cart.push({ id: productId, quantity: 1 });
+  }
+  saveCart();
+  openCart();
+}
+
+function addToCartWithQuantity(productId, qty = 1) {
+  const product = store.products.find((p) => p.id === productId);
+  if (!product || Number(product.stock) <= 0) return;
+  const safeQty = Math.max(1, Math.min(qty, Number(product.stock)));
+  trackEvent("add_to_cart", productId);
+  const existing = cart.find((i) => i.id === productId);
+  if (existing) {
+    const newQty = existing.quantity + safeQty;
+    existing.quantity = Math.min(newQty, Number(product.stock));
+  } else {
+    cart.push({ id: productId, quantity: safeQty });
   }
   saveCart();
   openCart();
@@ -2206,26 +2231,20 @@ function renderProductModalBody(product) {
   const avg         = avgStars(reviews);
   const count       = reviews.length;
 
-  const stockClass = outOfStock ? "no-stock" : "";
-  const stockText  = outOfStock
-    ? "Sin stock"
-    : Number(product.stock) <= 3
-      ? `Últimos ${product.stock} disponibles`
-      : `${product.stock} en stock`;
+  const stockNum = Number(product.stock || 0);
 
-  // Normalizar array de imágenes: siempre usar product.images si existe,
-  // sino construir array de 1 con product.image
+  // Normalizar array de imágenes
   const images = (product.images && product.images.length > 0)
     ? product.images
     : (product.image ? [product.image] : []);
   const hasMultiple = images.length > 1;
 
-  // ── Badges en el header ───────────────────────────────────────
+  // ── Badges en el header — solo el tag, la cat es ruido redundante ──
   const badgesEl = document.querySelector("#product-modal-badges");
   if (badgesEl) {
-    badgesEl.innerHTML = `
-      <span class="pm-badge pm-badge-tag">${escapeHtml(product.tag || "Producto")}</span>
-      <span class="pm-badge pm-badge-cat">${escapeHtml(product.category || "")}</span>`;
+    badgesEl.innerHTML = product.tag
+      ? `<span class="pm-badge pm-badge-tag">${escapeHtml(product.tag)}</span>`
+      : "";
   }
 
   // ── Galería ───────────────────────────────────────────────────
@@ -2235,24 +2254,19 @@ function renderProductModalBody(product) {
           <button class="pm-thumb ${i === 0 ? "is-active" : ""}"
             type="button" role="listitem"
             data-index="${i}"
-            aria-label="Imagen ${i + 1}"
+            aria-label="Imagen ${i + 1} de ${images.length}"
             aria-pressed="${i === 0}"
-            style="background-image:url('${url}')"
-            loading="lazy">
+            style="background-image:url('${url}')">
           </button>`).join("")}
       </div>`
     : "";
 
   const arrowsHtml = hasMultiple
     ? `<button class="pm-arrow pm-arrow-prev" type="button" aria-label="Imagen anterior" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <button class="pm-arrow pm-arrow-next" type="button" aria-label="Imagen siguiente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
       </button>`
     : "";
 
@@ -2267,14 +2281,13 @@ function renderProductModalBody(product) {
           src="${escapeHtml(images[0])}"
           alt="${escapeHtml(product.name)}"
           loading="eager" />`
-    : `<div class="pm-main-art">${initials(product.name)}</div>`;
+    : `<div class="pm-main-art" aria-hidden="true">${initials(product.name)}</div>`;
 
   const galleryEl = document.querySelector("#product-modal-gallery");
   const contentEl = document.querySelector("#product-modal-content");
 
-  // Guardia: si el HTML del modal no está en el DOM (caché viejo), abortar silencioso
   if (!galleryEl || !contentEl) {
-    console.warn("[Canopia] Modal DOM no encontrado — recargá la página para aplicar la actualización.");
+    console.warn("[Canopia] Modal DOM no encontrado — recargá la página.");
     return;
   }
 
@@ -2286,87 +2299,139 @@ function renderProductModalBody(product) {
     </div>
     ${thumbsHtml}`;
 
-  // ── Info + acciones + reseñas ─────────────────────────────────
+  // ── Estrellas compactas ───────────────────────────────────────
   const starsRow = count > 0
     ? `<div class="pm-stars-row">
         <span class="pm-stars">${starsHtml(avg, "0.9rem")}</span>
         <span class="pm-stars-count">${avg.toFixed(1)} · ${count} reseña${count !== 1 ? "s" : ""}</span>
        </div>`
-    : `<div class="pm-stars-row">
-        <span class="pm-stars">${starsHtml(0, "0.9rem")}</span>
-        <span class="pm-stars-count" style="color:var(--muted-2)">Sin reseñas aún</span>
-       </div>`;
+    : "";
+
+  // ── Stock: visible y preciso ──────────────────────────────────
+  let stockHtml;
+  if (outOfStock) {
+    stockHtml = `<div class="pm-stock-badge pm-stock-badge--out">
+      <span class="pm-stock-dot"></span>Agotado
+    </div>`;
+  } else if (stockNum <= 3) {
+    stockHtml = `<div class="pm-stock-badge pm-stock-badge--low">
+      <span class="pm-stock-dot"></span>Últimas ${stockNum} unidades
+    </div>`;
+  } else {
+    stockHtml = `<div class="pm-stock-badge pm-stock-badge--ok">
+      <span class="pm-stock-dot"></span>Disponible
+    </div>`;
+  }
+
+  // ── Control de cantidad ───────────────────────────────────────
+  const maxQty = outOfStock ? 0 : Math.min(stockNum, 99);
+  const qtyHtml = !outOfStock
+    ? `<div class="pm-qty-row">
+        <span class="pm-qty-label">Cantidad</span>
+        <div class="pm-qty-control" role="group" aria-label="Seleccionar cantidad">
+          <button class="pm-qty-btn" type="button" id="pm-qty-dec" aria-label="Disminuir cantidad" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14"/></svg>
+          </button>
+          <output class="pm-qty-value" id="pm-qty-value" aria-live="polite" aria-atomic="true">1</output>
+          <button class="pm-qty-btn" type="button" id="pm-qty-inc" aria-label="Aumentar cantidad" ${maxQty <= 1 ? "disabled" : ""}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+      </div>`
+    : "";
+
+  // ── Descripción: si es larga, colapsable ─────────────────────
+  const desc = (product.description || "").trim();
+  const CHAR_LIMIT = 120;
+  let descHtml = "";
+  if (desc) {
+    if (desc.length > CHAR_LIMIT) {
+      descHtml = `
+        <details class="pm-desc-details">
+          <summary class="pm-desc-summary">
+            <span class="pm-desc-preview">${escapeHtml(desc.slice(0, CHAR_LIMIT))}…</span>
+            <span class="pm-desc-toggle">Ver más</span>
+          </summary>
+          <p class="pm-desc pm-desc--full">${escapeHtml(desc)}</p>
+        </details>`;
+    } else {
+      descHtml = `<p class="pm-desc">${escapeHtml(desc)}</p>`;
+    }
+  }
+
+  // ── Label del CTA según estado ────────────────────────────────
+  const ctaLabel = outOfStock ? "Sin stock" : "Agregar al carrito";
+  const ctaIcon = outOfStock
+    ? `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>`
+    : `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`;
 
   contentEl.innerHTML = `
-    <!-- Nombre + estrellas + descripción -->
     <div class="pm-info">
-      <h2 class="pm-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
-      ${starsRow}
-      <p class="pm-desc">${escapeHtml(product.description || "")}</p>
 
-      <!-- Features row -->
-      <div class="pm-features">
-        <div class="pm-feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-            <path d="M8 12l3 3 5-5"/>
-          </svg>
-          <span>Alta calidad</span>
-        </div>
-        <div class="pm-feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-          <span>Resistente</span>
-        </div>
-        <div class="pm-feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-          </svg>
-          <span>Diseño exclusivo</span>
+      <!-- NIVEL 1: Nombre + precio + stock — lo imprescindible primero -->
+      <div class="pm-header-block">
+        <h2 class="pm-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
+        ${starsRow}
+        <div class="pm-price-row">
+          <span class="pm-price">${formatPrice(product.price)}</span>
+          ${stockHtml}
         </div>
       </div>
 
-      <hr class="pm-divider">
+      <!-- NIVEL 2: Descripción (colapsable si es larga) -->
+      ${descHtml ? `<div class="pm-desc-block">${descHtml}</div>` : ""}
 
-      <!-- Precio + stock -->
-      <div class="pm-price-row">
-        <span class="pm-price">${formatPrice(product.price)}</span>
-        <span class="pm-stock ${stockClass}">${stockText}</span>
+      <!-- NIVEL 3: Cantidad + CTA -->
+      <div class="pm-purchase-block">
+        ${qtyHtml}
+        <button class="pm-buy-btn" type="button"
+          id="modal-buy-btn" data-modal-buy="${escapeHtml(product.id)}"
+          ${outOfStock ? "disabled" : ""}
+          aria-disabled="${outOfStock}">
+          ${ctaIcon}
+          ${ctaLabel}
+        </button>
+        <a class="pm-wa-btn" href="${whatsappUrl(product.name)}"
+          target="_blank" rel="noreferrer"
+          aria-label="Consultar disponibilidad de ${escapeHtml(product.name)} por WhatsApp">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/>
+          </svg>
+          Consultar por WhatsApp
+        </a>
       </div>
 
-      <!-- Botón principal -->
-      <button class="pm-buy-btn" type="button"
-        id="modal-buy-btn" data-modal-buy="${product.id}"
-        ${outOfStock ? "disabled" : ""}>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-        </svg>
-        ${outOfStock ? "Sin stock" : "Agregar al carrito"}
-      </button>
+      <!-- NIVEL 4: Confianza — info real del negocio -->
+      <div class="pm-trust-bar" aria-label="Información de compra">
+        <div class="pm-trust-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          <span>Envíos a todo el país</span>
+        </div>
+        <div class="pm-trust-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Compra segura</span>
+        </div>
+        <div class="pm-trust-item">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>Atención directa</span>
+        </div>
+      </div>
 
-      <!-- Acciones secundarias -->
+      <!-- NIVEL 5: Acciones secundarias (fav + comparar) -->
       <div class="pm-secondary-actions">
         <button class="pm-action-btn ${isFav ? "is-active" : ""}" type="button"
-          id="modal-fav-btn" data-modal-fav="${product.id}"
-          aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
+          id="modal-fav-btn" data-modal-fav="${escapeHtml(product.id)}"
+          aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}"
+          aria-pressed="${isFav}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
           </svg>
           ${isFav ? "Guardado" : "Guardar"}
         </button>
-        <a class="pm-action-btn" href="${whatsappUrl(product.name)}"
-          target="_blank" rel="noreferrer"
-          aria-label="Consultar por WhatsApp">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/>
-          </svg>
-          WhatsApp
-        </a>
         <button class="pm-action-btn ${isComparing ? "is-active" : ""}" type="button"
-          data-modal-compare="${product.id}"
-          aria-label="Comparar producto">
+          data-modal-compare="${escapeHtml(product.id)}"
+          aria-label="${isComparing ? "Dejar de comparar" : "Comparar producto"}"
+          aria-pressed="${isComparing}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M18 20V10M12 20V4M6 20v-6"/>
           </svg>
@@ -2375,17 +2440,56 @@ function renderProductModalBody(product) {
       </div>
     </div>
 
-    <!-- Divisor reseñas -->
+    <!-- Sección de reseñas — separada visualmente del bloque de compra -->
     <div class="pm-reviews-section" id="product-modal-reviews">
       <!-- llenado por renderProductModalReviews -->
     </div>`;
 
-  // ── Bind acciones ─────────────────────────────────────────────
-  document.querySelector("[data-modal-buy]")?.addEventListener("click", () => {
-    addToCart(product.id);
-    closeProductModal();
+  // ── Bind: CTA con cantidad ────────────────────────────────────
+  let modalQty = 1;
+
+  const decBtn = document.querySelector("#pm-qty-dec");
+  const incBtn = document.querySelector("#pm-qty-inc");
+  const qtyDisplay = document.querySelector("#pm-qty-value");
+
+  function updateQtyUI() {
+    if (!qtyDisplay) return;
+    qtyDisplay.textContent = String(modalQty);
+    if (decBtn) decBtn.disabled = modalQty <= 1;
+    if (incBtn) incBtn.disabled = modalQty >= maxQty;
+  }
+
+  decBtn?.addEventListener("click", () => {
+    if (modalQty > 1) { modalQty--; updateQtyUI(); }
+  });
+  incBtn?.addEventListener("click", () => {
+    if (modalQty < maxQty) { modalQty++; updateQtyUI(); }
   });
 
+  document.querySelector("[data-modal-buy]")?.addEventListener("click", (e) => {
+    const btn = e.currentTarget;
+    if (btn.disabled) return;
+
+    // Feedback visual antes de cerrar
+    btn.disabled = true;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = `
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
+      Agregado
+    `;
+    btn.style.background = "var(--lime)";
+
+    setTimeout(() => {
+      addToCartWithQuantity(product.id, modalQty);
+      closeProductModal();
+      // Restaurar para la próxima apertura
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+      btn.style.background = "";
+    }, 380);
+  });
+
+  // ── Bind: fav ─────────────────────────────────────────────────
   document.querySelector("[data-modal-fav]")?.addEventListener("click", () => {
     toggleFav(product.id);
     const btn = document.querySelector("[data-modal-fav]");
@@ -2393,17 +2497,20 @@ function renderProductModalBody(product) {
     const nowFav = favs.has(product.id);
     btn.classList.toggle("is-active", nowFav);
     btn.setAttribute("aria-label", nowFav ? "Quitar de favoritos" : "Agregar a favoritos");
+    btn.setAttribute("aria-pressed", String(nowFav));
     const svg = btn.querySelector("svg");
     if (svg) svg.setAttribute("fill", nowFav ? "currentColor" : "none");
     btn.childNodes[btn.childNodes.length - 1].textContent = ` ${nowFav ? "Guardado" : "Guardar"}`;
   });
 
+  // ── Bind: comparar ────────────────────────────────────────────
   document.querySelector("[data-modal-compare]")?.addEventListener("click", () => {
     toggleCompare(product.id);
     const btn = document.querySelector("[data-modal-compare]");
     if (!btn) return;
     const nowComp = compareList.includes(product.id);
     btn.classList.toggle("is-active", nowComp);
+    btn.setAttribute("aria-pressed", String(nowComp));
     btn.childNodes[btn.childNodes.length - 1].textContent = ` ${nowComp ? "Comparando" : "Comparar"}`;
   });
 
@@ -2420,8 +2527,6 @@ function renderProductModalBody(product) {
   function goToImage(idx) {
     if (idx < 0 || idx >= images.length) return;
     currentIndex = idx;
-
-    // Cambiar imagen con fade
     const mainImg = document.querySelector("#pm-main-img");
     if (mainImg) {
       mainImg.style.opacity = "0";
@@ -2430,28 +2535,20 @@ function renderProductModalBody(product) {
         mainImg.style.opacity = "1";
       }, 110);
     }
-
-    // Sincronizar miniaturas
     thumbBtns.forEach((t, i) => {
       t.classList.toggle("is-active", i === idx);
       t.setAttribute("aria-pressed", String(i === idx));
     });
-
-    // Sincronizar puntos
     dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
-
-    // Estado flechas
     if (prevBtn) prevBtn.disabled = idx === 0;
     if (nextBtn) nextBtn.disabled = idx === images.length - 1;
   }
 
-  // Estado inicial
   if (prevBtn) prevBtn.disabled = true;
   if (nextBtn) nextBtn.disabled = images.length <= 1;
 
   prevBtn?.addEventListener("click", () => goToImage(currentIndex - 1));
   nextBtn?.addEventListener("click", () => goToImage(currentIndex + 1));
-
   thumbBtns.forEach((btn, i) => btn.addEventListener("click", () => goToImage(i)));
 
   // Swipe táctil
@@ -2469,10 +2566,9 @@ function renderProductModalBody(product) {
     }
   }, { passive: true });
 
-  // Exponer goToImage para la navegación por teclado
-  window._pmGoToImage   = goToImage;
-  window._pmCurrentIdx  = () => currentIndex;
-  window._pmImagesLen   = () => images.length;
+  window._pmGoToImage  = goToImage;
+  window._pmCurrentIdx = () => currentIndex;
+  window._pmImagesLen  = () => images.length;
 }
 
 // ── Sección de reseñas del modal ──────────────────────────────────
@@ -2593,7 +2689,7 @@ function setupProductModal() {
     const card = e.target.closest(".product-card");
     if (!card) return;
     const interactive = e.target.closest(
-      "button, a, [data-add-to-cart], [data-fav-toggle], [data-compare-toggle], [data-review-open]"
+      "button, a, [data-add-to-cart], [data-fav-toggle], [data-review-open]"
     );
     if (interactive) return;
     const productId = card.dataset.productId;
