@@ -2309,6 +2309,64 @@ function renderProductModalBody(product) {
       btn.classList.add("is-active");
     });
   });
+
+  // Galería: swipe táctil en móvil
+  const imgCol = document.querySelector("#product-modal-img-col");
+  if (imgCol && product.images && product.images.length > 1) {
+    const images = product.images;
+    let currentIndex = 0;
+
+    // Renderizar puntos indicadores
+    const dotsContainer = document.createElement("div");
+    dotsContainer.className = "modal-gallery-dots";
+    dotsContainer.setAttribute("aria-hidden", "true");
+    images.forEach((_, i) => {
+      const dot = document.createElement("span");
+      dot.className = "modal-gallery-dot" + (i === 0 ? " is-active" : "");
+      dotsContainer.appendChild(dot);
+    });
+    const thumbsEl = imgCol.querySelector(".product-modal-thumbs");
+    if (thumbsEl) imgCol.insertBefore(dotsContainer, thumbsEl);
+    else imgCol.appendChild(dotsContainer);
+
+    function goToImage(index) {
+      if (index < 0 || index >= images.length) return;
+      currentIndex = index;
+      const mainImg = document.querySelector("#product-modal-main-img");
+      if (mainImg) mainImg.src = images[index];
+      // Sincronizar miniaturas
+      document.querySelectorAll(".modal-thumb").forEach((t, i) => {
+        t.classList.toggle("is-active", i === index);
+      });
+      // Sincronizar puntos
+      dotsContainer.querySelectorAll(".modal-gallery-dot").forEach((d, i) => {
+        d.classList.toggle("is-active", i === index);
+      });
+    }
+
+    // Sincronizar click en miniatura con el índice actual
+    document.querySelectorAll(".modal-thumb").forEach((btn, i) => {
+      btn.addEventListener("click", () => goToImage(i));
+    });
+
+    // Swipe táctil
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    imgCol.addEventListener("touchstart", (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    imgCol.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      // Solo activar si el movimiento horizontal supera 40px y domina al vertical
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        goToImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
+      }
+    }, { passive: true });
+  }
 }
 
 // ── Sección de reseñas del modal ──────────────────────────────────
