@@ -2175,7 +2175,6 @@ function openProductModal(productId) {
   const product = store.products.find((p) => p.id === productId);
   if (!product) return;
 
-  // Registrar vista de producto
   trackEvent("product_view", productId);
 
   modalReviewsShowAll = false;
@@ -2186,6 +2185,9 @@ function openProductModal(productId) {
   overlay.classList.add("is-open");
   overlay.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+
+  // Foco inicial para accesibilidad
+  setTimeout(() => document.querySelector("#close-product-modal")?.focus(), 50);
 }
 
 function closeProductModal() {
@@ -2197,12 +2199,12 @@ function closeProductModal() {
 
 // ── Cuerpo del modal (imagen + info) ─────────────────────────────
 function renderProductModalBody(product) {
-  const isFav      = favs.has(product.id);
+  const isFav       = favs.has(product.id);
   const isComparing = compareList.includes(product.id);
-  const outOfStock = Number(product.stock) <= 0;
-  const reviews    = getProductReviews(product.id);
-  const avg        = avgStars(reviews);
-  const count      = reviews.length;
+  const outOfStock  = Number(product.stock) <= 0;
+  const reviews     = getProductReviews(product.id);
+  const avg         = avgStars(reviews);
+  const count       = reviews.length;
 
   const stockClass = outOfStock ? "no-stock" : "";
   const stockText  = outOfStock
@@ -2211,78 +2213,165 @@ function renderProductModalBody(product) {
       ? `Últimos ${product.stock} disponibles`
       : `${product.stock} en stock`;
 
-  document.querySelector("#product-modal-body").innerHTML = `
-    <!-- Imagen -->
-    <div class="product-modal-img-col" id="product-modal-img-col">
-      <div class="gallery-img-wrap">
-        ${product.image
-          ? `<img id="product-modal-main-img" src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
-          : `<div class="product-modal-art">${initials(product.name)}</div>`}
-        ${product.images && product.images.length > 1 ? `
-          <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Imagen anterior">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-          </button>
-          <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Imagen siguiente">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-          </button>` : ""}
+  // Normalizar array de imágenes: siempre usar product.images si existe,
+  // sino construir array de 1 con product.image
+  const images = (product.images && product.images.length > 0)
+    ? product.images
+    : (product.image ? [product.image] : []);
+  const hasMultiple = images.length > 1;
+
+  // ── Badges en el header ───────────────────────────────────────
+  const badgesEl = document.querySelector("#product-modal-badges");
+  if (badgesEl) {
+    badgesEl.innerHTML = `
+      <span class="pm-badge pm-badge-tag">${escapeHtml(product.tag || "Producto")}</span>
+      <span class="pm-badge pm-badge-cat">${escapeHtml(product.category || "")}</span>`;
+  }
+
+  // ── Galería ───────────────────────────────────────────────────
+  const thumbsHtml = hasMultiple
+    ? `<div class="pm-thumbs" id="pm-thumbs" role="list" aria-label="Imágenes del producto">
+        ${images.map((url, i) => `
+          <button class="pm-thumb ${i === 0 ? "is-active" : ""}"
+            type="button" role="listitem"
+            data-index="${i}"
+            aria-label="Imagen ${i + 1}"
+            aria-pressed="${i === 0}"
+            style="background-image:url('${url}')"
+            loading="lazy">
+          </button>`).join("")}
+      </div>`
+    : "";
+
+  const arrowsHtml = hasMultiple
+    ? `<button class="pm-arrow pm-arrow-prev" type="button" aria-label="Imagen anterior" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <button class="pm-arrow pm-arrow-next" type="button" aria-label="Imagen siguiente">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </button>`
+    : "";
+
+  const dotsHtml = hasMultiple
+    ? `<div class="pm-dots" aria-hidden="true">
+        ${images.map((_, i) => `<span class="pm-dot ${i === 0 ? "is-active" : ""}"></span>`).join("")}
+      </div>`
+    : "";
+
+  const mainImgHtml = images.length > 0
+    ? `<img id="pm-main-img" class="pm-main-img"
+          src="${escapeHtml(images[0])}"
+          alt="${escapeHtml(product.name)}"
+          loading="eager" />`
+    : `<div class="pm-main-art">${initials(product.name)}</div>`;
+
+  document.querySelector("#product-modal-gallery").innerHTML = `
+    <div class="pm-stage" id="pm-stage">
+      ${mainImgHtml}
+      ${arrowsHtml}
+      ${dotsHtml}
+    </div>
+    ${thumbsHtml}`;
+
+  // ── Info + acciones + reseñas ─────────────────────────────────
+  const starsRow = count > 0
+    ? `<div class="pm-stars-row">
+        <span class="pm-stars">${starsHtml(avg, "0.9rem")}</span>
+        <span class="pm-stars-count">${avg.toFixed(1)} · ${count} reseña${count !== 1 ? "s" : ""}</span>
+       </div>`
+    : `<div class="pm-stars-row">
+        <span class="pm-stars">${starsHtml(0, "0.9rem")}</span>
+        <span class="pm-stars-count" style="color:var(--muted-2)">Sin reseñas aún</span>
+       </div>`;
+
+  document.querySelector("#product-modal-content").innerHTML = `
+    <!-- Nombre + estrellas + descripción -->
+    <div class="pm-info">
+      <h2 class="pm-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
+      ${starsRow}
+      <p class="pm-desc">${escapeHtml(product.description || "")}</p>
+
+      <!-- Features row -->
+      <div class="pm-features">
+        <div class="pm-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+            <path d="M8 12l3 3 5-5"/>
+          </svg>
+          <span>Alta calidad</span>
+        </div>
+        <div class="pm-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>Resistente</span>
+        </div>
+        <div class="pm-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+          <span>Diseño exclusivo</span>
+        </div>
       </div>
-      ${product.images && product.images.length > 1 ? `
-        <div class="product-modal-thumbs">
-          ${product.images.map((url, i) => `
-            <button class="modal-thumb ${i === 0 ? "is-active" : ""}" type="button"
-              data-thumb="${url}" style="background-image:url('${url}')">
-            </button>`).join("")}
-        </div>` : ""}
+
+      <hr class="pm-divider">
+
+      <!-- Precio + stock -->
+      <div class="pm-price-row">
+        <span class="pm-price">${formatPrice(product.price)}</span>
+        <span class="pm-stock ${stockClass}">${stockText}</span>
+      </div>
+
+      <!-- Botón principal -->
+      <button class="pm-buy-btn" type="button"
+        id="modal-buy-btn" data-modal-buy="${product.id}"
+        ${outOfStock ? "disabled" : ""}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        ${outOfStock ? "Sin stock" : "Agregar al carrito"}
+      </button>
+
+      <!-- Acciones secundarias -->
+      <div class="pm-secondary-actions">
+        <button class="pm-action-btn ${isFav ? "is-active" : ""}" type="button"
+          id="modal-fav-btn" data-modal-fav="${product.id}"
+          aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}">
+          <svg viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          ${isFav ? "Guardado" : "Guardar"}
+        </button>
+        <a class="pm-action-btn" href="${whatsappUrl(product.name)}"
+          target="_blank" rel="noreferrer"
+          aria-label="Consultar por WhatsApp">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/>
+          </svg>
+          WhatsApp
+        </a>
+        <button class="pm-action-btn ${isComparing ? "is-active" : ""}" type="button"
+          data-modal-compare="${product.id}"
+          aria-label="Comparar producto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          ${isComparing ? "Comparando" : "Comparar"}
+        </button>
+      </div>
     </div>
 
-    <!-- Info -->
-    <div class="product-modal-info">
-      <div class="product-modal-meta">
-        <span class="badge">${product.tag}</span>
-        <span class="product-modal-cat">${product.category}</span>
-      </div>
-
-      <h2 class="product-modal-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
-
-      <!-- Estrellas -->
-      <div class="product-modal-stars-row">
-        <span class="stars-display">${starsHtml(avg, "1rem")}</span>
-        ${count > 0
-          ? `<span class="stars-count">${avg.toFixed(1)} (${count} reseña${count !== 1 ? "s" : ""})</span>`
-          : `<span class="stars-count" style="color:var(--muted-2)">Sin reseñas aún</span>`}
-      </div>
-
-      <p class="product-modal-desc">${escapeHtml(product.description || "")}</p>
-
-      <span class="product-modal-stock ${stockClass}">${stockText}</span>
-
-      <span class="product-modal-price">${formatPrice(product.price)}</span>
-
-      <div class="product-modal-actions">
-        <button class="btn btn-primary" type="button"
-          id="modal-buy-btn" data-modal-buy="${product.id}" ${outOfStock ? "disabled" : ""}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-          Agregar al carrito
-        </button>
-        <button class="btn btn-outline ${isFav ? "is-fav-modal" : ""}" type="button"
-          id="modal-fav-btn" data-modal-fav="${product.id}"
-          aria-label="${isFav ? "Quitar de favoritos" : "Agregar a favoritos"}"
-          style="flex:0 0 auto">
-          ${isFav ? "❤️" : "🤍"}
-        </button>
-        <a class="btn btn-outline" href="${whatsappUrl(product.name)}"
-          target="_blank" rel="noreferrer" style="flex:0 0 auto">
-          <svg viewBox="0 0 24 24" fill="currentColor" style="width:1rem;height:1rem"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.975 0C5.363 0 0 5.373 0 11.997c0 2.117.554 4.102 1.523 5.82L.057 23.926l6.264-1.643a11.9 11.9 0 0 0 5.654 1.435h.005c6.613 0 11.975-5.373 11.975-11.997 0-6.623-5.362-11.72-11.98-11.72z"/></svg>
-        </a>
-      </div>
-
-      <button class="compare-button ${isComparing ? "is-comparing" : ""}" type="button"
-        data-modal-compare="${product.id}" style="align-self:flex-start">
-        ${isComparing ? "✓ Comparando" : "⚖️ Comparar"}
-      </button>
+    <!-- Divisor reseñas -->
+    <div class="pm-reviews-section" id="product-modal-reviews">
+      <!-- llenado por renderProductModalReviews -->
     </div>`;
 
-  // Bind acciones
+  // ── Bind acciones ─────────────────────────────────────────────
   document.querySelector("[data-modal-buy]")?.addEventListener("click", () => {
     addToCart(product.id);
     closeProductModal();
@@ -2290,104 +2379,91 @@ function renderProductModalBody(product) {
 
   document.querySelector("[data-modal-fav]")?.addEventListener("click", () => {
     toggleFav(product.id);
-    // Actualizar botón fav sin cerrar el modal
     const btn = document.querySelector("[data-modal-fav]");
-    if (btn) {
-      const nowFav = favs.has(product.id);
-      btn.textContent = nowFav ? "❤️" : "🤍";
-      btn.setAttribute("aria-label", nowFav ? "Quitar de favoritos" : "Agregar a favoritos");
-    }
+    if (!btn) return;
+    const nowFav = favs.has(product.id);
+    btn.classList.toggle("is-active", nowFav);
+    btn.setAttribute("aria-label", nowFav ? "Quitar de favoritos" : "Agregar a favoritos");
+    const svg = btn.querySelector("svg");
+    if (svg) svg.setAttribute("fill", nowFav ? "currentColor" : "none");
+    btn.childNodes[btn.childNodes.length - 1].textContent = ` ${nowFav ? "Guardado" : "Guardar"}`;
   });
 
   document.querySelector("[data-modal-compare]")?.addEventListener("click", () => {
     toggleCompare(product.id);
     const btn = document.querySelector("[data-modal-compare]");
-    if (btn) {
-      const nowComp = compareList.includes(product.id);
-      btn.classList.toggle("is-comparing", nowComp);
-      btn.textContent = nowComp ? "✓ Comparando" : "⚖️ Comparar";
-    }
+    if (!btn) return;
+    const nowComp = compareList.includes(product.id);
+    btn.classList.toggle("is-active", nowComp);
+    btn.childNodes[btn.childNodes.length - 1].textContent = ` ${nowComp ? "Comparando" : "Comparar"}`;
   });
 
-  // Galería: cambiar imagen principal al clickear miniatura
-  document.querySelectorAll(".modal-thumb").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const mainImg = document.querySelector("#product-modal-main-img");
-      if (mainImg) mainImg.src = btn.dataset.thumb;
-      document.querySelectorAll(".modal-thumb").forEach((t) => t.classList.remove("is-active"));
-      btn.classList.add("is-active");
-    });
-  });
+  // ── Galería interactiva ───────────────────────────────────────
+  if (!hasMultiple) return;
 
-  // Galería: swipe táctil en móvil
-  const imgCol = document.querySelector("#product-modal-img-col");
-  if (imgCol && product.images && product.images.length > 1) {
-    const images = product.images;
-    let currentIndex = 0;
+  let currentIndex = 0;
+  const stage      = document.querySelector("#pm-stage");
+  const prevBtn    = stage?.querySelector(".pm-arrow-prev");
+  const nextBtn    = stage?.querySelector(".pm-arrow-next");
+  const dots       = document.querySelectorAll(".pm-dot");
+  const thumbBtns  = document.querySelectorAll(".pm-thumb");
 
-    // Renderizar puntos indicadores dentro del gallery-img-wrap
-    const imgWrap = imgCol.querySelector(".gallery-img-wrap");
-    const dotsContainer = document.createElement("div");
-    dotsContainer.className = "modal-gallery-dots";
-    dotsContainer.setAttribute("aria-hidden", "true");
-    images.forEach((_, i) => {
-      const dot = document.createElement("span");
-      dot.className = "modal-gallery-dot" + (i === 0 ? " is-active" : "");
-      dotsContainer.appendChild(dot);
-    });
-    if (imgWrap) imgWrap.appendChild(dotsContainer);
+  function goToImage(idx) {
+    if (idx < 0 || idx >= images.length) return;
+    currentIndex = idx;
 
-    function goToImage(index) {
-      if (index < 0 || index >= images.length) return;
-      currentIndex = index;
-      const mainImg = document.querySelector("#product-modal-main-img");
-      if (mainImg) mainImg.src = images[index];
-      // Sincronizar miniaturas
-      document.querySelectorAll(".modal-thumb").forEach((t, i) => {
-        t.classList.toggle("is-active", i === index);
-      });
-      // Sincronizar puntos
-      dotsContainer.querySelectorAll(".modal-gallery-dot").forEach((d, i) => {
-        d.classList.toggle("is-active", i === index);
-      });
-      // Deshabilitar flechas en los extremos
-      if (prevBtn) prevBtn.disabled = index === 0;
-      if (nextBtn) nextBtn.disabled = index === images.length - 1;
+    // Cambiar imagen con fade
+    const mainImg = document.querySelector("#pm-main-img");
+    if (mainImg) {
+      mainImg.style.opacity = "0";
+      setTimeout(() => {
+        mainImg.src = images[idx];
+        mainImg.style.opacity = "1";
+      }, 110);
     }
 
-    // Estado inicial de las flechas
-    const prevBtn = imgCol.querySelector(".gallery-arrow-prev");
-    const nextBtn = imgCol.querySelector(".gallery-arrow-next");
-    if (prevBtn) prevBtn.disabled = true; // empieza en la primera
-    if (nextBtn) nextBtn.disabled = images.length <= 1;
-
-    // Sincronizar click en miniatura con el índice actual
-    document.querySelectorAll(".modal-thumb").forEach((btn, i) => {
-      btn.addEventListener("click", () => goToImage(i));
+    // Sincronizar miniaturas
+    thumbBtns.forEach((t, i) => {
+      t.classList.toggle("is-active", i === idx);
+      t.setAttribute("aria-pressed", String(i === idx));
     });
 
-    // Botones flecha prev/next
-    if (prevBtn) prevBtn.addEventListener("click", () => goToImage(currentIndex - 1));
-    if (nextBtn) nextBtn.addEventListener("click", () => goToImage(currentIndex + 1));
+    // Sincronizar puntos
+    dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
 
-    // Swipe táctil
-    let touchStartX = 0;
-    let touchStartY = 0;
-    const swipeTarget = imgWrap || imgCol;
-
-    swipeTarget.addEventListener("touchstart", (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-
-    swipeTarget.addEventListener("touchend", (e) => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
-        goToImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
-      }
-    }, { passive: true });
+    // Estado flechas
+    if (prevBtn) prevBtn.disabled = idx === 0;
+    if (nextBtn) nextBtn.disabled = idx === images.length - 1;
   }
+
+  // Estado inicial
+  if (prevBtn) prevBtn.disabled = true;
+  if (nextBtn) nextBtn.disabled = images.length <= 1;
+
+  prevBtn?.addEventListener("click", () => goToImage(currentIndex - 1));
+  nextBtn?.addEventListener("click", () => goToImage(currentIndex + 1));
+
+  thumbBtns.forEach((btn, i) => btn.addEventListener("click", () => goToImage(i)));
+
+  // Swipe táctil
+  let touchStartX = 0;
+  let touchStartY = 0;
+  stage?.addEventListener("touchstart", (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  stage?.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy)) {
+      goToImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
+    }
+  }, { passive: true });
+
+  // Exponer goToImage para la navegación por teclado
+  window._pmGoToImage   = goToImage;
+  window._pmCurrentIdx  = () => currentIndex;
+  window._pmImagesLen   = () => images.length;
 }
 
 // ── Sección de reseñas del modal ──────────────────────────────────
@@ -2397,57 +2473,70 @@ function renderProductModalReviews(product) {
   const count   = reviews.length;
   const visible = modalReviewsShowAll ? reviews : reviews.slice(0, MODAL_REVIEWS_PAGE);
 
-  const summaryHtml = count > 0 ? `
-    <div class="modal-reviews-summary">
-      <span class="modal-avg-big">${avg.toFixed(1)}</span>
-      <div class="modal-avg-right">
-        <span>${starsHtml(avg, "1.1rem")}</span>
-        <span class="modal-avg-count">${count} reseña${count !== 1 ? "s" : ""}</span>
-      </div>
-    </div>` : "";
+  const summaryHtml = count > 0
+    ? `<div class="pm-rev-summary">
+        <div class="pm-rev-avg">
+          <span class="pm-rev-avg-num">${avg.toFixed(1)}</span>
+          <div class="pm-rev-avg-right">
+            <span>${starsHtml(avg, "1rem")}</span>
+            <span class="pm-rev-avg-count">${count} reseña${count !== 1 ? "s" : ""}</span>
+          </div>
+        </div>
+       </div>`
+    : "";
 
   const listHtml = count === 0
-    ? `<div class="modal-reviews-empty">Todavía no hay reseñas. ¡Sé el primero en opinar!</div>`
-    : `<div class="modal-reviews-list">
+    ? `<div class="pm-rev-empty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <p>Aún no hay reseñas.</p>
+        <p>Sé el primero en escribir una.</p>
+       </div>`
+    : `<div class="pm-rev-list">
         ${visible.map((r) => `
-          <div class="modal-review-item">
-            <div class="modal-review-head">
-              <div class="modal-review-author">
-                <div class="review-avatar">${r.author.slice(0,2).toUpperCase()}</div>
-                <span class="review-author-name">${escapeHtml(r.author)}</span>
+          <div class="pm-rev-item">
+            <div class="pm-rev-item-head">
+              <div class="pm-rev-author">
+                <div class="pm-rev-avatar">${r.author.slice(0, 2).toUpperCase()}</div>
+                <span class="pm-rev-name">${escapeHtml(r.author)}</span>
               </div>
-              <div style="display:flex;align-items:center;gap:.5rem">
-                <span class="review-stars">${starsHtml(r.stars, "0.85rem")}</span>
-                <span class="review-date">${r.date}</span>
+              <div class="pm-rev-meta">
+                <span class="pm-rev-stars">${starsHtml(r.stars, "0.82rem")}</span>
+                <span class="pm-rev-date">${r.date}</span>
               </div>
             </div>
-            ${r.text ? `<p class="modal-review-text">${escapeHtml(r.text)}</p>` : ""}
+            ${r.text ? `<p class="pm-rev-text">${escapeHtml(r.text)}</p>` : ""}
           </div>`).join("")}
        </div>
        ${!modalReviewsShowAll && reviews.length > MODAL_REVIEWS_PAGE
-         ? `<button class="modal-show-more" id="modal-show-more-btn">
-              Ver las ${reviews.length - MODAL_REVIEWS_PAGE} reseñas restantes ↓
+         ? `<button class="pm-rev-more" id="modal-show-more-btn" type="button">
+              Ver ${reviews.length - MODAL_REVIEWS_PAGE} reseña${reviews.length - MODAL_REVIEWS_PAGE !== 1 ? "s" : ""} más
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>`
          : ""}`;
 
-  document.querySelector("#product-modal-reviews").innerHTML = `
-    <div class="product-modal-reviews-head">
-      <h3>Reseñas y opiniones</h3>
-      <button class="btn btn-outline" type="button" id="modal-write-review-btn"
-        style="min-height:auto;padding:.4rem .9rem;font-size:.8rem">
-        ✏️ Escribir reseña
+  const reviewsSection = document.querySelector("#product-modal-reviews");
+  if (!reviewsSection) return;
+
+  reviewsSection.innerHTML = `
+    <div class="pm-rev-head">
+      <h3 class="pm-rev-title">Reseñas</h3>
+      <button class="pm-write-review-btn" type="button" id="modal-write-review-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+        Escribir reseña
       </button>
     </div>
     ${summaryHtml}
     ${listHtml}`;
 
-  // Bind: escribir reseña
   document.querySelector("#modal-write-review-btn")?.addEventListener("click", () => {
     closeProductModal();
     openReviewModal(product.id);
   });
 
-  // Bind: mostrar más
   document.querySelector("#modal-show-more-btn")?.addEventListener("click", () => {
     modalReviewsShowAll = true;
     renderProductModalReviews(product);
@@ -2459,32 +2548,45 @@ function setupProductModal() {
   // Cerrar con botón X
   document.querySelector("#close-product-modal")?.addEventListener("click", closeProductModal);
 
-  // Cerrar clickeando el overlay
+  // Cerrar clickeando el overlay (fuera del modal)
   document.querySelector("#product-modal-overlay")?.addEventListener("click", (e) => {
     if (e.target.id === "product-modal-overlay") closeProductModal();
   });
 
-  // Cerrar con Escape
+  // Cerrar con Escape — navegar galería con ← →
   document.addEventListener("keydown", (e) => {
+    const isOpen = document.querySelector("#product-modal-overlay")?.classList.contains("is-open");
+    if (!isOpen) return;
+
     if (e.key === "Escape") {
-      if (document.querySelector("#product-modal-overlay")?.classList.contains("is-open")) {
-        closeProductModal();
+      closeProductModal();
+      return;
+    }
+
+    // Navegación por teclado en la galería
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      // Solo si no hay un input/textarea enfocado
+      const active = document.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+
+      if (typeof window._pmGoToImage === "function") {
+        const idx = window._pmCurrentIdx?.() ?? 0;
+        const len = window._pmImagesLen?.() ?? 1;
+        if (e.key === "ArrowLeft")  window._pmGoToImage(idx - 1);
+        if (e.key === "ArrowRight") window._pmGoToImage(idx + 1);
+        e.preventDefault();
       }
     }
   });
 
-  // Click en la card (delegado desde el grid) — abre el modal
-  // Solo si el click NO fue en un botón/link interactivo
+  // Click en la card (delegado desde el grid)
   document.querySelector("#product-grid")?.addEventListener("click", (e) => {
     const card = e.target.closest(".product-card");
     if (!card) return;
-
-    // Si el click fue en un botón, link o elemento interactivo, no abrir modal
     const interactive = e.target.closest(
       "button, a, [data-add-to-cart], [data-fav-toggle], [data-compare-toggle], [data-review-open]"
     );
     if (interactive) return;
-
     const productId = card.dataset.productId;
     if (productId) openProductModal(productId);
   });

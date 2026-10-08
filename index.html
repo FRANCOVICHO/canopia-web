@@ -474,17 +474,31 @@
     <!-- ── MODAL DETALLE PRODUCTO ────────────────── -->
     <div class="product-modal-overlay" id="product-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="product-modal-name">
       <div class="product-modal" id="product-modal">
+        <!-- Handle drag móvil -->
         <div class="product-modal-handle" aria-hidden="true"></div>
-        <div class="product-modal-head">
-          <button class="icon-btn" type="button" id="close-product-modal" aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+
+        <!-- Header: badges izquierda · cerrar derecha -->
+        <div class="product-modal-head" id="product-modal-head">
+          <div class="product-modal-badges" id="product-modal-badges">
+            <!-- llenado por JS -->
+          </div>
+          <button class="pm-close-btn" type="button" id="close-product-modal" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
-        <div class="product-modal-body" id="product-modal-body">
-          <!-- llenado por JS -->
-        </div>
-        <div class="product-modal-reviews" id="product-modal-reviews">
-          <!-- llenado por JS -->
+
+        <!-- Galería + info (scroll vertical) -->
+        <div class="product-modal-scroll" id="product-modal-scroll">
+          <!-- Galería -->
+          <div class="product-modal-gallery" id="product-modal-gallery">
+            <!-- llenado por JS -->
+          </div>
+          <!-- Info + acciones + reseñas -->
+          <div class="product-modal-content" id="product-modal-content">
+            <!-- llenado por JS -->
+          </div>
         </div>
       </div>
     </div>
