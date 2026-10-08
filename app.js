@@ -2214,16 +2214,19 @@ function renderProductModalBody(product) {
   document.querySelector("#product-modal-body").innerHTML = `
     <!-- Imagen -->
     <div class="product-modal-img-col" id="product-modal-img-col">
-      ${product.image
-        ? `<img id="product-modal-main-img" src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
-        : `<div class="product-modal-art">${initials(product.name)}</div>`}
+      <div class="gallery-img-wrap">
+        ${product.image
+          ? `<img id="product-modal-main-img" src="${product.image}" alt="${escapeHtml(product.name)}" loading="eager" />`
+          : `<div class="product-modal-art">${initials(product.name)}</div>`}
+        ${product.images && product.images.length > 1 ? `
+          <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Imagen anterior">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Imagen siguiente">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </button>` : ""}
+      </div>
       ${product.images && product.images.length > 1 ? `
-        <button class="gallery-arrow gallery-arrow-prev" type="button" aria-label="Imagen anterior">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="gallery-arrow gallery-arrow-next" type="button" aria-label="Imagen siguiente">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
         <div class="product-modal-thumbs">
           ${product.images.map((url, i) => `
             <button class="modal-thumb ${i === 0 ? "is-active" : ""}" type="button"
@@ -2322,7 +2325,8 @@ function renderProductModalBody(product) {
     const images = product.images;
     let currentIndex = 0;
 
-    // Renderizar puntos indicadores
+    // Renderizar puntos indicadores dentro del gallery-img-wrap
+    const imgWrap = imgCol.querySelector(".gallery-img-wrap");
     const dotsContainer = document.createElement("div");
     dotsContainer.className = "modal-gallery-dots";
     dotsContainer.setAttribute("aria-hidden", "true");
@@ -2331,9 +2335,7 @@ function renderProductModalBody(product) {
       dot.className = "modal-gallery-dot" + (i === 0 ? " is-active" : "");
       dotsContainer.appendChild(dot);
     });
-    const thumbsEl = imgCol.querySelector(".product-modal-thumbs");
-    if (thumbsEl) imgCol.insertBefore(dotsContainer, thumbsEl);
-    else imgCol.appendChild(dotsContainer);
+    if (imgWrap) imgWrap.appendChild(dotsContainer);
 
     function goToImage(index) {
       if (index < 0 || index >= images.length) return;
@@ -2371,16 +2373,16 @@ function renderProductModalBody(product) {
     // Swipe táctil
     let touchStartX = 0;
     let touchStartY = 0;
+    const swipeTarget = imgWrap || imgCol;
 
-    imgCol.addEventListener("touchstart", (e) => {
+    swipeTarget.addEventListener("touchstart", (e) => {
       touchStartX = e.touches[0].clientX;
       touchStartY = e.touches[0].clientY;
     }, { passive: true });
 
-    imgCol.addEventListener("touchend", (e) => {
+    swipeTarget.addEventListener("touchend", (e) => {
       const dx = e.changedTouches[0].clientX - touchStartX;
       const dy = e.changedTouches[0].clientY - touchStartY;
-      // Solo activar si el movimiento horizontal supera 40px y domina al vertical
       if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
         goToImage(dx < 0 ? currentIndex + 1 : currentIndex - 1);
       }

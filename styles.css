@@ -2116,22 +2116,41 @@ button { font: inherit; cursor: pointer; }
   }
 }
 
-/* Columna imagen */
+/* Columna imagen — contenedor de la galería */
 .product-modal-img-col {
-  position: relative;
   background: var(--panel-2);
-  min-height: 16rem;
-  overflow: visible; /* permite que las miniaturas sean visibles fuera del area principal */
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
 }
-.product-modal-img-col img#product-modal-main-img {
+
+/* Wrapper de la imagen: aquí viven las flechas y los puntos */
+.gallery-img-wrap {
+  position: relative;       /* ancla las flechas y puntos */
+  flex: 1;
+  min-height: 0;
+  /* altura fija en móvil */
+  height: 260px;
+  overflow: hidden;
+  background: var(--panel-2);
+}
+@media (min-width: 640px) {
+  .gallery-img-wrap {
+    height: auto;
+    min-height: 300px;
+  }
+}
+
+/* Imagen principal */
+.gallery-img-wrap img#product-modal-main-img {
   width: 100%;
-  aspect-ratio: 4/3;
+  height: 100%;
   object-fit: cover;
   display: block;
-  flex-shrink: 0;
+  transition: opacity 0.18s ease;
 }
+
 .product-modal-art {
   width: 100%;
   height: 100%;
@@ -2143,6 +2162,121 @@ button { font: inherit; cursor: pointer; }
   font-weight: 900;
   color: var(--green);
   background: var(--panel-2);
+}
+
+/* ── Flechas de navegación ────────────────────────────────────────── */
+.gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.22);
+  background: rgba(13, 15, 16, 0.70);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s;
+  pointer-events: auto;
+}
+.gallery-arrow:hover {
+  background: rgba(13, 15, 16, 0.92);
+  border-color: var(--green);
+}
+.gallery-arrow:active {
+  transform: translateY(-50%) scale(0.91);
+}
+.gallery-arrow svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+.gallery-arrow-prev { left: 0.55rem; }
+.gallery-arrow-next { right: 0.55rem; }
+.gallery-arrow[disabled] {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* ── Puntos indicadores (dentro del gallery-img-wrap) ─────────────── */
+.modal-gallery-dots {
+  position: absolute;
+  bottom: 0.55rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.38rem;
+  z-index: 10;
+}
+.modal-gallery-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transition: background 0.15s, transform 0.15s;
+}
+.modal-gallery-dot.is-active {
+  background: var(--green);
+  transform: scale(1.35);
+}
+
+/* ── Galería de miniaturas ────────────────────────────────────────── */
+.product-modal-thumbs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.45rem 0.5rem;
+  background: rgba(0,0,0,0.55);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+.product-modal-thumbs::-webkit-scrollbar { display: none; }
+
+.modal-thumb {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.35rem;
+  border: 2px solid transparent;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--panel-2);
+  cursor: pointer;
+  transition: border-color 0.15s, opacity 0.15s;
+  opacity: 0.55;
+}
+.modal-thumb:hover  { opacity: 0.85; }
+.modal-thumb.is-active {
+  border-color: var(--green);
+  opacity: 1;
+}
+
+/* ── Puntos indicadores (swipe móvil) ────────────────────────────── */
+.modal-gallery-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.38rem;
+  padding: 0.4rem 0;
+  background: rgba(0,0,0,0.55);
+  flex-shrink: 0;
+}
+.modal-gallery-dot {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transition: background 0.15s, transform 0.15s;
+}
+.modal-gallery-dot.is-active {
+  background: var(--green);
+  transform: scale(1.35);
 }
 
 /* Columna info */
@@ -2353,89 +2487,6 @@ button { font: inherit; cursor: pointer; }
 .img-row-remove:hover { border-color: #f87171; color: #f87171; }
 /* Primera fila: no se puede borrar (siempre hay al menos 1) */
 .image-input-row:first-child .img-row-remove { opacity: 0; pointer-events: none; }
-
-/* Botones flecha prev/next sobre la imagen */
-.gallery-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 50%;
-  border: none;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s, transform 0.15s;
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-}
-.gallery-arrow:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
-.gallery-arrow svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  flex-shrink: 0;
-}
-.gallery-arrow-prev { left: 0.6rem; }
-.gallery-arrow-next { right: 0.6rem; }
-
-/* Ocultar flechas cuando solo hay 1 imagen o en el extremo */
-.gallery-arrow[disabled] {
-  opacity: 0.2;
-  pointer-events: none;
-}
-
-/* ── Galería de miniaturas en el modal de producto ── */
-.product-modal-thumbs {
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.5rem;
-  background: var(--panel-3);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-}
-.modal-thumb {
-  flex-shrink: 0;
-  width: 3.2rem;
-  height: 3.2rem;
-  border-radius: var(--radius-sm);
-  border: 2px solid transparent;
-  background-size: cover;
-  background-position: center;
-  background-color: var(--panel-2);
-  cursor: pointer;
-  transition: border-color 0.15s, opacity 0.15s;
-  opacity: 0.6;
-}
-.modal-thumb:hover { opacity: 0.85; }
-.modal-thumb.is-active { border-color: var(--green); opacity: 1; }
-
-/* Indicadores de puntos (swipe móvil) */
-.modal-gallery-dots {
-  display: flex;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0;
-  background: var(--panel-3);
-}
-.modal-gallery-dot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: var(--muted-2);
-  transition: background 0.15s, transform 0.15s;
-}
-.modal-gallery-dot.is-active {
-  background: var(--green);
-  transform: scale(1.3);
-}
 
 /* ── Admin: lista de pedidos ── */
 .orders-list { display: flex; flex-direction: column; gap: 0; }
