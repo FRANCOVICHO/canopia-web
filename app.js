@@ -2269,7 +2269,16 @@ function renderProductModalBody(product) {
           loading="eager" />`
     : `<div class="pm-main-art">${initials(product.name)}</div>`;
 
-  document.querySelector("#product-modal-gallery").innerHTML = `
+  const galleryEl = document.querySelector("#product-modal-gallery");
+  const contentEl = document.querySelector("#product-modal-content");
+
+  // Guardia: si el HTML del modal no está en el DOM (caché viejo), abortar silencioso
+  if (!galleryEl || !contentEl) {
+    console.warn("[Canopia] Modal DOM no encontrado — recargá la página para aplicar la actualización.");
+    return;
+  }
+
+  galleryEl.innerHTML = `
     <div class="pm-stage" id="pm-stage">
       ${mainImgHtml}
       ${arrowsHtml}
@@ -2288,7 +2297,7 @@ function renderProductModalBody(product) {
         <span class="pm-stars-count" style="color:var(--muted-2)">Sin reseñas aún</span>
        </div>`;
 
-  document.querySelector("#product-modal-content").innerHTML = `
+  contentEl.innerHTML = `
     <!-- Nombre + estrellas + descripción -->
     <div class="pm-info">
       <h2 class="pm-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
