@@ -483,6 +483,7 @@ function setupContact() {
 }
 
 function setupNav() {
+  // Hamburger — abre/cierra el menú móvil
   const toggle = document.querySelector(".nav-toggle");
   const nav = document.querySelector("#main-nav");
   if (toggle && nav) {
@@ -491,34 +492,9 @@ function setupNav() {
       toggle.setAttribute("aria-expanded", String(isOpen));
     });
   }
-
-  // Header search toggle
-  const searchToggle = document.querySelector("#search-toggle");
-  const searchOverlay = document.querySelector("#search-bar-overlay");
-  const searchClose = document.querySelector("#search-close");
-  const searchInput = document.querySelector("#header-search-input");
-
-  if (searchToggle && searchOverlay) {
-    searchToggle.addEventListener("click", () => {
-      searchOverlay.hidden = !searchOverlay.hidden;
-      if (!searchOverlay.hidden) searchInput?.focus();
-    });
-  }
-  if (searchClose) {
-    searchClose.addEventListener("click", () => { searchOverlay.hidden = true; });
-  }
-  // Sync header search with catalog search
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      searchQuery = e.target.value;
-      const catalogInput = document.querySelector("#catalog-search");
-      if (catalogInput) catalogInput.value = searchQuery;
-      renderProducts();
-      if (searchQuery.trim()) {
-        document.querySelector("#catalogo")?.scrollIntoView({ behavior: "smooth" });
-      }
-    });
-  }
+  // Nota: los binds del search header (toggle, close, input) los gestiona
+  // setupSmartSearch(), que también agrega el dropdown de sugerencias.
+  // No se duplican aquí para evitar doble-toggle del overlay.
 }
 
 // ─── FAVORITOS ────────────────────────────────────────────────────────────────
@@ -611,18 +587,15 @@ function toggleCompare(id) {
     compareList.splice(idx, 1);
   } else {
     if (compareList.length >= MAX_COMPARE) {
-      // quitar el primero para hacer lugar
       compareList.shift();
     }
     compareList.push(id);
   }
   updateCompareBar();
-  // actualizar botones en el grid
-  document.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
-    const isC = compareList.includes(btn.dataset.compareToggle);
-    btn.classList.toggle("is-comparing", isC);
-    btn.textContent = isC ? "✓ Comparando" : "Comparar";
-  });
+  // Los botones de comparar ahora viven solo dentro del modal de producto
+  // (data-modal-compare), no en las cards del grid. El modal actualiza
+  // su propio botón inline al recibirlo como bind. No hay [data-compare-toggle]
+  // en el DOM del grid, así que no se itera aquí.
 }
 
 function updateCompareBar() {
@@ -709,10 +682,8 @@ function setupCompare() {
   document.querySelector("#compare-clear-btn").addEventListener("click", () => {
     compareList = [];
     updateCompareBar();
-    document.querySelectorAll("[data-compare-toggle]").forEach((btn) => {
-      btn.classList.remove("is-comparing");
-      btn.textContent = "Comparar";
-    });
+    // No hay [data-compare-toggle] en el grid — el botón comparar vive
+    // en el modal de producto y se actualiza en renderProductModalBody.
   });
   document.querySelector("#close-compare-modal").addEventListener("click", closeCompareModal);
   document.querySelector("#compare-modal-overlay").addEventListener("click", (e) => {
