@@ -119,6 +119,7 @@ function setLiveStatus(isLive) {
 function refreshCatalogViews() {
   renderFilters();
   renderProducts();
+  renderCampaignSelection();
   renderCart();
   renderFavs();
 }
@@ -2663,7 +2664,31 @@ function trackEvent(event, productId = null) {
 }
 
 // ─── Setup catalog controls ───────────────────────────────────────────────────
+function renderCampaignSelection() {
+  const list = document.querySelector("#campaign-selection");
+  const selectionIds = ["kitgreen", "picagato", "bandeja"];
+  const products = selectionIds
+    .map((id) => store.products.find((product) => product.id === id))
+    .filter((product) => product && product.visible !== false && Number(product.stock) > 0 && product.image);
+  const activeId = list.contains(document.activeElement) ? document.activeElement.dataset.selectionProduct : "";
+  list.closest("section").hidden = !products.length;
+  list.innerHTML = products.map((product) => `
+    <li><button class="selection-product" type="button" data-selection-product="${escapeHtml(product.id)}">
+      <img src="${escapeHtml(product.image)}" alt="" width="64" height="64" loading="lazy" />
+      <span><strong>${escapeHtml(product.name)}</strong><small>${formatPrice(product.price)}</small></span>
+      <span aria-hidden="true">↗</span>
+    </button></li>`).join("");
+  if (activeId) {
+    (list.querySelector(`[data-selection-product="${CSS.escape(activeId)}"]`)
+      || list.closest("section").querySelector("a")).focus({ preventScroll: true });
+  }
+}
+
 function setupCatalogControls() {
+  document.querySelector("#campaign-selection").addEventListener("click", (event) => {
+    const product = event.target.closest("[data-selection-product]");
+    if (product) openProductModal(product.dataset.selectionProduct);
+  });
   document.querySelector("#filters").addEventListener("click", (event) => {
     const button = event.target.closest("[data-filter]");
     if (button) setCatalogFilter(button.dataset.filter);
@@ -2686,6 +2711,7 @@ async function init() {
 
   renderFilters();
   renderProducts();
+  renderCampaignSelection();
   setupContact();
   setupNav();
   setupCart();

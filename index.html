@@ -44,7 +44,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="campaign.css?v=1" />
+    <link rel="stylesheet" href="campaign.css?v=2" />
 
     <!-- ══ FAVICONS ════════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo-icon.png" />
@@ -205,14 +205,16 @@
 
     <main>
       <section id="inicio" class="campaign-hero" aria-labelledby="page-title">
-        <picture class="campaign-photo">
-          <source media="(max-width: 640px)" srcset="assets/campaign/kit-green-mobile.webp" />
-          <img src="assets/campaign/kit-green.webp" alt="" width="1280" height="853" fetchpriority="high" />
-        </picture>
-        <div class="campaign-copy">
-          <h1 id="page-title">Cultivo indoor<br class="campaign-break" /> y parafernalia.</h1>
-          <p>Tienda online desde Viedma.</p>
-          <a class="btn campaign-cta" href="#catalogo" data-shop-filter="todos">Ver catálogo <span aria-hidden="true">↗</span></a>
+        <div class="campaign-inner">
+          <div class="campaign-copy">
+            <h1 id="page-title">Cultivo indoor<br /> y parafernalia.</h1>
+            <p>Tienda online desde Viedma.</p>
+            <a class="btn campaign-cta" href="#catalogo" data-shop-filter="todos">Ver catálogo <span aria-hidden="true">↗</span></a>
+          </div>
+          <figure class="campaign-photo">
+            <img src="assets/campaign/kit-green-catalogo.webp" alt="Kit Green de OHIS con bandeja verde, picador y accesorios" width="1000" height="1000" fetchpriority="high" />
+            <figcaption>Kit Green · OHIS</figcaption>
+          </figure>
         </div>
       </section>
 
@@ -228,6 +230,14 @@
             <span>Smoke <span aria-hidden="true">→</span></span>
           </a>
         </div>
+      </section>
+
+      <section class="section campaign-selection" aria-labelledby="selection-title" hidden>
+        <div class="selection-header">
+          <h2 id="selection-title">Selección Canopia</h2>
+          <a href="#catalogo" data-shop-filter="todos">Ver todo <span aria-hidden="true">↗</span></a>
+        </div>
+        <ul class="selection-grid" id="campaign-selection"></ul>
       </section>
 
       <!-- ── CATÁLOGO ───────────────────────────────── -->
@@ -642,6 +652,6 @@
       </div>
     </aside>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
   </body>
 </html>
