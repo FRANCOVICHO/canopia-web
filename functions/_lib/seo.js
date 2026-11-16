@@ -5,6 +5,10 @@
 
 // ─── Constante global ───────────────────────────────────────────────────────
 
+function serializeJsonLd(value) {
+  return JSON.stringify(value).replace(/</g, "\\u003c");
+}
+
 export const SITE_BASE_URL = "https://canopiagrow.com";
 
 // ─── Sanitización XSS ───────────────────────────────────────────────────────
@@ -82,7 +86,7 @@ export function buildProductHtml(product, spaHtml) {
   const canonical   = `${SITE_BASE_URL}/producto/${id}`;
 
   // JSON-LD — sin escapeHtml aquí: los valores se serializan con JSON.stringify
-  const productSchema = JSON.stringify({
+  const productSchema = serializeJsonLd({
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
@@ -97,7 +101,7 @@ export function buildProductHtml(product, spaHtml) {
     },
   });
 
-  const breadcrumbSchema = JSON.stringify({
+  const breadcrumbSchema = serializeJsonLd({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
@@ -181,7 +185,7 @@ export function buildCategoryHtml(category, products, spaHtml) {
     },
   }));
 
-  const itemListSchema = JSON.stringify({
+  const itemListSchema = serializeJsonLd({
     "@context": "https://schema.org",
     "@type": "ItemList",
     name: category.name,
@@ -189,7 +193,7 @@ export function buildCategoryHtml(category, products, spaHtml) {
     itemListElement: itemList,
   });
 
-  const breadcrumbSchema = JSON.stringify({
+  const breadcrumbSchema = serializeJsonLd({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [

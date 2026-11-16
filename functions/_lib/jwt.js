@@ -36,17 +36,23 @@ export async function signJwt(payload, secret, expiresInSeconds = 60 * 60 * 24 *
 }
 
 export async function verifyJwt(token, secret) {
-  const parts = (token || "").split(".");
-  if (parts.length !== 3) return null;
-  const [header, body, sig] = parts;
-  const key = await getKey(secret);
-  const valid = await crypto.subtle.verify(
-    "HMAC", key, b64urlDecode(sig), enc.encode(`${header}.${body}`)
-  );
-  if (!valid) return null;
-  const payload = JSON.parse(new TextDecoder().decode(b64urlDecode(body)));
-  if (payload.exp < Math.floor(Date.now() / 1000)) return null;
-  return payload;
+  if (!secret || typeof token !== "string" || token.length > 4096) return null;
+  const [header, body, sig, extra] = token.split(".");
+  if (extra !== undefined || ![header, body, sig].every((part) => /^[A-Za-z0-9_-]+$/.test(part || ""))) return null;
+  try {
+    const decode = (value) => JSON.parse(new TextDecoder().decode(b64urlDecode(value)));
+    if (decode(header).alg !== "HS256") return null;
+    const key = await getKey(secret);
+    const valid = await crypto.subtle.verify("HMAC", key, b64urlDecode(sig), enc.encode(`${header}.${body}`));
+    if (!valid) return null;
+    const payload = decode(body);
+    const now = Math.floor(Date.now() / 1000);
+    if (!Number.isSafeInteger(payload.exp) || payload.exp <= now) return null;
+    if (payload.nbf !== undefined && (!Number.isSafeInteger(payload.nbf) || payload.nbf > now)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserFromRequest(request, env) {

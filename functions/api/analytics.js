@@ -30,7 +30,8 @@ export async function onRequestGet({ request, env }) {
     return Response.json({ error: "No autorizado." }, { status: 401, headers: cors });
 
   const url    = new URL(request.url);
-  const days   = Math.min(Number(url.searchParams.get("days") || 30), 90);
+  const days = Math.min(Math.max(Number.parseInt(url.searchParams.get("days"), 10) || 30, 1), 90);
+  const windowStart = `-${days} days`;
 
   const { results } = await env.canopia_db.prepare(`
     SELECT
@@ -40,10 +41,10 @@ export async function onRequestGet({ request, env }) {
       strftime('%Y-%m-%d', created_at) AS day,
       COUNT(*)                         AS count
     FROM analytics
-    WHERE created_at >= date('now', '-${days} days')
+    WHERE created_at >= date('now', ?)
     GROUP BY event, product_id, day, hour
     ORDER BY day DESC, hour ASC
-  `).all();
+  `).bind(windowStart).all();
 
   // Totales rápidos
   const totals = await env.canopia_db.prepare(`
@@ -51,9 +52,9 @@ export async function onRequestGet({ request, env }) {
       event,
       COUNT(*) AS total
     FROM analytics
-    WHERE created_at >= date('now', '-${days} days')
+    WHERE created_at >= date('now', ?)
     GROUP BY event
-  `).all();
+  `).bind(windowStart).all();
 
   // Top productos vistos
   const topProducts = await env.canopia_db.prepare(`
@@ -63,11 +64,11 @@ export async function onRequestGet({ request, env }) {
     FROM analytics
     WHERE event = 'product_view'
       AND product_id IS NOT NULL
-      AND created_at >= date('now', '-${days} days')
+      AND created_at >= date('now', ?)
     GROUP BY product_id
     ORDER BY views DESC
     LIMIT 10
-  `).all();
+  `).bind(windowStart).all();
 
   return Response.json({
     analytics:   results,

@@ -4,7 +4,7 @@ export async function checkAdmin(request, env) {
   const header = request.headers.get("Authorization") || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
 
-  if (!token) {
+  if (!token || token.length > 4096) {
     return { ok: false, error: "Token requerido." };
   }
 
@@ -18,7 +18,7 @@ export async function checkAdmin(request, env) {
   if (env.JWT_SECRET) {
     const payload = await verifyJwt(token, env.JWT_SECRET);
     const adminEmails = (env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase());
-    if (payload && payload.email && adminEmails.includes(payload.email)) {
+    if (payload && typeof payload.email === "string" && adminEmails.includes(payload.email.toLowerCase())) {
       return { ok: true };
     }
   }

@@ -1,0 +1,289 @@
+:root {
+  --bg: #f8f3e9;
+  --bg-2: #f0eadf;
+  --panel: #fffcf6;
+  --panel-2: #eee9de;
+  --panel-3: #e6e1d5;
+  --border: #ded8cb;
+  --border-2: #bdb8ac;
+  --text: #161b13;
+  --muted: #565d50;
+  --muted-2: #686e63;
+  --green: #3c5520;
+  --green-dim: #e2ebcc;
+  --green-glow: rgb(60 85 32 / 12%);
+  --lime: #cce26b;
+  --shadow: 0 12px 32px rgb(35 44 23 / 10%);
+  --shadow-lg: 0 20px 56px rgb(29 38 23 / 20%);
+  --campaign-edge: clamp(1rem, 4vw, 4.25rem);
+  --display-font: "Bricolage Grotesque", Inter, system-ui, sans-serif;
+}
+
+.canopia-store [hidden] { display: none !important; }
+.canopia-store :focus-visible { outline: 2px solid #376112; outline-offset: 4px; }
+.canopia-store h1,
+.canopia-store h2 { font-family: var(--display-font); }
+.canopia-store .section { width: min(1480px, calc(100% - 2 * var(--campaign-edge))); }
+.canopia-store :is(#inicio, #catalogo, #nosotros, #contacto) { scroll-margin-top: 5.75rem; }
+
+.skip-link {
+  position: fixed;
+  z-index: 500;
+  inset: .5rem auto auto .5rem;
+  padding: .7rem 1rem;
+  background: var(--panel);
+  transform: translateY(-150%);
+}
+.skip-link:focus { transform: none; }
+
+.canopia-store .site-header {
+  height: 4.75rem;
+  padding: 0 var(--campaign-edge);
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: .75rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: none;
+}
+.canopia-store .brand { width: max-content; max-width: 100%; gap: .45rem; }
+.canopia-store .brand-logo {
+  width: 3.8rem;
+  height: 3.8rem;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+.canopia-store .brand-text strong {
+  font: 800 clamp(1rem, 2.1vw, 1.65rem)/1 var(--display-font);
+  letter-spacing: -.055em;
+}
+.canopia-store .brand-text small { color: var(--muted); font-size: .57rem; letter-spacing: .08em; }
+.canopia-store .main-nav { gap: .75rem; }
+.canopia-store .main-nav a { color: var(--text); font-weight: 700; }
+.canopia-store .main-nav .live-badge { display: none; }
+.canopia-store .header-actions { justify-content: end; gap: .35rem; min-width: 0; }
+.canopia-store .header-actions .icon-btn,
+.canopia-store .nav-toggle {
+  width: 2.5rem;
+  min-height: 2.5rem;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text);
+}
+.canopia-store .cart-button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: .4rem;
+  min-height: 2.5rem;
+  white-space: nowrap;
+}
+.canopia-store .cart-button:hover { background: var(--panel-2); }
+.canopia-store .cart-button #cart-count,
+.canopia-store .fav-count { background: var(--green); color: white; }
+.canopia-store .search-bar-overlay { background: var(--bg); top: 4.75rem; }
+
+.campaign-hero {
+  isolation: isolate;
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-height: clamp(25rem, 34vw, 37rem);
+  background: #cede72;
+  color: #14200d;
+  overflow: hidden;
+}
+.campaign-photo {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 auto;
+  width: 68%;
+}
+.campaign-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #cede72, transparent 27%);
+  pointer-events: none;
+}
+.campaign-photo img { width: 100%; height: 100%; object-fit: cover; object-position: right 46%; }
+.campaign-copy { width: min(100%, 1560px); margin-inline: auto; padding: 3rem var(--campaign-edge); }
+.campaign-copy h1 {
+  max-width: 12ch;
+  font-size: clamp(3.25rem, 6.05vw, 6.65rem);
+  line-height: .9;
+  font-weight: 800;
+  letter-spacing: -.058em;
+  text-wrap: balance;
+}
+.campaign-copy p { margin-block: 1.25rem; font-size: clamp(1rem, 1.75vw, 1.35rem); font-weight: 600; }
+.canopia-store .campaign-cta {
+  gap: 1.65rem;
+  min-height: 3.25rem;
+  padding: .75rem 1.15rem;
+  border: 1px solid #192112;
+  border-radius: .22rem;
+  background: #192112;
+  color: #fffdf7;
+  font-size: .98rem;
+}
+.canopia-store .campaign-cta:hover { background: #fffdf7; color: #192112; }
+.campaign-shops { padding: clamp(1.8rem, 3vw, 3rem) 0 0; }
+.canopia-store .section-title {
+  font-size: clamp(2.2rem, 4.2vw, 4.25rem);
+  line-height: .98;
+  letter-spacing: -.058em;
+  font-weight: 800;
+}
+.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.shop-tile {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 2.55;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  overflow: hidden;
+  padding: clamp(.7rem, 2vw, 1.65rem);
+  background: #efe4d4;
+  color: #191b13;
+}
+.shop-tile-smoke { background: #10216e; color: #fffdf6; }
+.shop-tile img {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 47%;
+  transition: transform .25s ease;
+}
+.shop-tile:hover img { transform: scale(1.035); }
+.shop-tile > span {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .35rem .6rem .45rem;
+  background: #f8f3e9;
+  font: 800 clamp(1.4rem, 3.4vw, 3.55rem)/.95 var(--display-font);
+  letter-spacing: -.06em;
+}
+.shop-tile-smoke > span { background: #10216e; }
+.shop-tile > span > span { font-size: .6em; }
+
+.canopia-store .catalog-section { padding: clamp(1.8rem, 3.5vw, 3.6rem) 0 3.5rem; }
+.canopia-store .catalog-section .section-head-row { gap: 1rem; align-items: end; }
+.canopia-store .catalog-controls { flex-wrap: wrap; }
+.canopia-store .search-box,
+.canopia-store .sort-box { background: var(--panel); border-color: var(--border); }
+.canopia-store .filters-row { display: flex; flex-wrap: wrap; gap: .35rem .85rem; padding: 0; margin: .7rem 0; }
+.canopia-store .filter-button {
+  padding: .6rem .24rem;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-weight: 700;
+}
+.canopia-store .filter-button[aria-pressed="true"],
+.canopia-store .filter-button:hover { color: var(--text); border-bottom-color: var(--green); }
+.catalog-count { color: var(--muted); font-size: .86rem; margin-bottom: .85rem; }
+.catalog-count:empty { display: none; }
+.catalog-empty {
+  grid-column: 1/-1;
+  padding: clamp(1.3rem, 4vw, 3rem);
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+.catalog-empty p { margin: .55rem 0 .9rem; color: var(--muted); }
+.canopia-store .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.canopia-store .product-card {
+  min-width: 0;
+  background: var(--panel);
+  border-color: var(--border);
+  border-radius: .35rem;
+  box-shadow: none;
+}
+.canopia-store .product-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.canopia-store .product-image,
+.canopia-store .product-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1.13;
+  object-fit: contain;
+  background: #151915;
+}
+.canopia-store .product-body { padding: clamp(.65rem, 1.4vw, 1.15rem); }
+.canopia-store .product-body h3 { font-size: clamp(.92rem, 1.25vw, 1.1rem); }
+.product-title-button { padding: 0; color: inherit; border: 0; background: transparent; text-align: left; font: inherit; }
+.product-title-button:hover { text-decoration: underline; text-underline-offset: .16em; }
+.canopia-store .product-body > p { display: none; }
+.canopia-store .product-footer { align-items: start; flex-direction: column; }
+.canopia-store .product-actions { display: flex; flex-wrap: wrap; width: 100%; }
+.canopia-store .product-actions .btn { flex: 1; min-height: 2.4rem; }
+.canopia-store .btn-primary { color: white; background: var(--green); border-color: var(--green); box-shadow: none; }
+.canopia-store .btn-primary:hover:not(:disabled) { color: white; background: #283e14; border-color: #283e14; }
+.canopia-store .btn-outline { color: var(--text); }
+.canopia-store .btn-outline:hover { color: var(--green); background: var(--green-dim); }
+.canopia-store .fav-button { background: var(--panel); color: var(--green); border-color: var(--border); }
+.canopia-store .fav-button svg { width: 1.05rem; height: 1.05rem; }
+.canopia-store .checkout-whatsapp { width: 100%; margin-top: .55rem; }
+.canopia-store .compare-bar:not(.is-visible) { visibility: hidden; }
+.canopia-store .about-section { border-top: 1px solid var(--border); padding: 2rem 0; }
+.canopia-store .about-section .section-title { font-size: clamp(1.9rem, 4vw, 3rem); }
+.canopia-store .contact-section { padding: 2rem; margin-bottom: 3rem; }
+.canopia-store .contact-section .section-title { font-size: clamp(1.8rem, 3.4vw, 2.8rem); }
+.canopia-store .site-footer { background: var(--bg-2); padding-bottom: 1.25rem; }
+.canopia-store .footer-logo { border-radius: 0; }
+
+@media (min-width: 861px) {
+  .canopia-store .main-nav .secondary-nav-link { display: none; }
+}
+@media (max-width: 1020px) {
+  .canopia-store .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .canopia-store .site-header { grid-template-columns: minmax(0, 1fr) auto; }
+  .canopia-store .main-nav { gap: .15rem; background: var(--bg); }
+  .canopia-store .header-actions .icon-btn,
+  .canopia-store .nav-toggle { min-width: 2.1rem; width: 2.1rem; }
+  .canopia-store .cart-button { padding: 0 .35rem; min-width: 2.45rem; gap: .2rem; }
+  .cart-label { display: none; }
+  .campaign-hero { min-height: 22rem; }
+}
+@media (max-width: 640px) {
+  .canopia-store .site-header { height: 3.75rem; gap: .23rem; }
+  .canopia-store .brand-logo { width: 2.85rem; height: 2.85rem; }
+  .canopia-store .brand { gap: .2rem; }
+  .canopia-store .brand-text small { display: none; }
+  .canopia-store .main-nav,
+  .canopia-store .search-bar-overlay { top: 3.75rem; }
+  .canopia-store .header-actions { gap: .05rem; }
+  .campaign-hero { grid-template-rows: auto auto; min-height: 0; }
+  .campaign-copy { grid-row: 1; padding: 1.6rem var(--campaign-edge) .75rem; }
+  .campaign-copy h1 { font-size: clamp(2.7rem, 9.4vw, 4.85rem); }
+  .campaign-copy p { margin-block: .85rem; }
+  .campaign-photo { position: relative; grid-row: 2; inset: auto; width: 100%; z-index: 0; }
+  .campaign-photo img { width: 100%; height: clamp(12rem, 58vw, 21rem); object-position: center 52%; }
+  .campaign-photo::after { background: linear-gradient(#cede72, transparent 24%); }
+  .shop-grid { gap: .55rem; }
+  .shop-tile { aspect-ratio: 1.35; padding: .35rem; align-items: end; }
+  .shop-tile img { object-position: 60% center; }
+  .canopia-store .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
+  .canopia-store .catalog-section .section-head-row { align-items: stretch; }
+  .canopia-store .catalog-controls { width: 100%; }
+  .canopia-store .catalog-controls .search-box { min-width: 0; flex: 1 1 12rem; }
+  .canopia-store .catalog-controls input { width: 100%; }
+  .canopia-store .contact-section { padding: 1rem; }
+}
+@media (max-width: 365px) {
+  .canopia-store .brand-text { display: none; }
+  .canopia-store .product-actions { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .shop-tile img { transition: none; }
+}

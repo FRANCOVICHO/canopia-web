@@ -1,6 +1,8 @@
 import { checkAdmin } from "../_lib/auth.js";
+import { cartItems, changePendingOrder } from "../_lib/order-integrity.js";
+import { getToken, pbVerifyToken } from "../_lib/pocketbase.js";
 
-const CORS = { "Content-Type": "application/json" };
+const CORS = { "Cache-Control": "no-store" };
 
 // ── POST /api/orders  →  crea pedido en estado "pendiente" (SIN descontar stock)
 export async function onRequestPost({ request, env }) {
@@ -8,8 +10,8 @@ export async function onRequestPost({ request, env }) {
   const action = url.searchParams.get("action");
 
   // Confirmación desde el admin
-  if (action === "confirm") return confirmOrder(request, env);
-  if (action === "reject")  return rejectOrder(request, env);
+  if (action === "confirm" || action === "reject") return updateOrderStatus(request, env, action);
+  if (action) return Response.json({ error: "Acción inválida." }, { status: 400, headers: CORS });
 
   // Creación de pedido nuevo (flujo del cliente)
   const payload = await request.json().catch(() => null);
@@ -19,17 +21,20 @@ export async function onRequestPost({ request, env }) {
   const customerName  = String(payload.customer?.name  || "").trim();
   const customerPhone = String(payload.customer?.phone || "").trim();
   const customerNote  = String(payload.customer?.note  || "").trim();
-  const userId        = payload.user_id ? Number(payload.user_id) : null;
+  const token = getToken(request);
+  const user = token ? await pbVerifyToken(env, token) : null;
+  if (token && !user) {
+    return Response.json({ error: "La sesión venció. Volvé a iniciar sesión." }, { status: 401, headers: CORS });
+  }
+  const userId = user?.id || null;
 
-  if (!customerName || !customerPhone)
+  if (!customerName || customerName.length > 120 || !customerPhone || customerPhone.length > 40 || customerNote.length > 1000)
     return Response.json({ error: "Falta nombre o telefono." }, { status: 400, headers: CORS });
 
-  const items = payload.items
-    .map((item) => ({ id: String(item.id || "").trim(), quantity: Math.max(1, Number(item.quantity || 1)) }))
-    .filter((item) => item.id);
-
-  if (!items.length)
-    return Response.json({ error: "El carrito esta vacio." }, { status: 400, headers: CORS });
+  const items = cartItems(payload.items);
+  if (!items) {
+    return Response.json({ error: "El carrito contiene cantidades o productos inválidos." }, { status: 400, headers: CORS });
+  }
 
   // Validar productos y armar resumen (NO descontar stock todavía)
   const ids = items.map((i) => i.id);
@@ -82,7 +87,7 @@ export async function onRequestGet({ request, env }) {
 
   const url    = new URL(request.url);
   const status = url.searchParams.get("status") || "pendiente";
-  const limit  = Math.min(Number(url.searchParams.get("limit") || 50), 200);
+  const limit = Math.min(Math.max(Number.parseInt(url.searchParams.get("limit"), 10) || 50, 1), 200);
 
   const query = status === "todos"
     ? `SELECT * FROM orders ORDER BY created_at DESC LIMIT ?`
@@ -106,68 +111,21 @@ export async function onRequestGet({ request, env }) {
   return Response.json({ orders }, { headers: CORS });
 }
 
-// ── Confirmar pedido (descuenta stock) ────────────────────────────────────────
-async function confirmOrder(request, env) {
+async function updateOrderStatus(request, env, action) {
   const auth = await checkAdmin(request, env);
   if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
 
-  const body    = await request.json().catch(() => ({}));
-  const orderId = Number(body.order_id || 0);
-  if (!orderId) return Response.json({ error: "Falta order_id." }, { status: 400, headers: CORS });
-
-  const order = await env.canopia_db
-    .prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first();
-  if (!order) return Response.json({ error: "Pedido no encontrado." }, { status: 404, headers: CORS });
-  if (order.status !== "pendiente")
-    return Response.json({ error: `El pedido ya está ${order.status}.` }, { status: 409, headers: CORS });
-
-  const items = JSON.parse(order.items_json || "[]");
-
-  // Verificar stock antes de descontar
-  for (const item of items) {
-    const row = await env.canopia_db
-      .prepare("SELECT stock FROM products WHERE id = ?").bind(item.id).first();
-    if (!row) return Response.json({ error: `Producto no encontrado: ${item.id}` }, { status: 400, headers: CORS });
-    if (row.stock < item.quantity)
-      return Response.json(
-        { error: `Stock insuficiente para ${item.name}. Disponible: ${row.stock}` },
-        { status: 409, headers: CORS },
-      );
+  const body = await request.json().catch(() => null);
+  const orderId = Number(body?.order_id);
+  if (!Number.isSafeInteger(orderId) || orderId < 1) {
+    return Response.json({ error: "Falta order_id." }, { status: 400, headers: CORS });
   }
-
-  // Descontar stock + actualizar estado en batch
-  const statements = items.map((item) =>
-    env.canopia_db
-      .prepare("UPDATE products SET stock = stock - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND stock >= ?")
-      .bind(item.quantity, item.id, item.quantity),
-  );
-  statements.push(
-    env.canopia_db
-      .prepare("UPDATE orders SET status = 'confirmado' WHERE id = ?")
-      .bind(orderId),
-  );
-  await env.canopia_db.batch(statements);
-
-  return Response.json({ ok: true, order_id: orderId, status: "confirmado" }, { headers: CORS });
-}
-
-// ── Rechazar pedido (no descuenta nada) ───────────────────────────────────────
-async function rejectOrder(request, env) {
-  const auth = await checkAdmin(request, env);
-  if (!auth.ok) return Response.json({ error: auth.error }, { status: 401, headers: CORS });
-
-  const body    = await request.json().catch(() => ({}));
-  const orderId = Number(body.order_id || 0);
-  if (!orderId) return Response.json({ error: "Falta order_id." }, { status: 400, headers: CORS });
-
-  const order = await env.canopia_db
-    .prepare("SELECT status FROM orders WHERE id = ?").bind(orderId).first();
+  const order = await env.canopia_db.prepare("SELECT * FROM orders WHERE id = ?").bind(orderId).first();
   if (!order) return Response.json({ error: "Pedido no encontrado." }, { status: 404, headers: CORS });
-  if (order.status !== "pendiente")
-    return Response.json({ error: `El pedido ya está ${order.status}.` }, { status: 409, headers: CORS });
-
-  await env.canopia_db
-    .prepare("UPDATE orders SET status = 'rechazado' WHERE id = ?").bind(orderId).run();
-
-  return Response.json({ ok: true, order_id: orderId, status: "rechazado" }, { headers: CORS });
+  const status = action === "confirm" ? "confirmado" : "rechazado";
+  if (order.status !== "pendiente" || !await changePendingOrder(env.canopia_db, order, status)) {
+    return Response.json({ error: "El pedido cambió de estado o ya no hay stock suficiente." },
+      { status: 409, headers: CORS });
+  }
+  return Response.json({ ok: true, order_id: orderId, status }, { headers: CORS });
 }
