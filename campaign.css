@@ -96,6 +96,7 @@
 .campaign-hero {
   background: #cede72;
   color: #14200d;
+  overflow: clip;
 }
 .campaign-inner {
   width: min(100%, 1560px);
