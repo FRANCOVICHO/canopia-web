@@ -167,16 +167,23 @@
   isolation: isolate;
   aspect-ratio: 2.2;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   overflow: hidden;
   padding: clamp(.7rem, 2vw, 1.65rem);
   background: #efe4d4;
-  color: #191b13;
+  color: #fffdf6;
 }
 .shop-tile-smoke {
   background: radial-gradient(ellipse at 78% 12%, #304aa1, #14266d 64%, #101d52);
-  color: #fffdf6;
+}
+.shop-tile::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 57%;
+  background: linear-gradient(to top, rgb(10 16 13 / 88%), rgb(10 16 13 / 70%) 48%, transparent);
+  pointer-events: none;
 }
 .shop-tile img {
   position: absolute;
@@ -220,15 +227,14 @@
   );
 }
 .shop-tile > span {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: .55rem;
-  padding: .35rem .6rem .45rem;
-  background: #f8f3e9;
   font: 800 clamp(1.4rem, 3.4vw, 3.55rem)/.95 var(--display-font);
   letter-spacing: -.06em;
 }
-.shop-tile-smoke > span { background: #10216e; }
 .shop-tile > span > span { font-size: .6em; }
 
 .canopia-store .campaign-selection { padding: clamp(1.8rem, 3.1vw, 3rem) 0 0; }
@@ -371,7 +377,7 @@
   .campaign-photo { min-height: 0; }
   .selection-grid { grid-template-columns: 1fr; }
   .shop-grid { gap: .55rem; }
-  .shop-tile { aspect-ratio: 1.35; padding: .35rem; align-items: end; }
+  .shop-tile { aspect-ratio: 1.35; padding: .55rem; }
   .shop-tile-grow img { object-position: 55% 55%; }
   .smoke-product { width: 100%; right: 0; transform: translateY(-56%); }
   .canopia-store .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
