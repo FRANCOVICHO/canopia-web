@@ -385,6 +385,7 @@ function renderProducts() {
     grid.innerHTML = `<div class="catalog-empty">
       <h3>${title}</h3>
       <p>${description}</p>
+      ${catalogAvailable && (searchQuery.trim() || activeCategory !== "todos") ? `<button class="btn btn-primary" type="button" data-reset-catalog>Ver todo el catálogo</button>` : ""}
       ${searchQuery.trim() && catalogAvailable ? "" : `<a class="btn btn-outline" href="${whatsappUrl()}" target="_blank" rel="noopener noreferrer">Consultar por WhatsApp ↗</a>`}
     </div>`;
     return;
@@ -1177,10 +1178,10 @@ function renderReviewsList(reviews) {
     <div class="review-item">
       <div class="review-item-head">
         <div class="review-item-author">
-          <div class="review-avatar">${r.author.slice(0, 2).toUpperCase()}</div>
+          <div class="review-avatar">${escapeHtml(r.author.slice(0, 2).toUpperCase())}</div>
           <span class="review-author-name">${escapeHtml(r.author)}</span>
         </div>
-        <span class="review-date">${r.date}</span>
+        <span class="review-date">${escapeHtml(r.date)}</span>
       </div>
       <div class="review-stars">${starsHtml(r.stars, "0.9rem")}</div>
       ${r.text ? `<p class="review-text">${escapeHtml(r.text)}</p>` : ""}
@@ -2147,10 +2148,24 @@ function toggleFav(id) {
 
 const MODAL_REVIEWS_PAGE = 3; // reseñas visibles por defecto
 let modalReviewsShowAll = false;
+let productOpener = null;
+let productPageOverflow = "";
+let galleryController = null;
+
+function animateElement(element, frames, options) {
+  if (!element || !element.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  element.animate(frames, options);
+}
 
 function openProductModal(productId) {
   const product = store.products.find((p) => p.id === productId);
-  if (!product) return;
+  if (!product || product.visible === false) return;
+  const panel = document.querySelector("#product-modal-overlay");
+  if (!panel.classList.contains("is-open")) {
+    productOpener = document.activeElement;
+    productPageOverflow = document.body.style.overflow;
+  }
+  galleryController = null;
 
   trackEvent("product_view", productId);
 
@@ -2163,15 +2178,18 @@ function openProductModal(productId) {
   overlay.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
 
-  // Foco inicial para accesibilidad
-  setTimeout(() => document.querySelector("#close-product-modal")?.focus(), 50);
+  document.querySelector("#product-modal-scroll").scrollTop = 0;
+  document.querySelector("#close-product-modal").focus({ preventScroll: true });
 }
 
 function closeProductModal() {
   const overlay = document.querySelector("#product-modal-overlay");
   overlay.classList.remove("is-open");
   overlay.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  document.body.style.overflow = productPageOverflow;
+  galleryController = null;
+  (productOpener?.isConnected ? productOpener : document.querySelector("#catalog-search"))
+    ?.focus({ preventScroll: true });
 }
 
 // ── Cuerpo del modal (imagen + info) ─────────────────────────────
@@ -2194,7 +2212,7 @@ function renderProductModalBody(product) {
   // ── Badges en el header — solo el tag, la cat es ruido redundante ──
   const badgesEl = document.querySelector("#product-modal-badges");
   if (badgesEl) {
-    badgesEl.innerHTML = product.tag
+    badgesEl.innerHTML = product.tag && product.tag !== "Producto"
       ? `<span class="pm-badge pm-badge-tag">${escapeHtml(product.tag)}</span>`
       : "";
   }
@@ -2208,7 +2226,8 @@ function renderProductModalBody(product) {
             data-index="${i}"
             aria-label="Imagen ${i + 1} de ${images.length}"
             aria-pressed="${i === 0}"
-            style="background-image:url('${url}')">
+            >
+            <img src="${escapeHtml(url)}" alt="" loading="lazy" />
           </button>`).join("")}
       </div>`
     : "";
@@ -2267,7 +2286,7 @@ function renderProductModalBody(product) {
     </div>`;
   } else if (stockNum <= 3) {
     stockHtml = `<div class="pm-stock-badge pm-stock-badge--low">
-      <span class="pm-stock-dot"></span>Últimas ${stockNum} unidades
+      <span class="pm-stock-dot"></span>${stockNum === 1 ? "Última unidad" : `Últimas ${stockNum} unidades`}
     </div>`;
   } else {
     stockHtml = `<div class="pm-stock-badge pm-stock-badge--ok">
@@ -2292,24 +2311,7 @@ function renderProductModalBody(product) {
       </div>`
     : "";
 
-  // ── Descripción: si es larga, colapsable ─────────────────────
   const desc = (product.description || "").trim();
-  const CHAR_LIMIT = 120;
-  let descHtml = "";
-  if (desc) {
-    if (desc.length > CHAR_LIMIT) {
-      descHtml = `
-        <details class="pm-desc-details">
-          <summary class="pm-desc-summary">
-            <span class="pm-desc-preview">${escapeHtml(desc.slice(0, CHAR_LIMIT))}…</span>
-            <span class="pm-desc-toggle">Ver más</span>
-          </summary>
-          <p class="pm-desc pm-desc--full">${escapeHtml(desc)}</p>
-        </details>`;
-    } else {
-      descHtml = `<p class="pm-desc">${escapeHtml(desc)}</p>`;
-    }
-  }
 
   // ── Label del CTA según estado ────────────────────────────────
   const ctaLabel = outOfStock ? "Sin stock" : "Agregar al carrito";
@@ -2323,7 +2325,7 @@ function renderProductModalBody(product) {
       <!-- NIVEL 1: Nombre + precio + stock — lo imprescindible primero -->
       <div class="pm-header-block">
         <h2 class="pm-name" id="product-modal-name">${escapeHtml(product.name)}</h2>
-        ${starsRow}
+        ${count ? starsRow : ""}
         <div class="pm-price-row">
           <span class="pm-price">${formatPrice(product.price)}</span>
           ${stockHtml}
@@ -2331,7 +2333,7 @@ function renderProductModalBody(product) {
       </div>
 
       <!-- NIVEL 2: Descripción (colapsable si es larga) -->
-      ${descHtml ? `<div class="pm-desc-block">${descHtml}</div>` : ""}
+      
 
       <!-- NIVEL 3: Cantidad + CTA -->
       <div class="pm-purchase-block">
@@ -2351,7 +2353,12 @@ function renderProductModalBody(product) {
           </svg>
           Consultar por WhatsApp
         </a>
+        <small class="pm-order-note">El pedido queda pendiente de confirmación. Coordinamos pago y envío por WhatsApp.</small>
       </div>
+
+      ${desc ? `<div class="pm-desc-block"><h3>Sobre este producto</h3><p class="pm-desc">${escapeHtml(desc)}</p></div>` : ""}
+
+      <p id="pm-purchase-message" class="pm-purchase-message" role="status"></p>
 
       <!-- NIVEL 4: Confianza — info real del negocio -->
       <div class="pm-trust-bar" aria-label="Información de compra">
@@ -2361,7 +2368,7 @@ function renderProductModalBody(product) {
         </div>
         <div class="pm-trust-item">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Compra segura</span>
+          <span>Confirmamos tu pedido</span>
         </div>
         <div class="pm-trust-item">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -2418,27 +2425,18 @@ function renderProductModalBody(product) {
     if (modalQty < maxQty) { modalQty++; updateQtyUI(); }
   });
 
-  document.querySelector("[data-modal-buy]")?.addEventListener("click", (e) => {
-    const btn = e.currentTarget;
-    if (btn.disabled) return;
-
-    // Feedback visual antes de cerrar
-    btn.disabled = true;
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = `
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-      Agregado
-    `;
-    btn.style.background = "var(--lime)";
-
-    setTimeout(() => {
-      addToCartWithQuantity(product.id, modalQty);
-      closeProductModal();
-      // Restaurar para la próxima apertura
-      btn.disabled = false;
-      btn.innerHTML = originalHtml;
-      btn.style.background = "";
-    }, 380);
+  document.querySelector("[data-modal-buy]")?.addEventListener("click", () => {
+    const current = store.products.find((item) => item.id === product.id);
+    if (!current || current.visible === false || Number(current.stock) < modalQty) {
+      const message = document.querySelector("#pm-purchase-message");
+      message.textContent = "Cambió la disponibilidad. Revisá el producto antes de agregarlo.";
+      return;
+    }
+    closeProductModal();
+    addToCartWithQuantity(product.id, modalQty);
+    animateElement(document.querySelector("#cart-count"), [
+      { transform: "scale(1)" }, { transform: "scale(1.3)" }, { transform: "scale(1)" },
+    ], { duration: 240, easing: "ease-out" });
   });
 
   // ── Bind: fav ─────────────────────────────────────────────────
@@ -2481,11 +2479,8 @@ function renderProductModalBody(product) {
     currentIndex = idx;
     const mainImg = document.querySelector("#pm-main-img");
     if (mainImg) {
-      mainImg.style.opacity = "0";
-      setTimeout(() => {
-        mainImg.src = images[idx];
-        mainImg.style.opacity = "1";
-      }, 110);
+      mainImg.src = images[idx];
+      animateElement(mainImg, [{ opacity: .45 }, { opacity: 1 }], { duration: 160 });
     }
     thumbBtns.forEach((t, i) => {
       t.classList.toggle("is-active", i === idx);
@@ -2518,9 +2513,9 @@ function renderProductModalBody(product) {
     }
   }, { passive: true });
 
-  window._pmGoToImage  = goToImage;
-  window._pmCurrentIdx = () => currentIndex;
-  window._pmImagesLen  = () => images.length;
+  galleryController = {
+    move: (direction) => goToImage(currentIndex + direction),
+  };
 }
 
 // ── Sección de reseñas del modal ──────────────────────────────────
@@ -2555,12 +2550,12 @@ function renderProductModalReviews(product) {
           <div class="pm-rev-item">
             <div class="pm-rev-item-head">
               <div class="pm-rev-author">
-                <div class="pm-rev-avatar">${r.author.slice(0, 2).toUpperCase()}</div>
+                <div class="pm-rev-avatar">${escapeHtml(r.author.slice(0, 2).toUpperCase())}</div>
                 <span class="pm-rev-name">${escapeHtml(r.author)}</span>
               </div>
               <div class="pm-rev-meta">
                 <span class="pm-rev-stars">${starsHtml(r.stars, "0.82rem")}</span>
-                <span class="pm-rev-date">${r.date}</span>
+                <span class="pm-rev-date">${escapeHtml(r.date)}</span>
               </div>
             </div>
             ${r.text ? `<p class="pm-rev-text">${escapeHtml(r.text)}</p>` : ""}
@@ -2615,6 +2610,21 @@ function setupProductModal() {
     const isOpen = document.querySelector("#product-modal-overlay")?.classList.contains("is-open");
     if (!isOpen) return;
 
+    if (e.key === "Tab") {
+      const controls = [...document.querySelector("#product-modal").querySelectorAll(
+        'button:not(:disabled), a[href], input:not(:disabled), summary, [tabindex="0"]'
+      )].filter((element) => element.getClientRects().length);
+      const first = controls[0];
+      const last = controls.at(-1);
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    }
+
     if (e.key === "Escape") {
       closeProductModal();
       return;
@@ -2626,11 +2636,8 @@ function setupProductModal() {
       const active = document.activeElement;
       if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
 
-      if (typeof window._pmGoToImage === "function") {
-        const idx = window._pmCurrentIdx?.() ?? 0;
-        const len = window._pmImagesLen?.() ?? 1;
-        if (e.key === "ArrowLeft")  window._pmGoToImage(idx - 1);
-        if (e.key === "ArrowRight") window._pmGoToImage(idx + 1);
+      if (galleryController) {
+        galleryController.move(e.key === "ArrowLeft" ? -1 : 1);
         e.preventDefault();
       }
     }
@@ -2685,6 +2692,11 @@ function renderCampaignSelection() {
 }
 
 function setupCatalogControls() {
+  document.querySelector("#product-grid").addEventListener("click", (event) => {
+    if (!event.target.closest("[data-reset-catalog]")) return;
+    setCatalogFilter("todos", true);
+    document.querySelector("#catalog-search").focus({ preventScroll: true });
+  });
   document.querySelector("#campaign-selection").addEventListener("click", (event) => {
     const product = event.target.closest("[data-selection-product]");
     if (product) openProductModal(product.dataset.selectionProduct);
