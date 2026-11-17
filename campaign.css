@@ -504,3 +504,50 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* One quiet rhythm for opening, switching and dismissing forms. */
+.canopia-store :is(.cart-panel, .favs-panel, .auth-panel, .reviews-panel, .review-modal-overlay, .compare-modal-overlay, .product-modal-overlay) {
+  display: flex;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: rgb(17 27 16 / 48%);
+  transition: opacity 220ms ease, visibility 0s linear 280ms;
+}
+.canopia-store :is(.cart-panel, .favs-panel, .auth-panel, .reviews-panel, .review-modal-overlay, .compare-modal-overlay, .product-modal-overlay).is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.canopia-store :is(.cart-dialog, .favs-dialog, .auth-dialog, .reviews-dialog) {
+  transform: translateX(24px);
+  transition: transform 280ms cubic-bezier(.22, .68, 0, 1);
+}
+.canopia-store :is(.review-modal, .compare-modal, .product-modal) {
+  transform: translateY(12px);
+  opacity: 1;
+  transition: transform 280ms cubic-bezier(.22, .68, 0, 1);
+}
+.canopia-store .is-open > :is(.cart-dialog, .favs-dialog, .auth-dialog, .reviews-dialog, .review-modal, .compare-modal, .product-modal) {
+  transform: none;
+  animation: none;
+}
+.canopia-store .product-modal-overlay.is-open .product-modal { animation: none; }
+.canopia-store .review-modal { max-height: 92dvh; overflow-y: auto; }
+.canopia-store :is(.auth-form, .checkout-form, .review-form) :is(input, textarea, select) {
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+.canopia-store :is(.auth-form, .checkout-form, .review-form) :is(input, textarea, select):focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgb(60 85 32 / 9%);
+}
+@keyframes canopia-form-enter {
+  from { opacity: .35; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .canopia-store :is(.auth-form, #auth-view-recovery, #auth-view-profile, .auth-ptab-content):not([hidden]) {
+    animation: canopia-form-enter 220ms ease-out both;
+  }
+}

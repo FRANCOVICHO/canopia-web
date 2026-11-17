@@ -460,7 +460,7 @@ function setupNav() {
       if (event.key === "Escape" && nav.classList.contains("is-open")) {
         nav.classList.remove("is-open");
         toggle.setAttribute("aria-expanded", "false");
-        toggle.focus();
+        toggle.focus({ preventScroll: true });
       }
     });
   }
@@ -532,13 +532,13 @@ function renderFavs() {
 
 function openFavs() {
   renderFavs();
-  document.querySelector("#favs-panel").classList.add("is-open");
-  document.querySelector("#favs-panel").setAttribute("aria-hidden", "false");
+  setPanelOpen(document.querySelector("#favs-panel"), true);
+  
 }
 
 function closeFavs() {
-  document.querySelector("#favs-panel").classList.remove("is-open");
-  document.querySelector("#favs-panel").setAttribute("aria-hidden", "true");
+  setPanelOpen(document.querySelector("#favs-panel"), false);
+  
 }
 
 function setupFavs() {
@@ -642,11 +642,11 @@ function openCompareModal() {
     });
   });
 
-  document.querySelector("#compare-modal-overlay").classList.add("is-open");
+  setPanelOpen(document.querySelector("#compare-modal-overlay"), true);
 }
 
 function closeCompareModal() {
-  document.querySelector("#compare-modal-overlay").classList.remove("is-open");
+  setPanelOpen(document.querySelector("#compare-modal-overlay"), false);
 }
 
 function setupCompare() {
@@ -883,15 +883,15 @@ function openCart() {
   if (!document.querySelector("#cart-panel").classList.contains("is-open")) {
     cartOpener = document.activeElement;
   }
-  document.querySelector("#cart-panel").classList.add("is-open");
-  document.querySelector("#cart-panel").setAttribute("aria-hidden", "false");
-  document.querySelector("#close-cart").focus();
+  setPanelOpen(document.querySelector("#cart-panel"), true);
+  
+  document.querySelector("#close-cart").focus({ preventScroll: true });
 }
 
 function closeCart() {
-  document.querySelector("#cart-panel").classList.remove("is-open");
-  document.querySelector("#cart-panel").setAttribute("aria-hidden", "true");
-  (cartOpener?.isConnected ? cartOpener : document.querySelector("#open-cart")).focus();
+  setPanelOpen(document.querySelector("#cart-panel"), false);
+  
+  (cartOpener?.isConnected ? cartOpener : document.querySelector("#open-cart")).focus({ preventScroll: true });
 }
 
 function setupCart() {
@@ -909,10 +909,10 @@ function setupCart() {
     const last = focusable.at(-1);
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
-      last?.focus();
+      last?.focus({ preventScroll: true });
     } else if (!event.shiftKey && document.activeElement === last) {
       event.preventDefault();
-      first?.focus();
+      first?.focus({ preventScroll: true });
     }
   });
   document.querySelector("#checkout-form").addEventListener("submit", checkout);
@@ -1130,13 +1130,13 @@ function openReviewsPanel(productId) {
   // lista
   renderReviewsList(reviews);
 
-  document.querySelector("#reviews-panel").classList.add("is-open");
-  document.querySelector("#reviews-panel").setAttribute("aria-hidden", "false");
+  setPanelOpen(document.querySelector("#reviews-panel"), true);
+  
 }
 
 function closeReviewsPanel() {
-  document.querySelector("#reviews-panel").classList.remove("is-open");
-  document.querySelector("#reviews-panel").setAttribute("aria-hidden", "true");
+  setPanelOpen(document.querySelector("#reviews-panel"), false);
+  
   reviewsPanelProductId = null;
 }
 
@@ -1210,11 +1210,11 @@ function openReviewModal(productId) {
   document.querySelector("#review-form").reset();
   document.querySelector("#review-star-required").textContent = "";
   updateStarPicker(0);
-  document.querySelector("#review-modal-overlay").classList.add("is-open");
+  setPanelOpen(document.querySelector("#review-modal-overlay"), true);
 }
 
 function closeReviewModal() {
-  document.querySelector("#review-modal-overlay").classList.remove("is-open");
+  setPanelOpen(document.querySelector("#review-modal-overlay"), false);
   reviewModalProductId = null;
 }
 
@@ -1571,7 +1571,7 @@ function setupSmartSearch() {
   searchToggle?.addEventListener("click", () => {
     searchBarOverlay.hidden = !searchBarOverlay.hidden;
     if (!searchBarOverlay.hidden) {
-      headerInput?.focus();
+      headerInput?.focus({ preventScroll: true });
       renderDropdown("", dropdown);
     }
   });
@@ -1709,20 +1709,18 @@ function updateAuthButton() {
 // ── Abrir / cerrar panel ────────────────────────────────────────
 function openAuthPanel() {
   const panel = document.querySelector("#auth-panel");
-  panel.classList.add("is-open");
-  panel.setAttribute("aria-hidden", "false");
+  setPanelOpen(panel, true);
   if (currentUser) showProfileView();
   else showLoginView();
   const close = [...panel.querySelectorAll('button[id^="close-auth-panel"]')]
     .find((button) => button.getClientRects().length);
-  close?.focus();
+  close?.focus({ preventScroll: true });
 }
 
 function closeAuthPanel() {
   const panel = document.querySelector("#auth-panel");
-  panel.classList.remove("is-open");
-  panel.setAttribute("aria-hidden", "true");
-  document.querySelector("#open-auth")?.focus();
+  setPanelOpen(panel, false);
+  document.querySelector("#open-auth")?.focus({ preventScroll: true });
 }
 
 function showLoginView() {
@@ -1874,13 +1872,13 @@ async function deleteAddress(id) {
 
 function openAddressForm(data = {}) {
   const form = document.querySelector("#address-form");
-  form.hidden = false;
   form.label.value = data.label || "Casa";
   form.line1.value = data.line1 || "";
   form.city.value  = data.city  || "";
   form.notes.value = data.notes || "";
   form.id.value    = data.editAddress || "";
-  form.scrollIntoView({ behavior: "smooth" });
+  smoothContentChange(form.parentElement, () => { form.hidden = false; });
+  form.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "nearest" });
 }
 
 // ── Tab: Favoritos ──────────────────────────────────────────────
@@ -1954,9 +1952,11 @@ function setupAuth() {
       document.querySelectorAll(".auth-tab").forEach((t) => t.classList.remove("is-active"));
       btn.classList.add("is-active");
       const isLogin = btn.dataset.tab === "login";
-      document.querySelector("#login-form-user").hidden    = !isLogin;
-      document.querySelector("#register-form-user").hidden = isLogin;
-      document.querySelector("#auth-message").textContent  = "";
+      smoothContentChange(document.querySelector("#auth-view-login"), () => {
+        document.querySelector("#login-form-user").hidden = !isLogin;
+        document.querySelector("#register-form-user").hidden = isLogin;
+        document.querySelector("#auth-message").textContent = "";
+      });
     });
   });
 
@@ -2080,7 +2080,8 @@ function setupAuth() {
     openAddressForm();
   });
   document.querySelector("#cancel-address-btn")?.addEventListener("click", () => {
-    document.querySelector("#address-form").hidden = true;
+    const form = document.querySelector("#address-form");
+    smoothContentChange(form.parentElement, () => { form.hidden = true; });
   });
 
   // Dirección: guardar
@@ -2154,7 +2155,56 @@ let galleryController = null;
 
 function animateElement(element, frames, options) {
   if (!element || !element.animate || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  element.animate(frames, options);
+  return element.animate(frames, options);
+}
+
+const panelOpeners = new WeakMap();
+function setPanelOpen(panel, open) {
+  if (!panel) return;
+  const wasOpen = panel.classList.contains("is-open");
+  const focusInside = panel.contains(document.activeElement);
+  if (open && !wasOpen) panelOpeners.set(panel, document.activeElement);
+  panel.inert = !open;
+  panel.classList.toggle("is-open", open);
+  panel.setAttribute("aria-hidden", String(!open));
+  if (open && !wasOpen) {
+    const close = [...panel.querySelectorAll('button[id^="close-"]')]
+      .find((button) => button.getClientRects().length && getComputedStyle(button).visibility !== "hidden");
+    close?.focus({ preventScroll: true });
+  } else if (!open && wasOpen && focusInside) {
+    const opener = panelOpeners.get(panel);
+    if (opener?.isConnected && !opener.closest("[inert]")) opener.focus({ preventScroll: true });
+  }
+}
+
+const contentTransitions = new WeakMap();
+function smoothContentChange(container, change) {
+  if (!container) { change(); return; }
+  const before = container.getBoundingClientRect().height;
+  const previous = contentTransitions.get(container);
+  if (previous) {
+    contentTransitions.delete(container);
+    previous.animation.cancel();
+    container.style.overflow = previous.overflow;
+  }
+  change();
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const after = container.getBoundingClientRect().height;
+  if (Math.abs(before - after) < 1) return;
+  const previousOverflow = container.style.overflow;
+  container.style.overflow = "hidden";
+  const animation = animateElement(container, [{ height: `${before}px` }, { height: `${after}px` }], {
+    duration: 260, easing: "cubic-bezier(.22, .68, 0, 1)",
+  });
+  if (!animation) { container.style.overflow = previousOverflow; return; }
+  contentTransitions.set(container, { animation, overflow: previousOverflow });
+  const finish = () => {
+    if (contentTransitions.get(container)?.animation !== animation) return;
+    container.style.overflow = previousOverflow;
+    contentTransitions.delete(container);
+  };
+  animation.onfinish = finish;
+  animation.oncancel = finish;
 }
 
 function openProductModal(productId) {
@@ -2174,8 +2224,7 @@ function openProductModal(productId) {
   renderProductModalReviews(product);
 
   const overlay = document.querySelector("#product-modal-overlay");
-  overlay.classList.add("is-open");
-  overlay.setAttribute("aria-hidden", "false");
+  setPanelOpen(overlay, true);
   document.body.style.overflow = "hidden";
 
   document.querySelector("#product-modal-scroll").scrollTop = 0;
@@ -2184,8 +2233,7 @@ function openProductModal(productId) {
 
 function closeProductModal() {
   const overlay = document.querySelector("#product-modal-overlay");
-  overlay.classList.remove("is-open");
-  overlay.setAttribute("aria-hidden", "true");
+  setPanelOpen(overlay, false);
   document.body.style.overflow = productPageOverflow;
   galleryController = null;
   (productOpener?.isConnected ? productOpener : document.querySelector("#catalog-search"))
@@ -2618,10 +2666,10 @@ function setupProductModal() {
       const last = controls.at(-1);
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
-        last?.focus();
+        last?.focus({ preventScroll: true });
       } else if (!e.shiftKey && document.activeElement === last) {
         e.preventDefault();
-        first?.focus();
+        first?.focus({ preventScroll: true });
       }
     }
 
@@ -2719,6 +2767,8 @@ function setupCatalogControls() {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 async function init() {
+  document.querySelectorAll(".cart-panel, .favs-panel, .auth-panel, .reviews-panel, .review-modal-overlay, .compare-modal-overlay, .product-modal-overlay")
+    .forEach((panel) => setPanelOpen(panel, false));
   await loadStore();
 
   renderFilters();
