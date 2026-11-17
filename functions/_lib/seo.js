@@ -127,18 +127,21 @@ export function buildProductHtml(product, spaHtml) {
   <meta property="og:url" content="${canonical}">
   <meta property="og:title" content="${name} — CanopiaGrow">
   <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${image}">
-  <meta property="og:image:alt" content="${name}">
+  <meta property="og:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1254">
+  <meta property="og:image:height" content="1254">
+  <meta property="og:image:alt" content="Logo original de Canopia Grow &amp; Smoke Shop">
   <meta property="product:price:amount" content="${price.toFixed(2)}">
   <meta property="product:price:currency" content="ARS">
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
   <meta name="twitter:site" content="@canopiagrow">
   <meta name="twitter:title" content="${name} — CanopiaGrow">
   <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${image}">
-  <meta name="twitter:image:alt" content="${name}">
+  <meta name="twitter:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117">
+  <meta name="twitter:image:alt" content="Logo original de Canopia Grow &amp; Smoke Shop">
 
   <!-- JSON-LD Product -->
   <script type="application/ld+json">${productSchema}</script>
@@ -235,16 +238,19 @@ export function buildCategoryHtml(category, products, spaHtml) {
   <meta property="og:url" content="${canonical}">
   <meta property="og:title" content="${name} — CanopiaGrow">
   <meta property="og:description" content="${description || `Explorá ${name} en CanopiaGrow: grow shop y smoke shop online con envíos a todo el país.`}">
-  <meta property="og:image" content="${SITE_BASE_URL}/assets/hero.png">
-  <meta property="og:image:alt" content="${name} — CanopiaGrow">
+  <meta property="og:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1254">
+  <meta property="og:image:height" content="1254">
+  <meta property="og:image:alt" content="Logo original de Canopia Grow &amp; Smoke Shop">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@canopiagrow">
   <meta name="twitter:title" content="${name} — CanopiaGrow">
   <meta name="twitter:description" content="${description || `Explorá ${name} en CanopiaGrow.`}">
-  <meta name="twitter:image" content="${SITE_BASE_URL}/assets/hero.png">
-  <meta name="twitter:image:alt" content="${name} — CanopiaGrow">
+  <meta name="twitter:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117">
+  <meta name="twitter:image:alt" content="Logo original de Canopia Grow &amp; Smoke Shop">
 
   <!-- JSON-LD ItemList -->
   <script type="application/ld+json">${itemListSchema}</script>
