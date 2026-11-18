@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#101b17">
+  <title>Canopia Repartidores</title>
+  <link rel="stylesheet" href="courier.css">
+  <script src="courier.js" defer></script>
+</head>
+<body>
+  <header class="delivery-header"><a href="/" class="delivery-brand">CANOPIA<span>REPARTIDORES</span></a><a href="/" class="quiet-link">Volver a la tienda</a></header>
+  <main class="delivery-main">
+    <section id="courier-login" class="login-layout">
+      <div class="login-intro"><span class="eyebrow">EL ÚLTIMO TRAMO, EN TUS MANOS</span><h1>Todo listo.<br>Vamos a repartir.</h1><p>Tus entregas, direcciones y cobros en un solo lugar. Siempre con la información del equipo.</p><div class="intro-line">01 · Revisá &nbsp; 02 · Repartí &nbsp; 03 · Confirmá</div></div>
+      <form id="courier-login-form" class="delivery-login-card"><span class="eyebrow">ACCESO DEL EQUIPO</span><h2>Iniciá sesión</h2><p>Usá la cuenta que te asignó Canopia.</p><label>Usuario<input name="username" autocomplete="username" required maxlength="64" autocapitalize="none" spellcheck="false"></label><label>Contraseña<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button class="primary" type="submit">Entrar a mis entregas <span aria-hidden="true">→</span></button><p id="courier-login-message" class="message" role="status"></p><small>¿No podés entrar? Pedile al administrador que revise tu acceso.</small></form>
+    </section>
+    <section id="courier-workspace" hidden>
+      <div class="workspace-heading"><div><span class="eyebrow">TU JORNADA</span><h1 id="courier-greeting">Mis entregas</h1><p id="courier-account-info"></p></div><button id="courier-logout" class="secondary" type="button">Cerrar sesión</button></div>
+      <div class="sync-row"><p id="courier-sync" role="status">Conectando…</p><button type="button" id="courier-refresh" class="text-button">Actualizar ahora</button></div>
+      <div class="delivery-stats" id="courier-stats"></div>
+      <div class="delivery-toolbar"><div class="delivery-tabs" role="group" aria-label="Filtrar entregas"><button type="button" data-filter="active" aria-pressed="true">Pendientes</button><button type="button" data-filter="history" aria-pressed="false">Historial · 7 días</button></div><label class="delivery-search"><span class="sr-only">Buscar entrega</span><input id="courier-search" type="search" placeholder="Buscar nombre, dirección o pedido"></label></div>
+      <p id="courier-notice" class="message" role="status" aria-live="polite"></p>
+      <div id="courier-deliveries" class="delivery-grid"></div>
+    </section>
+  </main>
+  <dialog id="courier-status-dialog"><form id="courier-status-form"><span class="eyebrow">ACTUALIZAR ENTREGA</span><h2 id="courier-status-title"></h2><p id="courier-status-copy"></p><label>Observaciones<textarea name="note" maxlength="500" rows="3" placeholder="Por ejemplo, recibió el titular o no había nadie."></textarea></label><p class="message" id="courier-status-error" role="status"></p><div class="dialog-actions"><button type="button" class="secondary" id="courier-status-cancel">Volver</button><button type="submit" class="primary">Confirmar estado</button></div></form></dialog>
+</body>
+</html>

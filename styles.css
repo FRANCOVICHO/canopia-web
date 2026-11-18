@@ -3066,3 +3066,8 @@ button { font: inherit; cursor: pointer; }
   font-size: 0.78rem;
   color: var(--muted-2);
 }
+
+/* Private courier entry, shown only for eligible accounts. */
+.courier-entry{font-size:11px;font-weight:650;text-decoration:none;border:1px solid currentColor;border-radius:8px;padding:9px 10px;color:var(--text,#c4e673)}
+.courier-entry[hidden]{display:none!important}
+@media(max-width:600px){.courier-entry{font-size:9px;padding:8px 6px}}
