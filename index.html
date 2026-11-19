@@ -45,7 +45,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="campaign.css?v=6" />
+    <link rel="stylesheet" href="campaign.css?v=7" />
 
     <!-- ══ FAVICONS ════════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo-icon.png" />
@@ -178,7 +178,7 @@
         <button class="icon-btn" type="button" aria-label="Buscar" id="search-toggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
-        <a id="courier-entry" class="courier-entry" href="/repartidores.html" hidden aria-label="Canopia Repartidores">Repartidores</a>
+        <a id="courier-entry" class="courier-entry" href="/repartidores" hidden aria-label="Mis entregas, repartidores" title="Mis entregas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg><span>Mis entregas</span></a>
         
         <button class="icon-btn" type="button" id="open-auth" aria-label="Mi cuenta">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -542,7 +542,7 @@
 
           <!-- Form login -->
           <form class="auth-form" id="login-form-user">
-            <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
+            <label>Email o usuario<input name="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Tu email o usuario de repartidor" /></label>
             <label>Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="••••••" /></label>
             <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
             <button class="btn btn-primary" type="submit" style="width:100%">Ingresar</button>
@@ -563,6 +563,25 @@
           <p class="auth-skip">
             <button type="button" class="review-link" id="auth-skip-btn">Continuar sin cuenta →</button>
           </p>
+        </div>
+
+        <!-- Cuenta del equipo: sesión verificada por el servidor -->
+        <div id="auth-view-courier" hidden>
+          <div class="auth-dialog-head">
+            <h2>Mi cuenta</h2>
+            <button class="icon-btn" type="button" id="close-auth-panel-courier" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div class="courier-account">
+            <span class="courier-account-label">EQUIPO CANOPIA</span>
+            <h3 id="courier-account-name"></h3>
+            <p>Tu recorrido empieza acá.</p>
+            <a class="courier-account-card" href="/repartidores">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7.5" cy="18" r="2"/><circle cx="17.5" cy="18" r="2"/></svg><span><strong>Mis entregas</strong><small>Direcciones, pedidos y cobros</small></span><span aria-hidden="true">→</span>
+            </a>
+            <p class="courier-account-help">Revisá tus pendientes y actualizá cada entrega desde un solo lugar.</p>
+            <button class="btn btn-outline" id="courier-account-logout" type="button">Cerrar sesión</button>
+            <p class="auth-message" id="courier-account-message" role="status"></p>
+          </div>
         </div>
 
         <!-- VISTA: Recuperar contraseña -->
@@ -663,7 +682,7 @@
       </div>
     </aside>
 
-    <script src="app.js?v=8"></script>
-      <script src="courier-entry.js" defer></script>
+    <script src="app.js?v=9"></script>
+      <script src="courier-entry.js?v=2" defer></script>
   </body>
 </html>

@@ -551,3 +551,38 @@
     animation: canopia-form-enter 220ms ease-out both;
   }
 }
+
+/* Signed-in team access, kept next to Mi cuenta. */
+.canopia-store .courier-entry {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  min-width: 2.5rem; min-height: 2.75rem; padding: .5rem .65rem;
+  border: 1px solid var(--border); border-radius: .55rem;
+  background: var(--green-dim); color: var(--green); font-size: .75rem;
+  font-weight: 700; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+}
+.courier-entry svg, .courier-account-card > svg { width: 1.4rem; height: 1.4rem; flex-shrink: 0; }
+.canopia-store .courier-entry:hover { background: var(--panel-2); }
+.courier-account { padding: 1.5rem 1.2rem; }
+.courier-account-label { font-size: .65rem; letter-spacing: .14em; font-weight: 800; color: var(--green); }
+.courier-account h3 { font-size: 1.6rem; margin: .75rem 0 .35rem; overflow-wrap: anywhere; }
+.courier-account p { color: var(--muted); line-height: 1.6; }
+.courier-account-card {
+  display: flex; align-items: center; gap: .8rem; padding: 1.15rem;
+  margin: 1.5rem 0 .8rem; border-radius: .9rem; background: var(--green);
+  color: white; text-decoration: none; min-height: 5.5rem;
+}
+.courier-account-card > svg { width: 2rem; height: 2rem; }
+.courier-account-card > span:first-of-type { flex: 1; }
+.courier-account-card strong, .courier-account-card small { display: block; }
+.courier-account-card strong { font-size: 1.05rem; }
+.courier-account-card small { font-size: .75rem; margin-top: .3rem; opacity: .85; }
+.courier-account-card:hover { background: #283e14; }
+.courier-account .courier-account-help { font-size: .8rem; margin-bottom: 1.5rem; }
+.courier-account #courier-account-logout { width: 100%; min-height: 2.75rem; }
+@media (max-width: 1100px) {
+  .canopia-store .courier-entry { width: 2.5rem; padding: .4rem; }
+  .courier-entry > span { display: none; }
+}
+@media (max-width: 640px) {
+  .canopia-store .courier-entry { min-width: 2.1rem; width: 2.1rem; }
+}

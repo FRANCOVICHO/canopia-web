@@ -1693,6 +1693,7 @@ async function loadFavsFromServer() {
 
 // ── Render del header icon ──────────────────────────────────────
 function updateAuthButton() {
+  if (window.CanopiaCourier?.account) { window.CanopiaCourier.updateButton(); return; }
   const btn = document.querySelector("#open-auth");
   if (!btn) return;
   if (currentUser) {
@@ -1710,7 +1711,8 @@ function updateAuthButton() {
 function openAuthPanel() {
   const panel = document.querySelector("#auth-panel");
   setPanelOpen(panel, true);
-  if (currentUser) showProfileView();
+  if (window.CanopiaCourier?.account) window.CanopiaCourier.showAccount();
+  else if (currentUser) showProfileView();
   else showLoginView();
   const close = [...panel.querySelectorAll('button[id^="close-auth-panel"]')]
     .find((button) => button.getClientRects().length);
@@ -1724,6 +1726,8 @@ function closeAuthPanel() {
 }
 
 function showLoginView() {
+  const courierView = document.querySelector("#auth-view-courier");
+  if (courierView) courierView.hidden = true;
   document.querySelector("#auth-view-login").hidden   = false;
   document.querySelector("#auth-view-profile").hidden  = true;
   document.querySelector("#auth-view-recovery").hidden = true;
@@ -1731,6 +1735,8 @@ function showLoginView() {
 }
 
 function showProfileView() {
+  const courierView = document.querySelector("#auth-view-courier");
+  if (courierView) courierView.hidden = true;
   document.querySelector("#auth-view-login").hidden  = true;
   document.querySelector("#auth-view-profile").hidden = false;
   renderAuthUserBadge();
@@ -1960,26 +1966,41 @@ function setupAuth() {
     });
   });
 
-  // Login
+  // One account entry: customer emails and editor-issued courier usernames.
   document.querySelector("#login-form-user")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
     const msg = document.querySelector("#auth-message");
     msg.className = "auth-message";
     msg.textContent = "Verificando...";
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(form);
+    const identity = String(fd.get("email") || "").trim();
     try {
-      const data = await authApi("login", "POST", {
-        email: fd.get("email"),
-        password: fd.get("password"),
-        "cf-turnstile-response": fd.get("cf-turnstile-response"),
-      });
-      saveUserSession(data.token, data.user);
-      await loadFavsFromServer();
-      updateAuthButton();
-      showProfileView();
+      if (!identity.includes("@")) {
+        if (!window.CanopiaCourier) throw new Error("Recargá la página para volver a intentar.");
+        await window.CanopiaCourier.login(identity, fd.get("password"));
+        clearUserSession();
+        window.CanopiaCourier.showAccount();
+      } else {
+        const data = await authApi("login", "POST", {
+          email: identity,
+          password: fd.get("password"),
+          "cf-turnstile-response": fd.get("cf-turnstile-response"),
+        });
+        saveUserSession(data.token, data.user);
+        await loadFavsFromServer();
+        updateAuthButton();
+        showProfileView();
+      }
+      form.elements.password.value = "";
       msg.textContent = "";
     } catch (err) {
       msg.textContent = err.message;
+    } finally {
+      button.disabled = false;
     }
   });
 
