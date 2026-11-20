@@ -1,0 +1,50 @@
+/* The boot-critical rules are embedded in index.html as well. No layout animation. */
+.canopia-entry{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;color:#29421e;font-family:Inter,system-ui,sans-serif;pointer-events:auto;animation:entry-rescue 0s 18s forwards}
+html[data-entry-seen=true] .canopia-entry{display:none!important}
+.entry-panel{position:absolute;inset:0 50% 0 0;background:#f8f3e9;will-change:transform;transition:transform 700ms cubic-bezier(.65,0,.2,1)}
+.entry-panel-right{inset:0 0 0 calc(50% - 1px)}
+.entry-content{position:relative;text-align:center;width:min(78vw,360px);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);transition:opacity 180ms ease,transform 180ms ease}
+.entry-logo{display:block;margin-inline:auto;width:clamp(105px,23vw,174px);height:auto;aspect-ratio:1;overflow:visible}
+.entry-name{font-size:clamp(1.15rem,4vw,1.6rem);font-weight:700;letter-spacing:-.04em;margin:1rem 0 2.5rem}
+.entry-progress{height:86px;position:relative;width:100%}
+.entry-joint{display:block;width:100%;height:100%;overflow:visible}
+.joint-smoke{transform-origin:0 31px;animation:joint-smoke 2.5s ease-out infinite;opacity:0}
+.joint-smoke-late{animation-delay:1.15s}
+.joint-coal{animation:joint-glow 1.7s ease-in-out infinite alternate}
+.is-consumed .joint-burning-tip{opacity:0}
+@keyframes joint-smoke{0%{opacity:0;transform:translate(0,4px) scale(.75)}30%{opacity:.38}100%{opacity:0;transform:translate(-10px,-18px) scale(1.1)}}
+@keyframes joint-glow{from{opacity:.65}to{opacity:1}}
+.entry-status{font-size:.85rem;margin:1.2rem 0 0}
+.canopia-entry[data-state=exiting] .entry-content{opacity:0;transform:translateY(-5px)}
+.canopia-entry[data-state=exiting] .entry-panel{transform:translateX(-100%);transition-delay:170ms}
+.canopia-entry[data-state=exiting] .entry-panel-right{transform:translateX(100%)}
+.canopia-entry[hidden]{display:none!important}
+@keyframes entry-rescue{to{visibility:hidden}}
+.privacy-banner,.privacy-dialog{font:400 .9rem/1.5 Inter,system-ui,sans-serif;color:#202b1b;background:#fffcf6;border:1px solid #ded8cb;border-radius:18px;box-shadow:0 14px 50px #20301b26}
+.privacy-banner{position:fixed;z-index:420;bottom:max(1rem,env(safe-area-inset-bottom));left:max(1rem,env(safe-area-inset-left));width:min(460px,calc(100vw - 2rem));padding:1.15rem;animation:privacy-appear 220ms ease both}
+.privacy-banner[hidden]{display:none!important}
+.privacy-banner p{margin:.4rem 0 .8rem}
+.privacy-banner a,.privacy-dialog a{color:#36531e;text-decoration:underline}
+.privacy-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+.privacy-actions button,.privacy-dialog button,.legal-page .legal-button{font:inherit;cursor:pointer;border:1px solid #62734c;border-radius:9px;padding:.6rem .85rem;background:#edf1e3;color:#24351b}
+.privacy-actions button:hover,.privacy-dialog button:hover{background:#dfe8d1}
+.privacy-dialog{width:min(520px,calc(100vw - 2rem));padding:1.5rem;max-height:85dvh;overflow:auto}
+.privacy-dialog::backdrop{background:#17231066}
+.privacy-dialog h2{margin:0 0 .75rem;font-size:1.35rem}
+.privacy-category{display:block;border-block-start:1px solid #ded8cb;padding:1rem 0}
+.privacy-category small{display:block;color:#505c47}
+.privacy-dialog input{width:auto;accent-color:#3c5520}
+.legal-links{display:flex;flex-wrap:wrap;gap:.7rem 1.25rem;justify-content:center;padding:1rem;font-size:.85rem}
+.legal-links a,.legal-links button{color:inherit;text-decoration:underline;background:none;border:0;font:inherit;cursor:pointer}
+.consumer-entry{display:block;text-align:right;padding:.4rem max(1rem,4vw);font:600 .68rem/1.5 Inter,system-ui,sans-serif;color:#3c5520;background:#f0eadf;text-underline-offset:3px;border-bottom:1px solid #ded8cb}
+.legal-page{background:#f8f3e9;color:#202b1b;font:400 1rem/1.7 Inter,system-ui,sans-serif;margin:0}
+.legal-page main{max-width:900px;padding:2rem max(1rem,env(safe-area-inset-left));margin:auto}
+.legal-page h1{line-height:1.15;font-size:clamp(2rem,7vw,3.5rem);letter-spacing:-.04em}
+.legal-page h2{font-size:1.35rem;margin-top:2rem}
+.legal-page a{color:#36531e;text-underline-offset:3px}
+.legal-draft{padding:1rem;border:1px solid #987535;border-radius:10px;background:#f0e8d2}
+.legal-table-wrap{overflow:auto}
+.legal-page table{border-collapse:collapse;min-width:600px;font-size:.85rem}
+.legal-page td,.legal-page th{padding:.65rem;border:1px solid #c6cbb7;text-align:left;vertical-align:top}
+@keyframes privacy-appear{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.canopia-entry *,.privacy-banner{animation:none!important;transition:none!important}.entry-panel{will-change:auto}}

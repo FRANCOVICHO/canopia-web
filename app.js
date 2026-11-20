@@ -1,3 +1,13 @@
+async function reviewedProducts(products) {
+  let deadline;
+  try {
+    const { requiresLegalReview } = await Promise.race([import('/catalog-policy.js'), new Promise((_, reject) => { deadline=setTimeout(() => reject(new Error('Clasificación no disponible')),4500); })]);
+    return products.filter(product => !requiresLegalReview(product));
+  } catch { console.warn('Catálogo oculto: clasificación de productos no disponible.'); return []; }
+  finally { clearTimeout(deadline); }
+}
+const canopiaStorage = window.CanopiaPrivacy?.storage || (() => { const memory=new Map(); return {getItem:key=>memory.get(key)??null,setItem:(key,value)=>memory.set(key,String(value)),removeItem:key=>memory.delete(key)}; })();
+function storedList(key) { try { const value=JSON.parse(canopiaStorage.getItem(key)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } }
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const formatPrice = (value) =>
   new Intl.NumberFormat("es-AR", {
@@ -46,8 +56,8 @@ let store = defaultData;
 let activeCategory = "todos";
 let searchQuery = "";
 let activeSort = "default";
-let cart = JSON.parse(localStorage.getItem("canopia_cart") || "[]");
-let favs = new Set(JSON.parse(localStorage.getItem("canopia_favs") || "[]"));
+let cart = storedList("canopia_cart");
+let favs = new Set(storedList("canopia_favs"));
 let compareList = []; // max 3 IDs
 let catalogSignature = null;
 let catalogAvailable = false;
@@ -59,7 +69,7 @@ let apiBase = "";
 // ─── Load / Poll ─────────────────────────────────────────────────────────────
 async function loadStore() {
   try {
-    const response = await fetch("data/site.json", { cache: "no-store" });
+    const response = await fetch("data/site.json", { cache: "no-store", signal: AbortSignal.timeout(4500) });
     store = { ...defaultData, ...(await response.json()) };
     const isCloudflarePreview = location.hostname === "canopiagrow.pages.dev"
       || location.hostname.endsWith(".canopiagrow.pages.dev");
@@ -67,6 +77,8 @@ async function loadStore() {
     await loadOnlineData();
     if (!store.onlineData.productsCsvUrl) store.products = [];
     await Promise.all([loadDatabaseProducts(), loadDatabaseCategories()]);
+    store.products = await reviewedProducts(store.products);
+    store.combos = await reviewedProducts(store.combos);
   } catch (error) {
     console.warn("No se pudo cargar data/site.json", error);
   }
@@ -74,7 +86,7 @@ async function loadStore() {
 
 async function loadDatabaseProducts() {
   try {
-    const response = await fetch(`${apiBase}/api/products`, { cache: "no-store" });
+    const response = await fetch(`${apiBase}/api/products`, { cache: "no-store", signal: AbortSignal.timeout(4500) });
     if (!response.ok) throw new Error("Catálogo no disponible");
     const data = await response.json();
     if (!Array.isArray(data.products)) throw new Error("Respuesta de catálogo inválida");
@@ -82,7 +94,7 @@ async function loadDatabaseProducts() {
     const changed = signature !== catalogSignature || !catalogAvailable;
     catalogSignature = signature;
     catalogAvailable = true;
-    store.products = data.products;
+    store.products = await reviewedProducts(data.products);
     setLiveStatus(true);
     return changed;
   } catch (error) {
@@ -94,7 +106,7 @@ async function loadDatabaseProducts() {
 
 async function loadDatabaseCategories() {
   try {
-    const response = await fetch(`${apiBase}/api/categories`, { cache: "no-store" });
+    const response = await fetch(`${apiBase}/api/categories`, { cache: "no-store", signal: AbortSignal.timeout(4500) });
     if (!response.ok) return;
     const data = await response.json();
     if (Array.isArray(data.categories) && data.categories.length) {
@@ -156,7 +168,7 @@ async function loadOnlineData() {
 async function fetchCsvData(url, parser) {
   if (!url) return [];
   try {
-    const response = await fetch(url, { cache: "no-store" });
+    const response = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4500) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return parseCsv(await response.text()).map(parser).filter(Boolean);
   } catch (error) {
@@ -471,7 +483,7 @@ function setupNav() {
 
 // ─── FAVORITOS ────────────────────────────────────────────────────────────────
 function saveFavs() {
-  localStorage.setItem("canopia_favs", JSON.stringify([...favs]));
+  canopiaStorage.setItem("canopia_favs", JSON.stringify([...favs]));
 }
 
 function _toggleFavLocal(id) {
@@ -752,7 +764,7 @@ function renderSuggestionsRow(container, ids, title) {
 
 // ─── CARRITO ──────────────────────────────────────────────────────────────────
 function saveCart() {
-  localStorage.setItem("canopia_cart", JSON.stringify(cart));
+  canopiaStorage.setItem("canopia_cart", JSON.stringify(cart));
   renderCart();
 }
 
@@ -1057,12 +1069,12 @@ function showRelated(productId) {
 const REVIEWS_KEY = "canopia_reviews"; // { [productId]: [{author, stars, text, date}] }
 
 function loadReviews() {
-  try { return JSON.parse(localStorage.getItem(REVIEWS_KEY) || "{}"); }
+  try { return JSON.parse(canopiaStorage.getItem(REVIEWS_KEY) || "{}"); }
   catch { return {}; }
 }
 
 function saveReviews(data) {
-  localStorage.setItem(REVIEWS_KEY, JSON.stringify(data));
+  canopiaStorage.setItem(REVIEWS_KEY, JSON.stringify(data));
 }
 
 function getProductReviews(productId) {
@@ -1305,14 +1317,16 @@ const MAX_SUGGESTIONS = 5;
 
 // ── Historial ──────────────────────────────────────────────────
 function getSearchHistory() {
-  try { return JSON.parse(localStorage.getItem(SEARCH_HISTORY_KEY) || "[]"); }
+  if (!window.CanopiaPrivacy?.allowed("personalization")) return [];
+  try { return JSON.parse(canopiaStorage.getItem(SEARCH_HISTORY_KEY) || "[]"); }
   catch { return []; }
 }
 function addToSearchHistory(query) {
+  if (!window.CanopiaPrivacy?.allowed("personalization")) return;
   if (!query.trim()) return;
   let history = getSearchHistory().filter((h) => h !== query);
   history.unshift(query);
-  localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  canopiaStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
 }
 
 // ── Algoritmo de relevancia ─────────────────────────────────────
@@ -1633,7 +1647,7 @@ const USER_TOKEN_KEY = "canopia_user_token";
 const USER_DATA_KEY  = "canopia_user_data";
 
 let currentUser  = null;
-let currentToken = localStorage.getItem(USER_TOKEN_KEY) || null;
+let currentToken = canopiaStorage.getItem(USER_TOKEN_KEY) || null;
 
 // ── API helper autenticado ──────────────────────────────────────
 async function authApi(action, method = "GET", body = null) {
@@ -1653,20 +1667,20 @@ async function authApi(action, method = "GET", body = null) {
 function saveUserSession(token, user) {
   currentToken = token;
   currentUser  = user;
-  localStorage.setItem(USER_TOKEN_KEY, token);
-  localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
+  canopiaStorage.setItem(USER_TOKEN_KEY, token);
+  canopiaStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
 }
 
 function clearUserSession() {
   currentToken = null;
   currentUser  = null;
-  localStorage.removeItem(USER_TOKEN_KEY);
-  localStorage.removeItem(USER_DATA_KEY);
+  canopiaStorage.removeItem(USER_TOKEN_KEY);
+  canopiaStorage.removeItem(USER_DATA_KEY);
 }
 
 function loadUserFromStorage() {
   try {
-    const raw = localStorage.getItem(USER_DATA_KEY);
+    const raw = canopiaStorage.getItem(USER_DATA_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
@@ -2085,7 +2099,7 @@ function setupAuth() {
         phone: fd.get("phone"),
       });
       currentUser = data.user;
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
+      canopiaStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
       renderAuthUserBadge();
       msg.className = "auth-message is-ok";
       msg.textContent = "¡Cambios guardados!";
@@ -2132,7 +2146,7 @@ function setupAuth() {
     // Verificar token en background
     authApi("me").then((data) => {
       currentUser = data.user;
-      localStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
+      canopiaStorage.setItem(USER_DATA_KEY, JSON.stringify(data.user));
       updateAuthButton();
       loadFavsFromServer();
     }).catch(() => {
@@ -2730,13 +2744,7 @@ function setupProductModal() {
 // ═══════════════════════════════════════════════════════════════
 
 function trackEvent(event, productId = null) {
-  const body = { event };
-  if (productId) body.product_id = productId;
-  fetch(`${apiBase}/api/analytics`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).catch(() => {}); // silencioso — nunca bloquea la UI
+  window.CanopiaPrivacy?.track(`${apiBase}/api/analytics`, {event, ...(productId && {product_id:productId})});
 }
 
 // ─── Setup catalog controls ───────────────────────────────────────────────────
@@ -2818,4 +2826,6 @@ async function init() {
   startCatalogPolling();
 }
 
-init();
+init().then(() => window.CanopiaBoot?.ready()).catch((error) => { console.error("Canopia: inicialización incompleta", error); window.CanopiaBoot?.fail(); });
+
+window.addEventListener("canopia:privacychange", () => { if (window.CanopiaPrivacy?.allowed("analytics")) trackEvent("pageview"); document.querySelectorAll(".search-history-item").forEach(el => el.remove()); });

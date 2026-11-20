@@ -1,7 +1,7 @@
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password, X-Canopia-Consent",
 };
 
 export async function onRequestOptions() {
@@ -9,10 +9,15 @@ export async function onRequestOptions() {
 }
 
 export async function onRequestPost({ request, env }) {
+  // A technical opt-in signal; this is not proof of legal consent or identity.
+  if (request.headers.get('X-Canopia-Consent') !== 'analytics-v1')
+    return new Response(null, { status: 204, headers: cors });
   const body       = await request.json().catch(() => ({}));
   const event      = String(body.event      || "pageview").trim();
   const product_id = String(body.product_id || "").trim() || null;
 
+  if (!['pageview','product_view'].includes(event) || (product_id && product_id.length > 256))
+    return Response.json({error:'Evento inválido.'}, {status:400,headers:cors});
   await env.canopia_db
     .prepare("INSERT INTO analytics (event, product_id) VALUES (?, ?)")
     .bind(event, product_id)

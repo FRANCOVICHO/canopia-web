@@ -1,3 +1,4 @@
+import { requiresLegalReview } from "../../catalog-policy.js";
 import { slugify, buildCategoryHtml, buildErrorHtml } from "../_lib/seo.js";
 
 /**
@@ -55,7 +56,7 @@ export async function onRequestGet({ request, env, params }) {
     const spaHtml = await spaResponse.text();
 
     // 5. Construir y devolver el HTML SSR completo
-    const html = buildCategoryHtml(category, products, spaHtml);
+    const html = buildCategoryHtml(category, products.filter(product => !requiresLegalReview({...product, category: category.name})), spaHtml);
 
     return new Response(html, {
       status: 200,

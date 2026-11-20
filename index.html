@@ -1,12 +1,41 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-privacy-optional="true">
   <head>
     <meta charset="utf-8" />
+
+
+    <script src="/entry-session.js"></script>
+    <style id="entry-critical">html{background:#f8f3e9}/* The boot-critical rules are embedded in index.html as well. No layout animation. */
+.canopia-entry{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;color:#29421e;font-family:Inter,system-ui,sans-serif;pointer-events:auto;animation:entry-rescue 0s 18s forwards}
+html[data-entry-seen=true] .canopia-entry{display:none!important}
+.entry-panel{position:absolute;inset:0 50% 0 0;background:#f8f3e9;will-change:transform;transition:transform 700ms cubic-bezier(.65,0,.2,1)}
+.entry-panel-right{inset:0 0 0 calc(50% - 1px)}
+.entry-content{position:relative;text-align:center;width:min(78vw,360px);padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);transition:opacity 180ms ease,transform 180ms ease}
+.entry-logo{display:block;margin-inline:auto;width:clamp(105px,23vw,174px);height:auto;aspect-ratio:1;overflow:visible}
+.entry-name{font-size:clamp(1.15rem,4vw,1.6rem);font-weight:700;letter-spacing:-.04em;margin:1rem 0 2.5rem}
+.entry-progress{height:86px;position:relative;width:100%}
+.entry-joint{display:block;width:100%;height:100%;overflow:visible}
+.joint-smoke{transform-origin:0 31px;animation:joint-smoke 2.5s ease-out infinite;opacity:0}
+.joint-smoke-late{animation-delay:1.15s}
+.joint-coal{animation:joint-glow 1.7s ease-in-out infinite alternate}
+.is-consumed .joint-burning-tip{opacity:0}
+@keyframes joint-smoke{0%{opacity:0;transform:translate(0,4px) scale(.75)}30%{opacity:.38}100%{opacity:0;transform:translate(-10px,-18px) scale(1.1)}}
+@keyframes joint-glow{from{opacity:.65}to{opacity:1}}
+.entry-status{font-size:.85rem;margin:1.2rem 0 0}
+.canopia-entry[data-state=exiting] .entry-content{opacity:0;transform:translateY(-5px)}
+.canopia-entry[data-state=exiting] .entry-panel{transform:translateX(-100%);transition-delay:170ms}
+.canopia-entry[data-state=exiting] .entry-panel-right{transform:translateX(100%)}
+.canopia-entry[hidden]{display:none!important}
+@keyframes entry-rescue{to{visibility:hidden}}
+</style>
+    <script src="/experience.js" defer></script>
+    <link rel="stylesheet" href="/experience.css" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <!-- ══ SEO PRIMARIO ════════════════════════════════════════════════════ -->
     <title>CanopiaGrow — Grow Shop &amp; Smoke Shop | Cultivo Indoor y Parafernalia</title>
-    <meta name="description" content="CanopiaGrow, grow shop y smoke shop en Viedma, Río Negro. Parafernalia, cultivo indoor, grinders, bongs, fertilizantes y combos. Envíos a todo el país. Precios claros, stock actualizado." />
+    <meta name="description" content="CanopiaGrow, grow shop y smoke shop en Viedma, Río Negro. Parafernalia, cultivo indoor, grinders, bongs, fertilizantes y combos. Entregas coordinadas en Viedma mediante puntos de encuentro. Precios claros, stock actualizado." />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="author" content="CanopiaGrow" />
     <meta name="keywords" content="grow shop viedma, smoke shop viedma, grow shop rio negro, cultivo indoor viedma, parafernalia viedma, grinders, bongs, fertilizantes, canopiagrow, canopia" />
@@ -20,7 +49,7 @@
     <meta property="og:locale" content="es_AR" />
     <meta property="og:url" content="https://canopiagrow.com/" />
     <meta property="og:title" content="CanopiaGrow — Grow Shop &amp; Smoke Shop" />
-    <meta property="og:description" content="Parafernalia, cultivo indoor, grinders, bongs y combos. Todo lo que necesitás para tu espacio grow y tu ritual smoke. Envíos a todo el país." />
+    <meta property="og:description" content="Parafernalia, cultivo indoor, grinders, bongs y combos. Todo lo que necesitás para tu espacio grow y tu ritual smoke. Entregas coordinadas en Viedma mediante puntos de encuentro." />
     <meta property="og:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1254" />
@@ -31,7 +60,7 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:site" content="@canopiagrow" />
     <meta name="twitter:title" content="CanopiaGrow — Grow Shop &amp; Smoke Shop" />
-    <meta name="twitter:description" content="Parafernalia, cultivo indoor, grinders, bongs y combos. Envíos a todo el país." />
+    <meta name="twitter:description" content="Parafernalia, cultivo indoor, grinders, bongs y combos. Entregas coordinadas en Viedma mediante puntos de encuentro." />
     <meta name="twitter:image" content="https://canopiagrow.com/assets/logo-canopia.png?v=original-20261117" />
     <meta name="twitter:image:alt" content="Logo original de Canopia Grow &amp; Smoke Shop" />
 
@@ -64,7 +93,7 @@
   "name": "CanopiaGrow",
   "alternateName": "Canopia Grow Shop",
   "url": "https://canopiagrow.com/",
-  "description": "Grow shop y smoke shop online. Parafernalia, cultivo indoor, grinders, bongs, fertilizantes y combos con envíos a todo el país.",
+  "description": "Grow shop y smoke shop online. Parafernalia, cultivo indoor, grinders, bongs, fertilizantes y combos con entregas coordinadas en Viedma mediante puntos de encuentro.",
   "inLanguage": "es-AR",
   "potentialAction": {
     "@type": "SearchAction",
@@ -92,7 +121,7 @@
     "height": 120
   },
   "image": "https://canopiagrow.com/assets/hero.png",
-  "description": "CanopiaGrow es un grow shop y smoke shop online en Viedma, Río Negro, Argentina. Productos de cultivo indoor, parafernalia y accesorios con envíos a todo el país.",
+  "description": "CanopiaGrow es un grow shop y smoke shop online en Viedma, Río Negro, Argentina. Productos de cultivo indoor, parafernalia y accesorios con entregas coordinadas en Viedma mediante puntos de encuentro.",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Viedma",
@@ -127,7 +156,7 @@
   "name": "CanopiaGrow",
   "url": "https://canopiagrow.com/",
   "image": "https://canopiagrow.com/assets/logo-canopia.png",
-  "description": "Grow shop y smoke shop en Viedma, Río Negro. Productos de cultivo indoor, parafernalia y accesorios para el ritual smoke. Envíos a todo el país.",
+  "description": "Grow shop y smoke shop en Viedma, Río Negro. Productos de cultivo indoor, parafernalia y accesorios para el ritual smoke. Entregas coordinadas en Viedma mediante puntos de encuentro.",
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Viedma",
@@ -149,6 +178,52 @@
     </script>
   </head>
   <body class="canopia-store">
+    <div id="canopia-entry" class="canopia-entry" data-state="initial">
+      <div class="entry-panel" aria-hidden="true"></div><div class="entry-panel entry-panel-right" aria-hidden="true"></div>
+      <div class="entry-content">
+        <svg class="entry-logo" viewBox="0 0 384 384" role="img" aria-label="Logo original de Canopia" xmlns="http://www.w3.org/2000/svg"><defs><filter id="entry-logo-paper" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -1.063 -3.576 -0.361 0 4.4" result="ink"/><feComposite in="ink" in2="SourceAlpha" operator="in"/></filter></defs><image class="entry-logo-image" href="/assets/logo-entry.webp" width="384" height="384" filter="url(#entry-logo-paper)"/></svg>
+        <p class="entry-name">Canopia Grow Shop</p>
+        <div class="entry-progress" role="progressbar" aria-label="Preparando Canopia: animación de entrada, sin porcentaje de descarga"><svg class="entry-joint" viewBox="0 0 360 86" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="joint-paper" x1="0" y1="28" x2="0" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#b7b097"/><stop offset=".16" stop-color="#e3dfc9"/><stop offset=".37" stop-color="#f3eedb"/><stop offset=".57" stop-color="#e9e4cc"/><stop offset=".79" stop-color="#cbc6ab"/><stop offset="1" stop-color="#9b967c"/></linearGradient>
+    <linearGradient id="joint-filter" x1="0" y1="36" x2="0" y2="57" gradientUnits="userSpaceOnUse"><stop stop-color="#8d7758"/><stop offset=".2" stop-color="#bfa985"/><stop offset=".45" stop-color="#d6c2a0"/><stop offset=".72" stop-color="#b5a07b"/><stop offset="1" stop-color="#816b4a"/></linearGradient>
+    <radialGradient id="joint-ember" cx=".65" cy=".45" r=".65"><stop stop-color="#ffc36c"/><stop offset=".2" stop-color="#e88a32"/><stop offset=".6" stop-color="#a74622"/><stop offset="1" stop-color="#302b23"/></radialGradient>
+    <linearGradient id="joint-smoke-tone" x1="0" y1="36" x2="0" y2="-14" gradientUnits="userSpaceOnUse"><stop stop-color="#73786b" stop-opacity=".8"/><stop offset="1" stop-color="#9d9e91" stop-opacity="0"/></linearGradient>
+    <pattern id="joint-grain" width="43" height="23" patternUnits="userSpaceOnUse"><path d="m2 5 4-1m15 12 3 1m12-11 5-1m-30 15 2-1m20 1 3 1M15 7l3 2" stroke="#898c6b" stroke-opacity=".3" stroke-width=".45"/><path d="m1 14 5-1m20-9 3 1m8 10 4-1" stroke="#fffcf0" stroke-opacity=".55" stroke-width=".55"/><path d="m8 9 1.8-1 .7 1.4-1.5.4Zm20 8 1.2-.9 1.4 1.6-1.8.3ZM18 2l1.7 1-.6 1.3-1.3-.6Z" fill="#6f7853" fill-opacity=".19"/></pattern>
+    <filter id="joint-soft-shadow" x="-20%" y="-80%" width="140%" height="260%"><feGaussianBlur stdDeviation="1.25"/></filter>
+    <filter id="joint-haze" x="-100%" y="-30%" width="300%" height="160%"><feGaussianBlur stdDeviation="1"/></filter>
+    <clipPath id="joint-mask"><rect class="joint-paper-mask" x="20" y="24" width="276" height="44"/></clipPath>
+    <path id="joint-outline" d="M20 30.5C59 31 93 32 130 33.7L188 34.9Q247 36.6 296 37V55Q247 55.8 187 58L130 59.7Q74 62 20 62.5Z"/>
+  </defs>
+  <g clip-path="url(#joint-mask)">
+    <path d="M24 62Q156 65 295 57" stroke="#54523f" stroke-opacity=".18" stroke-width="3" filter="url(#joint-soft-shadow)"/>
+    <use href="#joint-outline" fill="url(#joint-paper)" stroke="#b2ae95" stroke-width=".55"/><use href="#joint-outline" fill="url(#joint-grain)"/>
+    <path d="M23 35Q93 35.7 153 38T293 40" stroke="#fffdf0" stroke-opacity=".55" stroke-width="1.1"/>
+    <path d="M23 57.5Q90 53 157 51.5T294 49.5" stroke="#999878" stroke-opacity=".55" stroke-width=".6"/><path d="M25 58.5Q111 53 166 52.4T293 50.4" stroke="#f8f2df" stroke-opacity=".7" stroke-width=".65"/>
+    <path d="m41 33 4 11-1 9m29-20 3 8m20 3 2 11m23-18 4 12m28-12 2 8-1 8m27-16 3 13m31-12 2 8m22-5 2 7m19-9 3 10" stroke="#aaa78c" stroke-opacity=".35" stroke-width=".5"/><path d="m42 34 3 9m53 2 2 9m55-15 1 7m59-7 2 7m44-7 2 9" stroke="#fffdf0" stroke-opacity=".6" stroke-width=".6"/>
+  </g>
+  <g class="joint-filter">
+    <ellipse cx="316" cy="57" rx="23" ry="1.5" fill="#61583f" fill-opacity=".14" filter="url(#joint-soft-shadow)"/>
+    <path d="M296 37L333 36.8Q339 37.5 339 46Q339 54 333 55.3L296 55Z" fill="url(#joint-filter)" stroke="#9c8969" stroke-width=".65"/>
+    <path d="m299 38 2 15m5-15 1 15m7-15 1 16m9-16 .6 15" stroke="#887450" stroke-opacity=".25" stroke-width=".5"/>
+    <path d="M298 39q18 1 33-.5M298 52.5q17-.6 33 0" stroke="#f0ddbb" stroke-opacity=".4" stroke-width=".55"/><path d="M297 54.8q18-2.5 35-1.5" stroke="#7a6747" stroke-opacity=".5" stroke-width=".55"/>
+    <ellipse cx="334" cy="46" rx="4.8" ry="9" fill="#776345" stroke="#9b8865" stroke-width="1"/><ellipse cx="334.3" cy="45.8" rx="3.6" ry="7.5" fill="#4e4633"/>
+    <path d="M334 38.7q-4 1.8-.5 5q4 2.5-.6 5.2q-3.1 2.8.9 4.2m-.6-13.1q4.7 3.1.7 5.9q-3.8 3.2.1 6.1" stroke="#c8b490" stroke-width="1.05"/><path d="M332 38q-3 2-2.5 7" stroke="#e2cfab" stroke-opacity=".8" stroke-width=".6"/>
+  </g>
+  <g class="joint-burning-tip" transform="translate(20 0)">
+    <g class="joint-smoke"><path d="M0 32C-7 26 6 23 3 16S-9 7-4-3S9-9 1-17" stroke="url(#joint-smoke-tone)" stroke-width="3" stroke-linecap="round" filter="url(#joint-haze)"/><path d="M0 32C-7 26 6 23 3 16S-9 7-4-3" stroke="url(#joint-smoke-tone)" stroke-width=".65"/></g>
+    <g class="joint-smoke joint-smoke-late"><path d="M-2 32C7 24-8 20-3 12S11 3 3-6S-5-13 0-19" stroke="url(#joint-smoke-tone)" stroke-width="2.2" stroke-linecap="round" filter="url(#joint-haze)"/></g>
+    <g class="joint-ash"><path d="m-2 30-3 1-1 4-3 1 1 5-2 3 1 4-1 4 3 3 1 5 5 2 3-3 1-6 1-6-1-8-2-6Z" fill="#69685d"/><path d="m-5 33 3-1 2 5-3 2-3-2Zm-2 9 5-2 2 3-2 4-5-1Zm2 8 4-1 1 5-3 3-3-3Zm3 8 3-2 1 3-2 2Z" fill="#b7b3a4"/><path d="m-4 35 3 3-3 4 3 4-2 4 3 5m-7-14 3 2m-3 8 4 1" stroke="#dfd8c7" stroke-opacity=".6" stroke-width=".65"/><path d="M1 31q4 4 3 9l1 6-1 7q0 6-3 9l-2-4 1-7-1-7 1-6Z" fill="#34352c"/><path d="m2 33 1 7-1 5 2 5-2 9" stroke="#71472c" stroke-width="1.25"/></g>
+    <ellipse class="joint-coal" cx="1.8" cy="46" rx="2.3" ry="15" fill="url(#joint-ember)"/><path d="m2 35-1 4 2 4-2 3 1 5-1 5" stroke="#f5b16a" stroke-opacity=".7" stroke-width=".5"/>
+    <circle cx="2" cy="39" r=".7" fill="#ffd595"/><circle cx="1" cy="48" r=".85" fill="#f9a453"/><circle cx="2.3" cy="53" r=".5" fill="#ffd595"/>
+  </g>
+</svg>
+</div>
+        <p class="entry-status" role="status">Cargando...</p>
+      </div>
+    </div>
+    <noscript><style>.canopia-entry{display:none!important}</style><p>JavaScript está desactivado. Podés consultar las políticas y <a href="https://wa.me/5492920699996">contactar a Canopia</a>; el catálogo interactivo necesita JavaScript.</p></noscript>
+
 
     <!-- ── HEADER ─────────────────────────────────── -->
     <a class="skip-link" href="#catalogo">Saltar al catálogo</a>
@@ -209,6 +284,7 @@
     </div>
 
     <main>
+      <a class="consumer-entry" href="/arrepentimiento.html">BOTÓN DE ARREPENTIMIENTO</a>
       <section id="inicio" class="campaign-hero" aria-labelledby="page-title">
         <div class="campaign-inner">
           <div class="campaign-copy">
@@ -348,6 +424,7 @@
         </div>
       </div>
       <span class="footer-copy">© 2026 CanopiaGrow — Grow Shop &amp; Smoke Shop. Catálogo online con stock actualizado.</span>
+    <nav class="legal-links" aria-label="Información legal"><a href="/privacidad.html">Privacidad</a><a href="/cookies.html">Cookies</a><a href="/terminos.html">Términos y condiciones</a><a href="/edad.html">Productos y edad</a><a href="/arrepentimiento.html">BOTÓN DE ARREPENTIMIENTO</a><button type="button" data-privacy-open>Preferencias de privacidad</button></nav>
     </footer>
 
     <!-- ── WHATSAPP STICKY ────────────────────────── -->
@@ -382,6 +459,7 @@
           <strong id="cart-total">$0</strong>
         </div>
         <form id="checkout-form" class="checkout-form">
+          <p>Al enviar un pedido usaremos tus datos para gestionarlo. <a href="/privacidad.html">Privacidad</a> · <a href="/terminos.html">Condiciones</a> · <a href="/arrepentimiento.html">Arrepentimiento</a></p>
           <label>Nombre<input name="name" autocomplete="name" required /></label>
           <label>WhatsApp<input name="phone" type="tel" autocomplete="tel" required /></label>
           <label>Nota<textarea name="note" placeholder="Retiro, envio, horario, referencias..."></textarea></label>
@@ -682,7 +760,7 @@
       </div>
     </aside>
 
-    <script src="app.js?v=9"></script>
+    <script src="app.js?v=9" defer></script>
       <script src="courier-entry.js?v=2" defer></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { requiresLegalReview } from "../../catalog-policy.js";
 import { buildProductHtml, buildErrorHtml } from "../_lib/seo.js";
 
 /**
@@ -48,7 +49,7 @@ export async function onRequestGet({ request, env, params }) {
   }
 
   // ── 3. Product hidden → 301 redirect ──────────────────────────────────────
-  if (product.visible === 0 || product.visible === "0") {
+  if (product.visible === 0 || product.visible === "0" || requiresLegalReview(product)) {
     return new Response(null, {
       status: 301,
       headers: { Location: "https://canopiagrow.com/" },

@@ -62,7 +62,9 @@
       setAccount(data.courier);
     },
   };
-  document.querySelector('#close-auth-panel-courier')?.addEventListener('click', closeAuthPanel);
+  document.querySelector('#close-auth-panel-courier')?.addEventListener('click', () => {
+    if (typeof closeAuthPanel === 'function') closeAuthPanel();
+  });
   document.querySelector('#courier-account-logout')?.addEventListener('click', async event => {
     const button = event.currentTarget;
     button.disabled = true;

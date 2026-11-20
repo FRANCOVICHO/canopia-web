@@ -1,3 +1,4 @@
+import { requiresLegalReview } from "../../catalog-policy.js";
 import { checkAdmin } from "../_lib/auth.js";
 
 function mapProduct(row) {
@@ -75,7 +76,7 @@ export async function onRequestGet({ request, env }) {
 
   return Response.json(
     {
-      products: results.map(mapProduct),
+      products: (isAdmin ? results : results.filter(product => !requiresLegalReview(product))).map(mapProduct),
       updatedAt: await getCatalogMeta(env),
     },
     { headers: { "Cache-Control": "no-store" } },

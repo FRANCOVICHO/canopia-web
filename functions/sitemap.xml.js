@@ -1,3 +1,4 @@
+import { requiresLegalReview } from "../catalog-policy.js";
 import { buildSitemapXml } from "./_lib/seo.js";
 
 /**
@@ -9,7 +10,7 @@ export async function onRequestGet({ env }) {
     const [productsResult, categoriesResult] = await Promise.all([
       env.canopia_db
         .prepare(
-          "SELECT id, updated_at FROM products WHERE visible = 1 ORDER BY name ASC"
+          "SELECT id, name, category, tag, updated_at FROM products WHERE visible = 1 ORDER BY name ASC"
         )
         .all(),
       env.canopia_db
@@ -20,7 +21,7 @@ export async function onRequestGet({ env }) {
     ]);
 
     const xml = buildSitemapXml(
-      productsResult.results,
+      productsResult.results.filter(product => !requiresLegalReview(product)),
       categoriesResult.results
     );
 

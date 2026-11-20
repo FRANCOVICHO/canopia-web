@@ -1,3 +1,4 @@
+import { requiresLegalReview } from "../../catalog-policy.js";
 import { checkAdmin } from "../_lib/auth.js";
 import { cartItems, changePendingOrder } from "../_lib/order-integrity.js";
 import { getToken, pbVerifyToken } from "../_lib/pocketbase.js";
@@ -40,7 +41,7 @@ export async function onRequestPost({ request, env }) {
   const ids = items.map((i) => i.id);
   const placeholders = ids.map(() => "?").join(",");
   const { results: dbProducts } = await env.canopia_db
-    .prepare(`SELECT id, name, price, stock FROM products WHERE id IN (${placeholders}) AND visible = 1`)
+    .prepare(`SELECT id, name, category, tag, price, stock FROM products WHERE id IN (${placeholders}) AND visible = 1`)
     .bind(...ids).all();
 
   const productMap = new Map(dbProducts.map((p) => [p.id, p]));
@@ -51,6 +52,7 @@ export async function onRequestPost({ request, env }) {
     const product = productMap.get(item.id);
     if (!product)
       return Response.json({ error: `Producto no disponible: ${item.id}` }, { status: 400, headers: CORS });
+    if (requiresLegalReview(product)) return Response.json({ error: "Producto no habilitado para venta online; pendiente de revisión legal." }, { status: 403 });
     if (product.stock < item.quantity)
       return Response.json(
         { error: `Stock insuficiente para ${product.name}. Disponible: ${product.stock}` },

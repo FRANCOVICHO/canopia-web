@@ -9,6 +9,14 @@ function serializeJsonLd(value) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
+function entryHead(spaHtml) {
+  const critical = spaHtml.match(/<style id="entry-critical">[\s\S]*?<\/style>/)?.[0];
+  if (!critical) return '';
+  return '<base href="/"><script src="/entry-session.js"></script>' + critical
+    + '<style>html:not([data-entry-seen=true]) :is(#ssr-product,#ssr-category){visibility:hidden;animation:canopia-ssr-recover 0s 18s forwards}@keyframes canopia-ssr-recover{to{visibility:visible}}</style>'
+    + '<noscript><style>#ssr-product,#ssr-category{visibility:visible!important}</style></noscript>';
+}
+
 export const SITE_BASE_URL = "https://canopiagrow.com";
 
 // ─── Sanitización XSS ───────────────────────────────────────────────────────
@@ -115,6 +123,7 @@ export function buildProductHtml(product, spaHtml) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${entryHead(spaHtml)}
   <title>${name} — CanopiaGrow</title>
   <meta name="description" content="${description}">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -226,6 +235,7 @@ export function buildCategoryHtml(category, products, spaHtml) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  ${entryHead(spaHtml)}
   <title>${name} — CanopiaGrow | Grow Shop &amp; Smoke Shop</title>
   <meta name="description" content="${description || `Explorá ${name} en CanopiaGrow: grow shop y smoke shop online con envíos a todo el país.`}">
   <meta name="robots" content="index, follow, max-image-preview:large">
