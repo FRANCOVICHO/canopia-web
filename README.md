@@ -24,7 +24,7 @@ El panel admin permite:
 2. Settings > Environment variables.
 3. Agrega una variable:
    - Name: `ADMIN_TOKEN`
-   - Value: una clave secreta que solo vos conozcas (ejemplo: `canopia2026-secreto`)
+   - Value: una clave secreta que solo vos conozcas (generar al menos 32 bytes aleatorios y guardar como secreto cifrado)
 4. Guarda y vuelve a desplegar el sitio.
 5. Entra a `https://tu-dominio.pages.dev/admin.html` y usa esa clave.
 

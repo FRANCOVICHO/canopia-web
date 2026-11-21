@@ -1,3 +1,5 @@
+function securityEscape(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function securityImage(value) { try { const u=new URL(String(value), location.origin); return ['https:','http:'].includes(u.protocol) ? securityEscape(u.href) : ''; } catch { return ''; } }
 // ── Helpers de imágenes ────────────────────────────────────────────────────────
 const TOKEN_KEY = "canopia_admin_token";
 /** Convierte el campo image (string o JSON array) a un array de URLs. */
@@ -123,7 +125,7 @@ async function loadCategories() {
   const filter = document.querySelector("#filter-category");
   const formCategory = document.querySelector("#form-category");
   const options = categories
-    .map((cat) => `<option value="${cat.id}">${cat.name}</option>`)
+    .map((cat) => `<option value="${securityEscape(cat.id)}">${securityEscape(cat.name)}</option>`)
     .join("");
 
   filter.innerHTML = `<option value="todos">Todas las categorias</option>${options}`;
@@ -179,16 +181,16 @@ function renderProducts() {
       (product) => `
         <tr>
           <td>
-            <strong>${product.name}</strong>
-            <small>${product.id}</small>
+            <strong>${securityEscape(product.name)}</strong>
+            <small>${securityEscape(product.id)}</small>
           </td>
-          <td>${product.category}</td>
+          <td>${securityEscape(product.category)}</td>
           <td>${formatPrice(product.price)}</td>
           <td>
             <div class="stock-editor">
-              <button type="button" data-stock-dec="${product.id}">-</button>
-              <span>${product.stock}</span>
-              <button type="button" data-stock-inc="${product.id}">+</button>
+              <button type="button" data-stock-dec="${securityEscape(product.id)}">-</button>
+              <span>${securityEscape(product.stock)}</span>
+              <button type="button" data-stock-inc="${securityEscape(product.id)}">+</button>
             </div>
           </td>
           <td>
@@ -196,8 +198,8 @@ function renderProducts() {
             ${product.featured ? '<span class="status-pill is-featured">Destacado</span>' : ""}
           </td>
           <td class="row-actions">
-            <button class="button ghost" type="button" data-edit="${product.id}">Editar</button>
-            <button class="button ghost danger" type="button" data-delete="${product.id}">Borrar</button>
+            <button class="button ghost" type="button" data-edit="${securityEscape(product.id)}">Editar</button>
+            <button class="button ghost danger" type="button" data-delete="${securityEscape(product.id)}">Borrar</button>
           </td>
         </tr>
       `,
@@ -304,7 +306,7 @@ async function adjustStock(id, delta) {
 async function deleteProduct(id) {
   const product = products.find((item) => item.id === id);
   if (!product) return;
-  if (!confirm(`Borrar "${product.name}"?`)) return;
+  if (!confirm(`Borrar "${securityEscape(product.name)}"?`)) return;
 
   try {
     await api(`/api/products?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -414,7 +416,7 @@ function renderOrders() {
           <small>📱 ${escapeAdmin(o.customer_phone)}${o.customer_note ? ` · ${escapeAdmin(o.customer_note)}` : ""}</small>
           <div class="order-row-items">
             ${(o.items || []).map((item) =>
-              `<span class="order-item-tag">${escapeAdmin(item.name)} ×${item.quantity}</span>`
+              `<span class="order-item-tag">${escapeAdmin(item.name)} ×${securityEscape(item.quantity)}</span>`
             ).join("")}
           </div>
         </div>

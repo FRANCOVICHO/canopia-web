@@ -63,6 +63,7 @@ async function getCatalogMeta(env) {
 
 export async function onRequestGet({ request, env }) {
   const isAdmin = (await checkAdmin(request, env)).ok;
+  if (request.headers.has("Authorization") && !isAdmin) return Response.json({error:"No autorizado."},{status:401,headers:{"Cache-Control":"no-store"}});
   const query = isAdmin
     ? `SELECT id, name, category, description, price, tag, image, featured, visible, stock, updated_at
        FROM products
