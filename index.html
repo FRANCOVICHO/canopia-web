@@ -75,6 +75,8 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css?v=10" />
     <link rel="stylesheet" href="campaign.css?v=7" />
+    <link rel="stylesheet" href="shop-polish.css?v=5" />
+    <link rel="stylesheet" href="account-entry.css?v=4" />
 
     <!-- ══ FAVICONS ════════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo-icon.png" />
@@ -178,6 +180,7 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
     </script>
   </head>
   <body class="canopia-store">
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;overflow:hidden"><defs><filter id="canopia-brand-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 -1.063 -3.576 -0.361 0 4.4" result="ink"/><feComposite in="ink" in2="SourceAlpha" operator="in"/></filter></defs></svg>
     <div id="canopia-entry" class="canopia-entry" data-state="initial">
       <div class="entry-panel" aria-hidden="true"></div><div class="entry-panel entry-panel-right" aria-hidden="true"></div>
       <div class="entry-content">
@@ -288,9 +291,9 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
       <section id="inicio" class="campaign-hero" aria-labelledby="page-title">
         <div class="campaign-inner">
           <div class="campaign-copy">
-            <h1 id="page-title">Cultivo indoor<br /> y parafernalia.</h1>
-            <p>Tienda online desde Viedma.</p>
-            <a class="btn campaign-cta" href="#catalogo" data-shop-filter="todos">Ver catálogo <span aria-hidden="true">↗</span></a>
+            <h1 id="page-title">De la raíz<br />al ritual.</h1>
+            <p>Cultivo indoor, smoke y accesorios para hacerlo a tu manera. Desde Viedma, para tu mundo.</p>
+            <a class="btn campaign-cta" href="#catalogo" data-shop-filter="todos">Encontrá tu próximo favorito <span aria-hidden="true">↗</span></a>
           </div>
           <figure class="campaign-photo">
             <div class="campaign-kit-product">
@@ -306,13 +309,13 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
         <div class="shop-grid">
           <a class="shop-tile shop-tile-grow" href="#catalogo" data-shop-filter="grow" id="grow">
             <img src="assets/campaign/grow-led.webp" width="1050" height="700" alt="" />
-            <span>Grow <span aria-hidden="true">→</span></span>
+            <span class="shop-story"><small>Grow</small><strong>Hacelo crecer.</strong><span class="shop-story-link">Explorá cultivo <span aria-hidden="true">↗</span></span></span>
           </a>
           <a class="shop-tile shop-tile-smoke" href="#catalogo" data-shop-filter="smoke" id="smoke">
             <div class="smoke-product">
               <img src="assets/campaign/picador-gato-catalogo.webp" width="1000" height="750" alt="" />
             </div>
-            <span>Smoke <span aria-hidden="true">→</span></span>
+            <span class="shop-story"><small>Smoke</small><strong>Armá tu ritual.</strong><span class="shop-story-link">Explorá accesorios <span aria-hidden="true">↗</span></span></span>
           </a>
         </div>
       </section>
@@ -461,8 +464,8 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
         <form id="checkout-form" class="checkout-form">
           <p>Al enviar un pedido usaremos tus datos para gestionarlo. <a href="/privacidad.html">Privacidad</a> · <a href="/terminos.html">Condiciones</a> · <a href="/arrepentimiento.html">Arrepentimiento</a></p>
           <label>Nombre<input name="name" autocomplete="name" required /></label>
-          <label>WhatsApp<input name="phone" type="tel" autocomplete="tel" required /></label>
-          <label>Nota<textarea name="note" placeholder="Retiro, envio, horario, referencias..."></textarea></label>
+           <label>WhatsApp<input name="phone" type="tel" autocomplete="tel" required placeholder="Código de área + número" /><small class="field-hint">Te contactamos para coordinar el pago y la entrega.</small></label>
+           <label>Nota <span class="field-optional">(opcional)</span><textarea name="note" rows="3" placeholder="¿Retirás o necesitás envío? Dejanos tu horario y las referencias."></textarea></label>
           <button class="btn btn-primary" type="submit" style="width:100%">Enviar pedido</button>
           <p id="checkout-message" class="checkout-message" role="status"></p>
           <a class="btn btn-outline checkout-whatsapp" id="checkout-whatsapp" target="_blank" rel="noopener noreferrer" hidden>Enviar resumen por WhatsApp</a>
@@ -605,43 +608,42 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
       <div class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-panel-title">
 
         <!-- VISTA: Login / Registro -->
-        <div id="auth-view-login">
-          <div class="auth-dialog-head">
-            <h2 id="auth-panel-title">Mi cuenta</h2>
-            <button class="icon-btn" type="button" id="close-auth-panel" aria-label="Cerrar">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-          </div>
-
-          <div class="auth-tabs">
-            <button class="auth-tab is-active" type="button" data-tab="login">Ingresar</button>
-            <button class="auth-tab" type="button" data-tab="register">Crear cuenta</button>
-          </div>
-
-          <!-- Form login -->
-          <form class="auth-form" id="login-form-user">
-            <label>Email o usuario<input name="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Tu email o usuario de repartidor" /></label>
-            <label>Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="••••••" /></label>
-            <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
-            <button class="btn btn-primary" type="submit" style="width:100%">Ingresar</button>
-            <button type="button" class="auth-forgot-btn" id="forgot-password-btn">¿Olvidaste tu contraseña?</button>
-          </form>
-
-          <!-- Form registro (oculto por defecto) -->
-          <form class="auth-form" id="register-form-user" hidden>
-            <label>Nombre<input name="name" autocomplete="name" required placeholder="Tu nombre" /></label>
-            <label>Email<input name="email" type="email" autocomplete="email" required placeholder="tu@email.com" /></label>
-            <label>WhatsApp<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional" /></label>
-            <label>Contraseña<input name="password" type="password" autocomplete="new-password" required placeholder="Mínimo 6 caracteres" /></label>
-            <div class="cf-turnstile" data-sitekey="1x00000000000000000000AA"></div>
-            <button class="btn btn-primary" type="submit" style="width:100%">Crear cuenta</button>
-          </form>
-
-          <p class="auth-message" id="auth-message"></p>
-          <p class="auth-skip">
-            <button type="button" class="review-link" id="auth-skip-btn">Continuar sin cuenta →</button>
-          </p>
-        </div>
+         <div id="auth-view-login" class="account-entry">
+           <div class="account-story">
+             <img src="assets/logo-entry.webp" width="120" height="120" alt="Canopia Grow Shop" />
+             <h3>Tu lugar.<br />Tu ritual.</h3>
+             <p>Lo que te gusta, guardado.<br />Lo que viene, por crecer.</p>
+             <span class="account-story-signature">Desde Viedma, a tu manera.</span>
+           </div>
+           <div class="account-entry-content">
+             <div class="auth-dialog-head">
+               <h2 id="auth-panel-title" class="account-dialog-label">Mi cuenta</h2>
+               <button class="icon-btn" type="button" id="close-auth-panel" aria-label="Cerrar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18m12 0L6 6"/></svg></button>
+             </div>
+             <div class="account-entry-heading"><h3 id="account-entry-title">Volvé a tu Canopia.</h3><p id="account-entry-description">Ingresá y seguí donde lo dejaste.</p></div>
+             <div class="auth-tabs" role="group" aria-label="Elegir acceso o registro">
+               <button class="auth-tab is-active" type="button" data-tab="login">Ingresar</button>
+               <button class="auth-tab" type="button" data-tab="register">Crear cuenta</button>
+             </div>
+             <form class="auth-form" id="login-form-user">
+               <label>Email o usuario<input name="email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="tu@email.com" /></label>
+               <label>Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="Tu contraseña" /></label>
+               <button type="button" class="auth-forgot-btn" id="forgot-password-btn">¿Olvidaste tu contraseña?</button>
+               <div class="cf-turnstile" data-size="flexible" data-sitekey="1x00000000000000000000AA"></div>
+               <button class="btn btn-primary account-submit" type="submit"><span>Ingresar</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+             </form>
+             <form class="auth-form" id="register-form-user" hidden>
+               <label>Tu nombre<input name="name" autocomplete="name" required placeholder="¿Cómo te llamás?" /></label>
+               <label>Email<input name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="tu@email.com" /></label>
+               <label>WhatsApp <span class="account-optional">Opcional</span><input name="phone" type="tel" autocomplete="tel" placeholder="Código de área y número" /></label>
+               <label>Creá tu contraseña<input name="password" type="password" autocomplete="new-password" minlength="6" required placeholder="Al menos 6 caracteres" /></label>
+               <div class="cf-turnstile" data-size="flexible" data-sitekey="1x00000000000000000000AA"></div>
+               <button class="btn btn-primary account-submit" type="submit"><span>Crear mi cuenta</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+             </form>
+             <p class="auth-message" id="auth-message" role="status" aria-live="polite"></p>
+             <p class="auth-skip"><button type="button" class="review-link" id="auth-skip-btn">Seguir explorando</button></p>
+           </div>
+         </div>
 
         <!-- Cuenta del equipo: sesión verificada por el servidor -->
         <div id="auth-view-courier" hidden>
@@ -760,7 +762,9 @@ html[data-entry-seen=true] .canopia-entry{display:none!important}
       </div>
     </aside>
 
-    <script src="app.js?v=9" defer></script>
+    <script src="account-moment.js?v=3" defer></script>
+    <script src="app.js?v=13" defer></script>
+    <script src="shop-polish.js?v=5" defer></script>
       <script src="courier-entry.js?v=2" defer></script>
   </body>
 </html>

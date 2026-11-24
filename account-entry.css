@@ -1,0 +1,80 @@
+/* The account has one composition, shared by login, registration and recovery. */
+.account-moment { overflow: hidden; }
+.account-moment-ink { inset: auto; top: 0; left: 0; border-radius: 50%; transform-origin: center; will-change: transform; contain: layout paint; }
+.account-moment.is-reduced .account-moment-ink { inset: 0; width: auto; height: auto; border-radius: 0; will-change: auto; }
+.account-moment-check { position: absolute; top: 0; left: 0; width: 160px; height: 160px; margin: 0; transform-origin: center; will-change: transform; }
+.account-moment-content { position: absolute; top: calc(43% + 96px); width: 100%; max-width: none; padding: 0 24px; }
+.account-moment-content p { font-size: clamp(1.8rem,4vw,3rem); }
+.account-moment-content > span { margin-top: 10px; font-size: .95rem; color: #e6eacb; }
+.account-moment.is-reduced .account-moment-check { top: calc(43% - 80px); left: calc(50% - 80px); transform: none; }
+.canopia-store .auth-panel { justify-content: center; align-items: center; padding: 24px; }
+.canopia-store .auth-panel .auth-dialog {
+  width: min(900px, 100%); height: auto; max-height: calc(100dvh - 48px);
+  padding: 0; overflow: auto; border: 0; border-radius: 22px;
+  background: var(--panel); box-shadow: 0 24px 80px rgb(19 30 12 / 20%);
+  transform: translateY(10px) scale(.985);
+  transition: transform 350ms cubic-bezier(.22,1,.36,1);
+  animation: none;
+}
+.canopia-store .auth-panel.is-open .auth-dialog { transform: none; animation: none; }
+.account-entry { flex: 0 0 auto; display: grid; grid-template-columns: .85fr 1.15fr; min-height: 630px; }
+.account-story { display: flex; flex-direction: column; padding: 38px 32px; background: var(--green); color: var(--bg); }
+.account-story img { width: 92px; height: 92px; object-fit: contain; filter: url('#canopia-brand-ink') brightness(0) invert(1); margin-bottom: 52px; }
+.account-story h3 { font: 800 clamp(2.8rem,4.4vw,4.1rem)/1.02 var(--display-font); letter-spacing: -.035em; }
+.account-story p { font-size: .95rem; line-height: 1.8; margin-top: 22px; color: #e6eacb; }
+.account-story-signature { margin-top: auto; padding-top: 48px; font-size: .75rem; color: #e6eacb; }
+.account-entry-content { min-width: 0; padding: 22px 36px 18px; }
+.canopia-store .account-entry .auth-dialog-head { padding: 0; margin-bottom: 18px; min-height: 40px; }
+.canopia-store .account-entry .auth-dialog-head h2 { font-size: .78rem; color: var(--muted); font-weight: 500; }
+.account-entry .icon-btn { width: 44px; height: 44px; min-height: 44px; border: 0; background: transparent; }
+.account-entry-heading h3 { font: 800 2rem/1.1 var(--display-font); letter-spacing: -.035em; color: var(--text); text-wrap: balance; }
+.account-entry-heading p { font-size: .85rem; line-height: 1.6; color: var(--muted); margin-top: 8px; }
+.canopia-store .account-entry .auth-tabs { margin: 22px 0 24px; padding: 0; gap: 24px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.canopia-store .account-entry .auth-tab { flex: 0 1 auto; padding: 10px 0 12px; min-height: 44px; border-radius: 0; border-bottom: 2px solid transparent; font-size: .86rem; }
+.canopia-store .account-entry .auth-tab.is-active { background: transparent; border-bottom-color: var(--green); color: var(--green); }
+.canopia-store .account-entry .auth-form { padding: 0; gap: 16px; animation: none; }
+.canopia-store .account-entry .auth-form label { display: block; position: relative; font-size: .8rem; line-height: 1.5; font-weight: 600; }
+.canopia-store .account-entry .auth-form input { display: block; margin-top: 7px; min-height: 50px; height: 50px; border: 1px solid #c8c6b9; border-radius: 9px; background: #fffefb; padding: 12px 14px; font-weight: 400; }
+.canopia-store .account-entry .auth-form input:focus { border-color: var(--green); outline: 3px solid rgb(60 85 32 / 9%); outline-offset: 0; }
+.canopia-store .account-entry .password-field { display: block; }
+.canopia-store .account-entry .password-field input { padding-right: 78px; }
+.account-entry .password-toggle { right: 5px; font-size: .72rem; font-weight: 500; }
+.account-optional { float: right; color: var(--muted); font-size: .72rem; font-weight: 400; }
+.canopia-store .account-entry .auth-forgot-btn { align-self: flex-end; min-height: 30px; padding: 0; margin: -6px 0 0; font-size: .76rem; font-weight: 500; color: var(--green); }
+.canopia-store .account-entry .account-submit { width: 100%; min-height: 52px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; margin: 0; background: var(--green); color: #fffdf7; box-shadow: none; font-size: .9rem; }
+.account-submit > svg { width: 22px; height: 22px; transition: transform 180ms ease; }
+.account-submit:hover > svg { transform: translateX(3px); }
+.canopia-store .account-entry .account-submit.account-is-loading { justify-content: center; }
+.canopia-store .account-entry .auth-skip { padding: 12px 0 0; margin: 0; }
+.account-entry .auth-skip button { font-size: .76rem; color: var(--muted); min-height: 36px; }
+.canopia-store .account-entry .auth-message:not(:empty) { margin: 14px 0 0; padding: 10px 12px; font-size: .8rem; }
+.account-entry .password-guidance { margin-top: 7px; font-size: .7rem; }
+.account-entry .password-guidance::before { width: 24px; height: 3px; }
+.account-entry .field-error { display: block; margin-top: 6px; }
+.account-entry .cf-turnstile { min-height: 65px; }
+.canopia-store .auth-dialog:has(#auth-view-login[hidden]) { width: min(560px,100%); }
+.canopia-store .auth-dialog #auth-view-profile:not([hidden]) { animation: none; }
+@media(max-width:700px) {
+  .canopia-store .auth-panel { padding: 12px; }
+  .canopia-store .auth-panel .auth-dialog { max-height: calc(100dvh - 24px); border-radius: 18px; }
+  .account-entry { grid-template-columns: minmax(0,1fr); min-height: 0; }
+  .account-story { padding: 22px 24px; display: grid; grid-template-columns: 1fr auto; align-items: center; }
+  .account-story img { grid-column: 2; grid-row: 1; width: 64px; height: 64px; margin: 0; }
+  .account-story h3 { grid-column: 1; grid-row: 1; font-size: 2.2rem; }
+  .account-story p, .account-story-signature { display: none; }
+  .account-entry-content { padding: 16px 24px 12px; }
+  .canopia-store .account-entry .auth-dialog-head { margin-bottom: 6px; }
+  .account-entry-heading h3 { font-size: 1.65rem; }
+  .canopia-store .account-entry .auth-tabs { margin-block: 16px 20px; }
+}
+@media(max-width:360px) {
+  .canopia-store .auth-panel { padding: 0; }
+  .canopia-store .auth-panel .auth-dialog { max-height: 100dvh; border-radius: 0; }
+  .account-entry-content { padding-inline: 10px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .canopia-store .auth-panel .auth-dialog, .account-submit > svg { transition: none; }
+}
+
+.account-dialog-label { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.account-entry .auth-dialog-head > .icon-btn { margin-left: auto; }

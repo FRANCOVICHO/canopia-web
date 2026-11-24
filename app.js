@@ -1964,6 +1964,18 @@ function setupAuth() {
   });
   document.querySelector("#auth-panel")?.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeAuthPanel();
+    if (event.key !== "Tab") return;
+    const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href], iframe, [tabindex="0"]')]
+      .filter(element => element.getClientRects().length && getComputedStyle(element).visibility !== "hidden");
+    const first = controls[0];
+    const last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus({ preventScroll: true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus({ preventScroll: true });
+    }
   });
 
   // Tabs login/registro
@@ -1972,10 +1984,13 @@ function setupAuth() {
       document.querySelectorAll(".auth-tab").forEach((t) => t.classList.remove("is-active"));
       btn.classList.add("is-active");
       const isLogin = btn.dataset.tab === "login";
-      smoothContentChange(document.querySelector("#auth-view-login"), () => {
-        document.querySelector("#login-form-user").hidden = !isLogin;
-        document.querySelector("#register-form-user").hidden = isLogin;
-        document.querySelector("#auth-message").textContent = "";
+      document.querySelector("#login-form-user").hidden = !isLogin;
+      document.querySelector("#register-form-user").hidden = isLogin;
+      document.querySelector("#auth-message").textContent = "";
+      const activeForm = document.querySelector(isLogin ? "#login-form-user" : "#register-form-user");
+      activeForm.getAnimations().forEach(animation => animation.cancel());
+      animateElement(activeForm, [{ opacity: .65, transform: "translateY(4px)" }, { opacity: 1, transform: "none" }], {
+        duration: 180, easing: "cubic-bezier(.22,1,.36,1)",
       });
     });
   });
@@ -1990,6 +2005,7 @@ function setupAuth() {
     const msg = document.querySelector("#auth-message");
     msg.className = "auth-message";
     msg.textContent = "Verificando...";
+    window.CanopiaAccountMoment?.pending(button, "login");
     const fd = new FormData(form);
     const identity = String(fd.get("email") || "").trim();
     try {
@@ -1997,7 +2013,8 @@ function setupAuth() {
         if (!window.CanopiaCourier) throw new Error("Recargá la página para volver a intentar.");
         await window.CanopiaCourier.login(identity, fd.get("password"));
         clearUserSession();
-        window.CanopiaCourier.showAccount();
+        if (window.CanopiaAccountMoment) await window.CanopiaAccountMoment.success(button, () => window.CanopiaCourier.showAccount(), "login");
+        else window.CanopiaCourier.showAccount();
       } else {
         const data = await authApi("login", "POST", {
           email: identity,
@@ -2007,13 +2024,15 @@ function setupAuth() {
         saveUserSession(data.token, data.user);
         await loadFavsFromServer();
         updateAuthButton();
-        showProfileView();
+        if (window.CanopiaAccountMoment) await window.CanopiaAccountMoment.success(button, showProfileView, "login");
+        else showProfileView();
       }
       form.elements.password.value = "";
       msg.textContent = "";
     } catch (err) {
       msg.textContent = err.message;
     } finally {
+      window.CanopiaAccountMoment?.reset(button);
       button.disabled = false;
     }
   });
@@ -2021,10 +2040,15 @@ function setupAuth() {
   // Registro
   document.querySelector("#register-form-user")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
+    window.CanopiaAccountMoment?.pending(button, "register");
     const msg = document.querySelector("#auth-message");
     msg.className = "auth-message";
     msg.textContent = "Creando cuenta...";
-    const fd = new FormData(e.currentTarget);
+    const fd = new FormData(form);
     try {
       const data = await authApi("register", "POST", {
         name:     fd.get("name"),
@@ -2036,10 +2060,15 @@ function setupAuth() {
       saveUserSession(data.token, data.user);
       await syncFavsToServer();
       updateAuthButton();
-      showProfileView();
+      if (window.CanopiaAccountMoment) await window.CanopiaAccountMoment.success(button, showProfileView, "register");
+      else showProfileView();
+      form.elements.password.value = "";
       msg.textContent = "";
     } catch (err) {
       msg.textContent = err.message;
+    } finally {
+      window.CanopiaAccountMoment?.reset(button);
+      button.disabled = false;
     }
   });
 
